@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "ResonatorSlot.h"
+#include "Modulation/ParamSource.h"
 
 //==============================================================================
 MechanoscAudioProcessor::MechanoscAudioProcessor()
@@ -138,12 +139,15 @@ void MechanoscAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     spec.maximumBlockSize = (juce::uint32) samplesPerBlock;
     spec.numChannels = 1;
 
+    // Global modules read the shared APVTS atomics directly (no per-voice shadows).
+    ParamSource globalSrc (apvts);
+
     for (auto& slot : globalResonators)
         slot.prepare (spec);
     globalMatrix.prepare (spec);
-    globalMatrix.assignParameters (apvts);
+    globalMatrix.assignParameters (globalSrc);
     for (int i = 0; i < ResonatorSlot::numSlots; ++i)
-        globalResonators[(size_t) i].assignParameters (apvts, ResonatorSlot::slotPrefix (i));
+        globalResonators[(size_t) i].assignParameters (globalSrc, ResonatorSlot::slotPrefix (i));
 
     inputCapture.setSize (2, samplesPerBlock, false, false, true);
     inputCapture.clear();
@@ -231,27 +235,20 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 playing = pos->getIsPlaying();
             }
 
-        // Derive the global ADSR gate from this block's MIDI (read-only; doesn't consume it).
-        bool noteOnThisBlock = false;
+        // Track held notes (read-only; doesn't consume the buffer) to derive the global
+        // ADSR gate: attack on the first note after silence, release on the last note off.
         for (const auto meta : midiMessages)
         {
             const auto msg = meta.getMessage();
             if (msg.isNoteOn())
-            {
-                noteOnThisBlock = true;
                 ++heldNoteCount;
-            }
             else if (msg.isNoteOff())
-            {
                 heldNoteCount = juce::jmax (0, heldNoteCount - 1);
-            }
             else if (msg.isAllNotesOff() || msg.isAllSoundOff())
-            {
                 heldNoteCount = 0;
-            }
         }
 
-        modEngine.process (numSamples, bpm, ppq, playing, heldNoteCount > 0, noteOnThisBlock);
+        modEngine.process (numSamples, bpm, ppq, playing, heldNoteCount > 0);
     }
 
     // Pick ping-pong roles: voices read last block's global output (prev); global writes this block (cur).
@@ -264,6 +261,7 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (int i = 0; i < synth.getNumVoices(); ++i)
         if (auto* voice = dynamic_cast<SynthVoice*> (synth.getVoice (i)))
         {
+            voice->updateModulation (numSamples);   // fill per-voice shadows before modules cache them
             voice->checkParameters();
             voice->setSharedBuffers (&columnSum, &prevBuf, &sendBus);
             voice->setInputBuffer (&inputCapture);

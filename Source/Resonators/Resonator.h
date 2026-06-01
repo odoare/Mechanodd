@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+class ParamSource;
+
 class Resonator
 {
 public:
@@ -48,7 +50,7 @@ public:
 
     virtual void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                         const juce::String& prefix) = 0;
-    virtual void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) = 0;
+    virtual void assignParameters (ParamSource& apvts, const juce::String& prefix) = 0;
     virtual void checkParameters() = 0;
 
     static juce::String makeId (const juce::String& prefix, const juce::String& name) { return prefix + "_" + name; }
@@ -59,7 +61,7 @@ protected:
 
     static void addCommonParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                      const juce::String& prefix);
-    void assignCommonParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix);
+    void assignCommonParameters (ParamSource& apvts, const juce::String& prefix);
     // Returns true if the tuned fundamental changed since the last call.
     bool checkCommonParameters();
 
@@ -68,7 +70,7 @@ protected:
     // release is ramped.
     static void addGateParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                    const juce::String& prefix);
-    void assignGateParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix);
+    void assignGateParameters (ParamSource& apvts, const juce::String& prefix);
     void checkGateParameters();              // recompute release coefficient
 
     float advanceGate() noexcept;            // step the gate one sample, return [0,1]

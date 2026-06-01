@@ -16,6 +16,7 @@
 
 #include <JuceHeader.h>
 
+
 class Effect
 {
 public:

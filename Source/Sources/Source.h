@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+class ParamSource;
+
 class Source
 {
 public:
@@ -50,7 +52,7 @@ public:
     // checkCommonParameters from their own override, then add their specifics.
     virtual void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                         const juce::String& prefix) = 0;
-    virtual void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) = 0;
+    virtual void assignParameters (ParamSource& apvts, const juce::String& prefix) = 0;
     virtual void checkParameters() = 0;
 
     static juce::String makeId (const juce::String& prefix, const juce::String& name) { return prefix + "_" + name; }
@@ -65,7 +67,7 @@ protected:
     // Common parameter helpers for subclasses.
     static void addCommonParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                      const juce::String& prefix);
-    void assignCommonParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix);
+    void assignCommonParameters (ParamSource& apvts, const juce::String& prefix);
     void checkCommonParameters();
 
     juce::dsp::ProcessSpec spec { 44100.0, 512, 1 };

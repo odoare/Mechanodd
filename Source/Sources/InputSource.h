@@ -26,7 +26,7 @@ public:
         addCommonParameters (params, prefix);
     }
 
-    void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) override
+    void assignParameters (ParamSource& apvts, const juce::String& prefix) override
     {
         assignCommonParameters (apvts, prefix);
     }

@@ -35,7 +35,7 @@ public:
     ResonatorSlot();
 
     void prepare (const juce::dsp::ProcessSpec& spec);
-    void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& slotPrefix);
+    void assignParameters (ParamSource& apvts, const juce::String& slotPrefix);
     void checkParameters();
     float processSample (float input) { return active()->processSample (input); }
     void reset();

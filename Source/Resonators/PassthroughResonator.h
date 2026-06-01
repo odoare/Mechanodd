@@ -21,6 +21,6 @@ public:
     float processSample (float input) override { return input; }
 
     void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>&, const juce::String&) override {}
-    void assignParameters (juce::AudioProcessorValueTreeState&, const juce::String&) override {}
+    void assignParameters (ParamSource&, const juce::String&) override {}
     void checkParameters() override {}
 };

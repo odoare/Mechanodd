@@ -37,10 +37,10 @@ public:
     void assignParameters (juce::AudioProcessorValueTreeState& apvts);
 
     // Advance the modulators and write modulated values into the target raw-value atomics.
-    // gate/noteOnThisBlock drive the (global) ADSR modulators: a note-on retriggers the
-    // envelope, and gate stays high while any note is held.
-    void process (int numSamples, double bpm, double ppqPosition, bool isPlaying,
-                  bool gate, bool noteOnThisBlock);
+    // `gate` is the global note gate (true while any note is held): its rising edge (first
+    // note after silence) retriggers the global ADSR modulators and its falling edge (last
+    // note released) releases them.
+    void process (int numSamples, double bpm, double ppqPosition, bool isPlaying, bool gate);
 
     // Adds modulator parameters. `targetChoices` must be "None" followed by every
     // modulatable parameter id, in a stable order.
@@ -61,6 +61,27 @@ public:
     static juce::String releaseId     (int i) { return modPrefix (i) + "_release"; }
     static juce::String amountId      (int i) { return modPrefix (i) + "_amount"; }
     static juce::String polarityId    (int i) { return modPrefix (i) + "_polarity"; }
+
+    // ADSR offset (in normalised parameter space), shared by the global engine and the
+    // per-voice engine. Polarity -: knob -> min as env falls; +: knob -> max as env falls.
+    static float adsrOffset (float amount, bool positive, float base01, float env)
+    {
+        return positive ?  amount * (1.0f - base01) * (1.0f - env)
+                        : -amount * base01          * (1.0f - env);
+    }
+
+    // Targets whose modules live in the voices (sources / resonators / per-voice matrix)
+    // get per-voice ADSR; global targets (effects) keep the global ADSR. Resonators are
+    // only per-voice when their slot is in per-voice mode (see resGlobalFlagId): a global
+    // resonator is processed once and gets the global ADSR instead.
+    static bool isPerVoiceTarget (const juce::String& id)
+    {
+        return id.startsWith ("src") || id.startsWith ("res") || id.startsWith ("mtx_");
+    }
+
+    // For a "res<n>_..." target, the id of that slot's per-voice/global flag parameter
+    // ("res<n>_global"); empty for non-resonator targets.
+    static juce::String resGlobalFlagId (const juce::String& id);
 
     static juce::StringArray typeChoices()     { return { "LFO", "ADSR" }; }
     static juce::StringArray shapeChoices()    { return { "Sine", "Tri", "Square", "Saw Up", "Saw Dn" }; }
@@ -96,6 +117,8 @@ private:
     // Index 0 == "None"; others map to a modulatable float parameter.
     std::vector<juce::RangedAudioParameter*> targetParams;
     std::vector<std::atomic<float>*>         targetAtomics;
+    std::vector<bool>                        perVoiceTarget;   // true: src/res/mtx target
+    std::vector<std::atomic<float>*>         targetResGlobal;  // res slot's _global flag, else nullptr
 
     std::vector<float> offset;        // per target, accumulator (sized to targets)
     std::vector<int>   touchedNow;    // target indices modulated this block

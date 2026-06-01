@@ -7,6 +7,7 @@
 */
 
 #include "ModalResonator.h"
+#include "../Modulation/ParamSource.h"
 #include <algorithm>
 
 void ModalResonator::prepareImpl (const juce::dsp::ProcessSpec&)
@@ -135,7 +136,7 @@ void ModalResonator::addParametersToLayout (std::vector<std::unique_ptr<juce::Ra
     addModalParameters (params, prefix);
 }
 
-void ModalResonator::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void ModalResonator::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     assignCommonParameters (apvts, prefix);
     assignGateParameters (apvts, prefix);
@@ -185,7 +186,7 @@ void ModalResonator::addModalParameters (std::vector<std::unique_ptr<juce::Range
     params.push_back (std::make_unique<FloatParam> (makeId (prefix, "outY"), prefix + " Out Y", juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 0.60f));
 }
 
-void ModalResonator::assignModalParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void ModalResonator::assignModalParameters (ParamSource& apvts, const juce::String& prefix)
 {
     pShape       = apvts.getRawParameterValue (makeId (prefix, "shape"));
     pAspect      = apvts.getRawParameterValue (makeId (prefix, "aspect"));

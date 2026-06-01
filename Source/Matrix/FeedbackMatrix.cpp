@@ -7,6 +7,7 @@
 */
 
 #include "FeedbackMatrix.h"
+#include "../Modulation/ParamSource.h"
 #include "SynthVoice.h"
 
 static_assert (FeedbackMatrix::numSources == SynthVoice::numSourceSlots,
@@ -22,7 +23,7 @@ void FeedbackMatrix::reset()
     prevResonatorOut.fill (0.0f);
 }
 
-void FeedbackMatrix::assignParameters (juce::AudioProcessorValueTreeState& apvts)
+void FeedbackMatrix::assignParameters (ParamSource& apvts)
 {
     for (int r = 0; r < numRows; ++r)
     {

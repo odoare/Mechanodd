@@ -7,6 +7,7 @@
 */
 
 #include "WaveguideResonator.h"
+#include "../Modulation/ParamSource.h"
 
 namespace
 {
@@ -137,7 +138,7 @@ void WaveguideResonator::addParametersToLayout (std::vector<std::unique_ptr<juce
         juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 0.0f));
 }
 
-void WaveguideResonator::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void WaveguideResonator::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     assignCommonParameters (apvts, prefix);
     assignGateParameters (apvts, prefix);

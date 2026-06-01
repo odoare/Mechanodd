@@ -7,6 +7,7 @@
 */
 
 #include "SynthVoice.h"
+#include "../Modulation/ParamSource.h"
 
 SynthVoice::SynthVoice() = default;
 
@@ -28,16 +29,29 @@ void SynthVoice::prepare (const juce::dsp::ProcessSpec& spec)
     sourceScratch.setSize (numSourceSlots, (int) spec.maximumBlockSize, false, false, true);
     voiceOut.setSize (2, (int) spec.maximumBlockSize, false, false, true);
 
+    voiceMod.prepare (spec.sampleRate);
+
     isPrepared = true;
 }
 
 void SynthVoice::assignParameters (juce::AudioProcessorValueTreeState& apvts)
 {
+    // Build a per-voice parameter source: the voice's modulators register shadow
+    // atomics for per-voice targets, then the modules below resolve through it so
+    // they read the voice's modulated values instead of the shared APVTS atomics.
+    ParamSource src (apvts);
+    voiceMod.assign (apvts, src);
+
     for (int i = 0; i < numSourceSlots; ++i)
-        sourceSlots[(size_t) i].assignParameters (apvts, sourceSlotPrefix (i));
+        sourceSlots[(size_t) i].assignParameters (src, sourceSlotPrefix (i));
     for (int i = 0; i < numResonatorSlots; ++i)
-        resonatorSlots[(size_t) i].assignParameters (apvts, ResonatorSlot::slotPrefix (i));
-    matrix.assignParameters (apvts);
+        resonatorSlots[(size_t) i].assignParameters (src, ResonatorSlot::slotPrefix (i));
+    matrix.assignParameters (src);
+}
+
+void SynthVoice::updateModulation (int numSamples)
+{
+    voiceMod.process (numSamples);
 }
 
 void SynthVoice::checkParameters()
@@ -66,6 +80,7 @@ void SynthVoice::startNote (int midiNoteNumber, float velocity, juce::Synthesise
         slot.noteOn();
     }
     matrix.reset();
+    voiceMod.noteOn();
 
     sourcesPlaying = true;
     silentSamples  = 0;
@@ -77,6 +92,7 @@ void SynthVoice::stopNote (float, bool allowTailOff)
         slot.noteOff();
     for (auto& slot : resonatorSlots)
         slot.noteOff();
+    voiceMod.noteOff();
 
     if (! allowTailOff)
         clearCurrentNote();

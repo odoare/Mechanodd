@@ -7,6 +7,7 @@
 */
 
 #include "Source.h"
+#include "../Modulation/ParamSource.h"
 
 void Source::prepare (const juce::dsp::ProcessSpec& newSpec)
 {
@@ -95,7 +96,7 @@ void Source::addCommonParameters (std::vector<std::unique_ptr<juce::RangedAudioP
     params.push_back (std::make_unique<FloatParam> (makeId (prefix, "velCutoff"), prefix + " Vel>Cutoff", juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 0.0f));
 }
 
-void Source::assignCommonParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void Source::assignCommonParameters (ParamSource& apvts, const juce::String& prefix)
 {
     pAttack    = apvts.getRawParameterValue (makeId (prefix, "attack"));
     pDecay     = apvts.getRawParameterValue (makeId (prefix, "decay"));

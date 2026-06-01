@@ -34,7 +34,7 @@ public:
 
     void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                 const juce::String& prefix) override;
-    void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) override;
+    void assignParameters (ParamSource& apvts, const juce::String& prefix) override;
     void checkParameters() override;
 
 protected:
@@ -52,7 +52,7 @@ protected:
 
     // Subclasses may add their own parameters; call these for the shared modal set.
     void addModalParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix);
-    void assignModalParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix);
+    void assignModalParameters (ParamSource& apvts, const juce::String& prefix);
     // Returns true if anything affecting the mode set changed.
     bool checkModalParameters();
 

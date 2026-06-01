@@ -8,6 +8,7 @@
 
 #include "SourceSlot.h"
 #include "SourceFactory.h"
+#include "../Modulation/ParamSource.h"
 
 SourceSlot::SourceSlot()
 {
@@ -21,7 +22,7 @@ void SourceSlot::prepare (const juce::dsp::ProcessSpec& spec)
         s->prepare (spec);
 }
 
-void SourceSlot::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& slotPrefix)
+void SourceSlot::assignParameters (ParamSource& apvts, const juce::String& slotPrefix)
 {
     typeParam = apvts.getRawParameterValue (typeParamId (slotPrefix));
 

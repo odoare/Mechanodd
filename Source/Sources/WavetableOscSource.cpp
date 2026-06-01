@@ -8,6 +8,7 @@
 
 #include "WavetableOscSource.h"
 #include "WavetableLibrary.h"
+#include "../Modulation/ParamSource.h"
 
 void WavetableOscSource::onNoteOn()
 {
@@ -28,7 +29,7 @@ void WavetableOscSource::addParametersToLayout (std::vector<std::unique_ptr<juce
         makeId (prefix, "tune"), prefix + " Tune", juce::NormalisableRange<float> (-24.0f, 24.0f, 1.0f), 0.0f));
 }
 
-void WavetableOscSource::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void WavetableOscSource::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     assignCommonParameters (apvts, prefix);
     pWave = apvts.getRawParameterValue (makeId (prefix, "wave"));

@@ -7,6 +7,7 @@
 */
 
 #include "NoiseSource.h"
+#include "../Modulation/ParamSource.h"
 
 void NoiseSource::addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                          const juce::String& prefix)
@@ -14,7 +15,7 @@ void NoiseSource::addParametersToLayout (std::vector<std::unique_ptr<juce::Range
     addCommonParameters (params, prefix);
 }
 
-void NoiseSource::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void NoiseSource::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     assignCommonParameters (apvts, prefix);
 }

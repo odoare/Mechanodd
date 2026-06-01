@@ -19,6 +19,7 @@
 #include "SourceSlot.h"
 #include "ResonatorSlot.h"
 #include "FeedbackMatrix.h"
+#include "../Modulation/VoiceModEngine.h"
 
 class SynthVoice : public juce::SynthesiserVoice
 {
@@ -42,6 +43,10 @@ public:
     void assignParameters (juce::AudioProcessorValueTreeState& apvts);
     void checkParameters();
 
+    // Advance this voice's per-voice modulators and refresh its parameter shadows.
+    // Must run before checkParameters() so the modules cache the modulated values.
+    void updateModulation (int numSamples);
+
     // Shared block buffers owned by the processor:
     //  columnSum  - summed-over-voices column signals (sources + PV resonators) for the global rows.
     //  globalPrev - previous block's global resonator outputs, broadcast to PV rows.
@@ -60,6 +65,7 @@ private:
     std::array<SourceSlot, numSourceSlots>       sourceSlots;
     std::array<ResonatorSlot, numResonatorSlots> resonatorSlots;
     FeedbackMatrix matrix;
+    VoiceModEngine voiceMod;
 
     juce::AudioBuffer<float> sourceScratch;  // numSourceSlots channels
     juce::AudioBuffer<float> voiceOut;       // stereo

@@ -25,7 +25,7 @@ public:
     SourceSlot();
 
     void prepare (const juce::dsp::ProcessSpec& spec);
-    void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& slotPrefix);
+    void assignParameters (ParamSource& apvts, const juce::String& slotPrefix);
     void checkParameters();
     void process (juce::AudioBuffer<float>& outBuffer, int startSample, int numSamples);
     void noteOn (float velocity);

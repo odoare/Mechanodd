@@ -7,7 +7,18 @@
 */
 
 #include "ModEngine.h"
+#include "../Resonators/ResonatorSlot.h"
 #include <algorithm>
+
+juce::String ModEngine::resGlobalFlagId (const juce::String& id)
+{
+    if (! id.startsWith ("res"))
+        return {};
+    const auto digits = id.substring (3).initialSectionContainingOnly ("0123456789");
+    if (digits.isEmpty())
+        return {};
+    return ResonatorSlot::globalParamId (ResonatorSlot::slotPrefix (digits.getIntValue()));
+}
 
 void ModEngine::prepare (double sr)
 {
@@ -54,6 +65,8 @@ void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
     // Target names come from any modulator's target choice (built in addParameters).
     targetParams.clear();
     targetAtomics.clear();
+    perVoiceTarget.clear();
+    targetResGlobal.clear();
 
     juce::StringArray names;
     if (auto* tparam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (targetId (0))))
@@ -65,11 +78,17 @@ void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
         {
             targetParams.push_back (nullptr);
             targetAtomics.push_back (nullptr);
+            perVoiceTarget.push_back (false);
+            targetResGlobal.push_back (nullptr);
         }
         else
         {
             targetParams.push_back (apvts.getParameter (name));
             targetAtomics.push_back (apvts.getRawParameterValue (name));
+            perVoiceTarget.push_back (isPerVoiceTarget (name));
+
+            const auto flagId = resGlobalFlagId (name);
+            targetResGlobal.push_back (flagId.isEmpty() ? nullptr : apvts.getRawParameterValue (flagId));
         }
     }
 
@@ -95,8 +114,7 @@ void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
     }
 }
 
-void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool isPlaying,
-                         bool gate, bool noteOnThisBlock)
+void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool isPlaying, bool gate)
 {
     if (targetParams.empty())
         return;
@@ -119,6 +137,16 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
         float val;
         if (type == typeAdsr)
         {
+            // Per-voice targets are modulated by each voice's own envelope (VoiceModEngine);
+            // the global engine only handles ADSR on global targets (effects) and on
+            // resonators whose slot is currently in global mode.
+            bool perVoiceNow = perVoiceTarget[(size_t) idx];
+            if (perVoiceNow && targetResGlobal[(size_t) idx] != nullptr
+                && targetResGlobal[(size_t) idx]->load() > 0.5f)
+                perVoiceNow = false;   // global resonator -> handled here
+            if (perVoiceNow)
+                continue;
+
             juce::ADSR::Parameters p;
             p.attack  = juce::jmax (0.0f, m.attack->load());
             p.decay   = juce::jmax (0.0f, m.decay->load());
@@ -126,8 +154,9 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
             p.release = juce::jmax (0.0f, m.release->load());
             m.adsr.setParameters (p);
 
-            // Edge-triggered gating, shared across all ADSR modulators.
-            if (noteOnThisBlock && gate)
+            // Gate edges, shared across all global ADSR modulators: attack on the first
+            // note after silence, release when the last held note is lifted.
+            if (gate && ! prevGate)
                 m.adsr.noteOn();
             else if (prevGate && ! gate)
                 m.adsr.noteOff();
@@ -140,10 +169,7 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
             const bool  positive = m.polarity->load() > 0.5f;
             const float base01   = targetParams[(size_t) idx]->getValue();
 
-            // Offset relative to the knob value so it sums with other modulators.
-            // Polarity -: knob -> min as env falls; +: knob -> max as env falls.
-            val = positive ?  amount * (1.0f - base01) * (1.0f - env)
-                           : -amount * base01          * (1.0f - env);
+            val = adsrOffset (amount, positive, base01, env);
         }
         else
         {

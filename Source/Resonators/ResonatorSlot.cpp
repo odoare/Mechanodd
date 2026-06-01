@@ -8,6 +8,7 @@
 
 #include "ResonatorSlot.h"
 #include "ResonatorFactory.h"
+#include "../Modulation/ParamSource.h"
 
 ResonatorSlot::ResonatorSlot()
 {
@@ -27,7 +28,7 @@ void ResonatorSlot::reset()
         r->reset();
 }
 
-void ResonatorSlot::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void ResonatorSlot::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     typeParam       = apvts.getRawParameterValue (typeParamId (prefix));
     globalParam     = apvts.getRawParameterValue (globalParamId (prefix));

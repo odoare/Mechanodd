@@ -7,6 +7,7 @@
 */
 
 #include "Resonator.h"
+#include "../Modulation/ParamSource.h"
 
 void Resonator::prepare (const juce::dsp::ProcessSpec& newSpec)
 {
@@ -66,7 +67,7 @@ void Resonator::addCommonParameters (std::vector<std::unique_ptr<juce::RangedAud
         juce::NormalisableRange<float> (-1.0f, 1.0f, 1e-3f), 0.0f));
 }
 
-void Resonator::assignCommonParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void Resonator::assignCommonParameters (ParamSource& apvts, const juce::String& prefix)
 {
     pFine   = apvts.getRawParameterValue (makeId (prefix, "fine"));
     pCoarse = apvts.getRawParameterValue (makeId (prefix, "coarse"));
@@ -97,7 +98,7 @@ void Resonator::addGateParameters (std::vector<std::unique_ptr<juce::RangedAudio
         juce::NormalisableRange<float> (1.0f, 10000.0f, 0.1f, 0.3f), 300.0f));
 }
 
-void Resonator::assignGateParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void Resonator::assignGateParameters (ParamSource& apvts, const juce::String& prefix)
 {
     pGateRel = apvts.getRawParameterValue (makeId (prefix, "noteRel"));
 }

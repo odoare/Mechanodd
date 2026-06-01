@@ -46,7 +46,7 @@ public:
 
     void prepare (const juce::dsp::ProcessSpec& spec);
     void reset();
-    void assignParameters (juce::AudioProcessorValueTreeState& apvts);
+    void assignParameters (ParamSource& apvts);
     void checkParameters();
 
     bool isGlobal (int slot) const { return globalMask[(size_t) slot]; }

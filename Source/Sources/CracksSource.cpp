@@ -7,6 +7,7 @@
 */
 
 #include "CracksSource.h"
+#include "../Modulation/ParamSource.h"
 
 void CracksSource::prepareImpl (const juce::dsp::ProcessSpec& s)
 {
@@ -22,7 +23,7 @@ void CracksSource::addParametersToLayout (std::vector<std::unique_ptr<juce::Rang
         juce::NormalisableRange<float> (1.0f, 5000.0f, 1.0f, 0.4f), 200.0f));
 }
 
-void CracksSource::assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+void CracksSource::assignParameters (ParamSource& apvts, const juce::String& prefix)
 {
     assignCommonParameters (apvts, prefix);
     pDensity = apvts.getRawParameterValue (makeId (prefix, "density"));
