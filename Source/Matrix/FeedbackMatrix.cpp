@@ -13,14 +13,36 @@
 static_assert (FeedbackMatrix::numSources == SynthVoice::numSourceSlots,
                "FeedbackMatrix::numSources must match SynthVoice::numSourceSlots");
 
-void FeedbackMatrix::prepare (const juce::dsp::ProcessSpec&)
+void FeedbackMatrix::prepare (const juce::dsp::ProcessSpec& spec)
 {
+    sampleRate   = spec.sampleRate;
+    smoothPrimed = false;
+
+    constexpr double smoothSeconds = 0.01;   // 20 ms linear ramp
+    for (auto& row : gains)
+        for (auto& g : row)
+            g.reset (sampleRate, smoothSeconds);
+    for (auto& l : level) l.reset (sampleRate, smoothSeconds);
+    for (auto& p : panL)  p.reset (sampleRate, smoothSeconds);
+    for (auto& p : panR)  p.reset (sampleRate, smoothSeconds);
+    for (auto& s : send)  s.reset (sampleRate, smoothSeconds);
+
     reset();
 }
 
 void FeedbackMatrix::reset()
 {
     prevResonatorOut.fill (0.0f);
+
+    // Snap the gain smoothers to their current targets so a (re)started voice routes
+    // correctly from sample 0; in-flight ramps from a previous note must not leak into
+    // the attack. Smoothing still applies to parameter/modulation changes during sustain.
+    auto snap = [] (SmoothedGain& s) { s.setCurrentAndTargetValue (s.getTargetValue()); };
+    for (auto& row : gains) for (auto& g : row) snap (g);
+    for (auto& l : level) snap (l);
+    for (auto& p : panL)  snap (p);
+    for (auto& p : panR)  snap (p);
+    for (auto& s : send)  snap (s);
 }
 
 void FeedbackMatrix::assignParameters (ParamSource& apvts)
@@ -45,23 +67,33 @@ void FeedbackMatrix::checkParameters()
     if (levelParam[0] == nullptr)
         return;
 
+    // Aim each smoother at its new target. The very first call after prepare snaps
+    // (no audible slew at start-up); later calls ramp toward the target.
+    auto aim = [this] (SmoothedGain& s, float target)
+    {
+        if (smoothPrimed) s.setTargetValue (target);
+        else              s.setCurrentAndTargetValue (target);
+    };
+
     for (int r = 0; r < numRows; ++r)
     {
         for (int c = 0; c < numColumns; ++c)
         {
             auto* p = gainParam[(size_t) r][(size_t) c];
-            gains[(size_t) r][(size_t) c] = (p != nullptr) ? p->load() : 0.0f;
+            aim (gains[(size_t) r][(size_t) c], (p != nullptr) ? p->load() : 0.0f);
         }
 
-        level[(size_t) r] = juce::Decibels::decibelsToGain (levelParam[(size_t) r]->load(), -60.0f);
+        aim (level[(size_t) r], juce::Decibels::decibelsToGain (levelParam[(size_t) r]->load(), -60.0f));
 
         const float pan   = panParam[(size_t) r]->load();
         const float angle = (pan + 1.0f) * 0.25f * juce::MathConstants<float>::pi;
-        panL[(size_t) r]  = std::cos (angle);
-        panR[(size_t) r]  = std::sin (angle);
+        aim (panL[(size_t) r], std::cos (angle));
+        aim (panR[(size_t) r], std::sin (angle));
 
-        send[(size_t) r]  = sendParam[(size_t) r]->load();
+        aim (send[(size_t) r], sendParam[(size_t) r]->load());
     }
+
+    smoothPrimed = true;
 
     for (int k = 0; k < numResonators; ++k)
         globalMask[(size_t) k] = globalParam[(size_t) k] != nullptr && globalParam[(size_t) k]->load() > 0.5f;
@@ -69,15 +101,18 @@ void FeedbackMatrix::checkParameters()
 
 void FeedbackMatrix::mixRow (int r, float out, int n, float* outL, float* outR, float* sendL, float* sendR)
 {
-    const float o = out * level[(size_t) r];
-    outL[n] += o * panL[(size_t) r];
-    outR[n] += o * panR[(size_t) r];
+    // One getNextValue per smoother per sample keeps all ramps sample-aligned.
+    const float pl = panL[(size_t) r].getNextValue();
+    const float pr = panR[(size_t) r].getNextValue();
+    const float o  = out * level[(size_t) r].getNextValue();
+    outL[n] += o * pl;
+    outR[n] += o * pr;
 
+    const float s = out * send[(size_t) r].getNextValue();   // pre-fader, panned
     if (sendL != nullptr)
     {
-        const float s = out * send[(size_t) r];   // pre-fader, panned
-        sendL[n] += s * panL[(size_t) r];
-        sendR[n] += s * panR[(size_t) r];
+        sendL[n] += s * pl;
+        sendR[n] += s * pr;
     }
 }
 
@@ -109,7 +144,7 @@ void FeedbackMatrix::processVoice (const float* const* sourceSamples,
                     colSample = globalMask[(size_t) k] ? globalPrev[k][i]
                                                        : prevResonatorOut[(size_t) k];
                 }
-                in += gains[(size_t) r][(size_t) c] * colSample;
+                in += gains[(size_t) r][(size_t) c].getNextValue() * colSample;
             }
             curOut[(size_t) r] = resonators[(size_t) r].processSample (in);
         }
@@ -157,7 +192,7 @@ void FeedbackMatrix::processGlobal (const float* const* columnSum,
                     colSample = globalMask[(size_t) k] ? prevResonatorOut[(size_t) k]
                                                        : columnSum[numSources + k][i];
                 }
-                in += gains[(size_t) r][(size_t) c] * colSample;
+                in += gains[(size_t) r][(size_t) c].getNextValue() * colSample;
             }
             curOut[(size_t) r] = resonators[(size_t) r].processSample (in);
         }

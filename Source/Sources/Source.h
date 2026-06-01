@@ -58,6 +58,11 @@ public:
     static juce::String makeId (const juce::String& prefix, const juce::String& name) { return prefix + "_" + name; }
 
 protected:
+    // Aim the per-sample parameter smoothers at the current (member) values. `snap`
+    // jumps immediately (note start / prepare); otherwise the value ramps over the
+    // smoothing time. Reads level/cutoff/resonance + velocity links + velocity.
+    void updateSmoothTargets (bool snap);
+
     // Template-method hooks implemented by concrete sources.
     virtual void prepareImpl (const juce::dsp::ProcessSpec& /*spec*/) {}
     virtual void onNoteOn() {}   // called at note start (after envelope retrigger)
@@ -83,6 +88,12 @@ protected:
     float velToLevel   { 0.0f };    // 0..1: amount velocity scales level
     float velToCutoff  { 0.0f };    // 0..1: amount velocity scales cutoff
     float velocity     { 1.0f };
+
+    // Per-sample linear smoothers for the continuous controls that are applied as
+    // per-sample multipliers (level holds the velocity-scaled output gain; cutoff
+    // holds the velocity-scaled, clamped filter frequency). They remove zipper on
+    // automation / GUI moves and also smooth the block-rate steps from modulation.
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> levelSm, cutoffSm, resoSm;
 
 private:
     // Cached APVTS pointers for the common parameters.

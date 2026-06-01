@@ -75,12 +75,20 @@ public:
 private:
     void mixRow (int r, float out, int n, float* outL, float* outR, float* sendL, float* sendR);
 
-    std::array<std::array<float, numColumns>, numRows> gains {};
-    std::array<float, numRows> level {};
-    std::array<float, numRows> panL  {};
-    std::array<float, numRows> panR  {};
-    std::array<float, numRows> send  {};
+    // Per-sample linear smoothers: the routing gains, per-row output level, pan and
+    // send are all applied as per-sample multipliers in the process loops, so ramping
+    // them removes zipper on parameter / modulation changes (feedback-gain steps are
+    // the most audible). Coefficient-driven resonator params are smoothed elsewhere.
+    using SmoothedGain = juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear>;
+    std::array<std::array<SmoothedGain, numColumns>, numRows> gains {};
+    std::array<SmoothedGain, numRows> level {};
+    std::array<SmoothedGain, numRows> panL  {};
+    std::array<SmoothedGain, numRows> panR  {};
+    std::array<SmoothedGain, numRows> send  {};
     std::array<bool,  numResonators> globalMask {};
+
+    double sampleRate { 44100.0 };
+    bool   smoothPrimed { false };   // first checkParameters snaps; later ones ramp
 
     std::array<float, numResonators> prevResonatorOut {};
 

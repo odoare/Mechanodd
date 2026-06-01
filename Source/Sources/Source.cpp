@@ -23,6 +23,12 @@ void Source::prepare (const juce::dsp::ProcessSpec& newSpec)
 
     scratch.setSize (1, (int) spec.maximumBlockSize, false, false, true);
 
+    constexpr double smoothSeconds = 0.01;   // 10 ms linear ramp
+    levelSm .reset (spec.sampleRate, smoothSeconds);
+    cutoffSm.reset (spec.sampleRate, smoothSeconds);
+    resoSm  .reset (spec.sampleRate, smoothSeconds);
+    updateSmoothTargets (true);
+
     prepareImpl (spec);
 }
 
@@ -31,6 +37,10 @@ void Source::noteOn (float vel)
     velocity = vel;
     adsr.setParameters (adsrParams);
     adsr.noteOn();
+    // Snap the smoothers so the note starts at the intended gain/cutoff from sample 0
+    // (the ADSR provides the fade-in); a leftover ramp from a previous note would
+    // otherwise misgain the attack transient.
+    updateSmoothTargets (true);
     onNoteOn();
 }
 
@@ -49,21 +59,28 @@ void Source::process (juce::AudioBuffer<float>& outBuffer, int startSample, int 
     juce::AudioBuffer<float> monoView (scratch.getArrayOfWritePointers(), 1, 0, numSamples);
     renderSource (monoView, 0, numSamples);
 
-    // velocity-scaled level and cutoff
-    const float velLevel  = juce::jmap (velToLevel,  1.0f, velocity);
-    const float effLevel  = level * velLevel;
-    const float velCut    = juce::jmap (velToCutoff, 1.0f, velocity);
-    lpf.setCutoffFrequency (juce::jlimit (20.0f, (float) (spec.sampleRate * 0.49), cutoff * velCut));
-    lpf.setResonance (resonance);
-
     auto* mono = scratch.getWritePointer (0);
 
-    // 2) per-sample filter + envelope + level
+    // 2) per-sample filter + envelope + level. Cutoff/resonance feed the SVF, which
+    // is only re-tuned per sample while those smoothers are actually moving (the
+    // recompute is the costly part); the output level ramps every sample.
+    const bool sweepFilter = cutoffSm.isSmoothing() || resoSm.isSmoothing();
+    if (! sweepFilter)
+    {
+        lpf.setCutoffFrequency (cutoffSm.getCurrentValue());
+        lpf.setResonance (resoSm.getCurrentValue());
+    }
+
     for (int i = 0; i < numSamples; ++i)
     {
         const float env = adsr.getNextSample();
+        if (sweepFilter)
+        {
+            lpf.setCutoffFrequency (cutoffSm.getNextValue());
+            lpf.setResonance (resoSm.getNextValue());
+        }
         float s = lpf.processSample (0, mono[i]);
-        mono[i] = s * env * effLevel;
+        mono[i] = s * env * levelSm.getNextValue();
     }
 
     // 3) add mono content into every output channel
@@ -123,4 +140,27 @@ void Source::checkCommonParameters()
     level       = juce::Decibels::decibelsToGain (pLevel->load(), -60.0f);
     velToLevel  = pVelLevel->load();
     velToCutoff = pVelCutoff->load();
+
+    updateSmoothTargets (false);
+}
+
+void Source::updateSmoothTargets (bool snap)
+{
+    const float velLevel = juce::jmap (velToLevel,  1.0f, velocity);
+    const float effLevel = level * velLevel;
+    const float velCut   = juce::jmap (velToCutoff, 1.0f, velocity);
+    const float effCut   = juce::jlimit (20.0f, (float) (spec.sampleRate * 0.49), cutoff * velCut);
+
+    if (snap)
+    {
+        levelSm .setCurrentAndTargetValue (effLevel);
+        cutoffSm.setCurrentAndTargetValue (effCut);
+        resoSm  .setCurrentAndTargetValue (resonance);
+    }
+    else
+    {
+        levelSm .setTargetValue (effLevel);
+        cutoffSm.setTargetValue (effCut);
+        resoSm  .setTargetValue (resonance);
+    }
 }
