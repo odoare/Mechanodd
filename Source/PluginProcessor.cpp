@@ -230,7 +230,28 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 ppq     = pos->getPpqPosition().orFallback (0.0);
                 playing = pos->getIsPlaying();
             }
-        modEngine.process (numSamples, bpm, ppq, playing);
+
+        // Derive the global ADSR gate from this block's MIDI (read-only; doesn't consume it).
+        bool noteOnThisBlock = false;
+        for (const auto meta : midiMessages)
+        {
+            const auto msg = meta.getMessage();
+            if (msg.isNoteOn())
+            {
+                noteOnThisBlock = true;
+                ++heldNoteCount;
+            }
+            else if (msg.isNoteOff())
+            {
+                heldNoteCount = juce::jmax (0, heldNoteCount - 1);
+            }
+            else if (msg.isAllNotesOff() || msg.isAllSoundOff())
+            {
+                heldNoteCount = 0;
+            }
+        }
+
+        modEngine.process (numSamples, bpm, ppq, playing, heldNoteCount > 0, noteOnThisBlock);
     }
 
     // Pick ping-pong roles: voices read last block's global output (prev); global writes this block (cur).

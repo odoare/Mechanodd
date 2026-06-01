@@ -12,15 +12,21 @@
 void ModEngine::prepare (double sr)
 {
     sampleRate = sr;
+    for (auto& m : mods)
+        m.adsr.setSampleRate (sr);
     reset();
 }
 
 void ModEngine::reset()
 {
     for (auto& m : mods)
+    {
         m.phase = 0.0f;
+        m.adsr.reset();
+    }
     prevTouched.clear();
     touchedNow.clear();
+    prevGate = false;
 }
 
 float ModEngine::evalLfo (int shape, float phase)
@@ -74,15 +80,23 @@ void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
     for (int i = 0; i < numModulators; ++i)
     {
         mods[(size_t) i].target   = apvts.getRawParameterValue (targetId (i));
+        mods[(size_t) i].type     = apvts.getRawParameterValue (typeId (i));
         mods[(size_t) i].shape    = apvts.getRawParameterValue (shapeId (i));
         mods[(size_t) i].rate     = apvts.getRawParameterValue (rateId (i));
         mods[(size_t) i].sync     = apvts.getRawParameterValue (syncId (i));
         mods[(size_t) i].syncRate = apvts.getRawParameterValue (syncRateId (i));
         mods[(size_t) i].depth    = apvts.getRawParameterValue (depthId (i));
+        mods[(size_t) i].attack   = apvts.getRawParameterValue (attackId (i));
+        mods[(size_t) i].decay    = apvts.getRawParameterValue (decayId (i));
+        mods[(size_t) i].sustain  = apvts.getRawParameterValue (sustainId (i));
+        mods[(size_t) i].release  = apvts.getRawParameterValue (releaseId (i));
+        mods[(size_t) i].amount   = apvts.getRawParameterValue (amountId (i));
+        mods[(size_t) i].polarity = apvts.getRawParameterValue (polarityId (i));
     }
 }
 
-void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool isPlaying)
+void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool isPlaying,
+                         bool gate, bool noteOnThisBlock)
 {
     if (targetParams.empty())
         return;
@@ -100,25 +114,59 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
         if (idx <= 0 || idx >= (int) targetParams.size() || targetParams[(size_t) idx] == nullptr)
             continue;
 
-        const int   shape  = (int) m.shape->load();
-        const bool  synced = m.sync->load() > 0.5f;
-        const float depth  = m.depth->load();
+        const int type = (int) m.type->load();
 
-        float freq;
-        if (synced)
-            freq = (float) (bpm / 60.0) / juce::jmax (1.0e-4f, syncRateBeats ((int) m.syncRate->load()));
-        else
-            freq = juce::jmax (0.0f, m.rate->load());
+        float val;
+        if (type == typeAdsr)
+        {
+            juce::ADSR::Parameters p;
+            p.attack  = juce::jmax (0.0f, m.attack->load());
+            p.decay   = juce::jmax (0.0f, m.decay->load());
+            p.sustain = juce::jlimit (0.0f, 1.0f, m.sustain->load());
+            p.release = juce::jmax (0.0f, m.release->load());
+            m.adsr.setParameters (p);
 
-        if (synced && isPlaying)
-            m.phase = (float) std::fmod (ppqPosition / syncRateBeats ((int) m.syncRate->load()), 1.0);
+            // Edge-triggered gating, shared across all ADSR modulators.
+            if (noteOnThisBlock && gate)
+                m.adsr.noteOn();
+            else if (prevGate && ! gate)
+                m.adsr.noteOff();
+
+            float env = 0.0f;
+            for (int s = 0; s < numSamples; ++s)
+                env = m.adsr.getNextSample();   // block-rate: use the level at block end
+
+            const float amount   = juce::jlimit (0.0f, 1.0f, m.amount->load());
+            const bool  positive = m.polarity->load() > 0.5f;
+            const float base01   = targetParams[(size_t) idx]->getValue();
+
+            // Offset relative to the knob value so it sums with other modulators.
+            // Polarity -: knob -> min as env falls; +: knob -> max as env falls.
+            val = positive ?  amount * (1.0f - base01) * (1.0f - env)
+                           : -amount * base01          * (1.0f - env);
+        }
         else
         {
-            m.phase += freq * blockSeconds;
-            m.phase -= std::floor (m.phase);
-        }
+            const int   shape  = (int) m.shape->load();
+            const bool  synced = m.sync->load() > 0.5f;
+            const float depth  = m.depth->load();
 
-        const float val = depth * evalLfo (shape, m.phase);
+            float freq;
+            if (synced)
+                freq = (float) (bpm / 60.0) / juce::jmax (1.0e-4f, syncRateBeats ((int) m.syncRate->load()));
+            else
+                freq = juce::jmax (0.0f, m.rate->load());
+
+            if (synced && isPlaying)
+                m.phase = (float) std::fmod (ppqPosition / syncRateBeats ((int) m.syncRate->load()), 1.0);
+            else
+            {
+                m.phase += freq * blockSeconds;
+                m.phase -= std::floor (m.phase);
+            }
+
+            val = depth * evalLfo (shape, m.phase);
+        }
 
         auto found = std::find (touchedNow.begin(), touchedNow.end(), idx);
         if (found == touchedNow.end())
@@ -153,6 +201,7 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
         applyTarget (idx, offset[(size_t) idx]);
 
     prevTouched = touchedNow;
+    prevGate    = gate;
 }
 
 void ModEngine::addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
@@ -160,13 +209,31 @@ void ModEngine::addParameters (std::vector<std::unique_ptr<juce::RangedAudioPara
 {
     for (int i = 0; i < numModulators; ++i)
     {
-        params.push_back (std::make_unique<juce::AudioParameterChoice> (targetId (i), "Mod " + juce::String (i) + " Target", targetChoices, 0));
-        params.push_back (std::make_unique<juce::AudioParameterChoice> (shapeId (i), "Mod " + juce::String (i) + " Shape", shapeChoices(), 0));
-        params.push_back (std::make_unique<juce::AudioParameterFloat>  (rateId (i),  "Mod " + juce::String (i) + " Rate",
+        const juce::String pfx = "Mod " + juce::String (i) + " ";
+
+        params.push_back (std::make_unique<juce::AudioParameterChoice> (targetId (i), pfx + "Target", targetChoices, 0));
+        params.push_back (std::make_unique<juce::AudioParameterChoice> (typeId (i),   pfx + "Type", typeChoices(), 0));
+
+        // LFO controls.
+        params.push_back (std::make_unique<juce::AudioParameterChoice> (shapeId (i), pfx + "Shape", shapeChoices(), 0));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (rateId (i),  pfx + "Rate",
             juce::NormalisableRange<float> (0.01f, 40.0f, 1e-3f, 0.3f), 1.0f));
-        params.push_back (std::make_unique<juce::AudioParameterBool>   (syncId (i),  "Mod " + juce::String (i) + " Sync", false));
-        params.push_back (std::make_unique<juce::AudioParameterChoice> (syncRateId (i), "Mod " + juce::String (i) + " Sync Rate", syncRateChoices(), 2));
-        params.push_back (std::make_unique<juce::AudioParameterFloat>  (depthId (i), "Mod " + juce::String (i) + " Depth",
+        params.push_back (std::make_unique<juce::AudioParameterBool>   (syncId (i),  pfx + "Sync", false));
+        params.push_back (std::make_unique<juce::AudioParameterChoice> (syncRateId (i), pfx + "Sync Rate", syncRateChoices(), 2));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (depthId (i), pfx + "Depth",
             juce::NormalisableRange<float> (-1.0f, 1.0f, 1e-3f), 0.0f));
+
+        // ADSR controls.
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (attackId (i),  pfx + "Attack",
+            juce::NormalisableRange<float> (0.0f, 10.0f, 1e-3f, 0.3f), 0.01f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (decayId (i),   pfx + "Decay",
+            juce::NormalisableRange<float> (0.0f, 10.0f, 1e-3f, 0.3f), 0.1f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (sustainId (i), pfx + "Sustain",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 0.8f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (releaseId (i), pfx + "Release",
+            juce::NormalisableRange<float> (0.0f, 10.0f, 1e-3f, 0.3f), 0.2f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat>  (amountId (i),  pfx + "Amount",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 1.0f));
+        params.push_back (std::make_unique<juce::AudioParameterChoice> (polarityId (i), pfx + "Polarity", polarityChoices(), 0));
     }
 }

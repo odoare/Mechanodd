@@ -45,6 +45,10 @@ protected:
     virtual float modeFrequency (int m, int n, float fundamental, float aspectRatio) const = 0;
     // Mode shape value at normalised position (x, y) in [0,1]^2. Default: rectangular.
     virtual float modeShape (int m, int n, float x, float y) const;
+    // Per-mode level compensation for the band-pass bandwidth varying with zeta.
+    // Subclasses with dense mode spectra (membrane) override to boost more
+    // aggressively at low damping where mode interference reduces total RMS.
+    virtual float modeGainCompensation (float zeta) const noexcept;
 
     // Subclasses may add their own parameters; call these for the shared modal set.
     void addModalParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix);

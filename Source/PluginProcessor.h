@@ -73,6 +73,7 @@ private:
     juce::AudioBuffer<float> sendBus;       // stereo
 
     ModEngine modEngine;
+    int       heldNoteCount { 0 };   // held MIDI notes, drives the global ADSR gate
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanoscAudioProcessor)
 };

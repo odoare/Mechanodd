@@ -43,7 +43,7 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     modulationComponent = std::make_unique<ModulationComponent> (audioProcessor.apvts);
 
     tabs.addTab ("Effects",    juce::Colours::darkgrey, effectsTab.get(), false);
-    tabs.addTab ("LFO",        juce::Colours::darkgrey, modulationComponent.get(), false);
+    tabs.addTab ("Modulation", juce::Colours::darkgrey, modulationComponent.get(), false);
     addAndMakeVisible (tabs);
 
     setResizable (true, true);

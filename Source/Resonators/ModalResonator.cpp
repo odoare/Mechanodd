@@ -42,7 +42,9 @@ float ModalResonator::modeDamping (float freq, float fundamental) const
 // level roughly constant across the damping range. The clamp window must be
 // wide enough to cover the full dB-resonance parameter range (0..100 dB →
 // zeta 1e-1..1e-6), where the exact compensation spans 0.316x .. 100x.
-static inline float modeGainCompensation (float zeta) noexcept
+// Subclasses with dense mode spectra (membrane) override this for a stronger
+// curve.
+float ModalResonator::modeGainCompensation (float zeta) const noexcept
 {
     constexpr float zetaRef = 0.01f;
     const float g = std::sqrt (zetaRef / juce::jmax (zeta, 1.0e-7f));
