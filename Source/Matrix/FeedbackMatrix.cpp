@@ -50,8 +50,18 @@ void FeedbackMatrix::assignParameters (ParamSource& apvts)
     for (int r = 0; r < numRows; ++r)
     {
         for (int c = 0; c < numColumns; ++c)
-            gainParam[(size_t) r][(size_t) c] = isSelfCell (r, c) ? nullptr
-                                                                  : apvts.getRawParameterValue (gainId (r, c));
+        {
+            if (isSelfCell (r, c))
+            {
+                gainParam[(size_t) r][(size_t) c]    = nullptr;
+                gainParamObj[(size_t) r][(size_t) c] = nullptr;
+            }
+            else
+            {
+                gainParam[(size_t) r][(size_t) c]    = apvts.getRawParameterValue (gainId (r, c));
+                gainParamObj[(size_t) r][(size_t) c] = apvts.getApvts().getParameter (gainId (r, c));
+            }
+        }
 
         levelParam[(size_t) r] = apvts.getRawParameterValue (levelId (r));
         panParam[(size_t) r]   = apvts.getRawParameterValue (panId (r));
@@ -79,8 +89,20 @@ void FeedbackMatrix::checkParameters()
     {
         for (int c = 0; c < numColumns; ++c)
         {
-            auto* p = gainParam[(size_t) r][(size_t) c];
-            aim (gains[(size_t) r][(size_t) c], (p != nullptr) ? p->load() : 0.0f);
+            auto* atom = gainParam[(size_t) r][(size_t) c];
+            auto* prm  = gainParamObj[(size_t) r][(size_t) c];
+
+            float target = 0.0f;
+            if (atom != nullptr && prm != nullptr)
+            {
+                // base01 = knob position (unmodulated); mod01 = value after the engines'
+                // modulation. modulatedGain applies the offset to the linear gain with the
+                // sign locked, so modulation can't flip the cell's phase.
+                const float base01 = prm->getValue();
+                const float mod01  = prm->getNormalisableRange().convertTo0to1 (atom->load());
+                target = modulatedGain (base01, mod01);
+            }
+            aim (gains[(size_t) r][(size_t) c], target);
         }
 
         aim (level[(size_t) r], juce::Decibels::decibelsToGain (levelParam[(size_t) r]->load(), -60.0f));
@@ -219,9 +241,35 @@ void FeedbackMatrix::addParameters (std::vector<std::unique_ptr<juce::RangedAudi
             if (isSelfCell (r, c))
                 continue;
 
+            // Bipolar, centre-mute gain: v in [-1, 1], 0 = mute, sign = phase, magnitude
+            // is linear-in-dB (see gainFromParam). Readout shows dB and a phase mark.
+            const auto gainAttrs = juce::AudioParameterFloatAttributes()
+                .withStringFromValueFunction ([] (float v, int)
+                {
+                    if (std::abs (v) <= 1.0e-4f)
+                        return juce::String ("-inf dB");
+                    const float dB = gainMinDb + std::abs (v) * (gainMaxDb - gainMinDb);
+                    juce::String s (dB, 1);
+                    s << " dB";
+                    if (v < 0.0f)
+                        s << " " << juce::String::fromUTF8 ("\xC3\x98");   // phase-invert mark
+                    return s;
+                })
+                .withValueFromStringFunction ([] (const juce::String& t)
+                {
+                    if (t.containsIgnoreCase ("inf"))
+                        return 0.0f;
+                    // The leading '-' belongs to the dB figure (e.g. "-12 dB" is a quiet
+                    // in-phase gain); phase inversion is signalled only by the mark.
+                    const float dB  = t.getFloatValue();
+                    const float mag = juce::jlimit (0.0f, 1.0f, (dB - gainMinDb) / (gainMaxDb - gainMinDb));
+                    const bool  inv = t.contains (juce::String::fromUTF8 ("\xC3\x98"));
+                    return inv ? -mag : mag;
+                });
+
             params.push_back (std::make_unique<FloatParam> (
                 gainId (r, c), "Mtx " + juce::String (r) + "<-" + juce::String (c),
-                juce::NormalisableRange<float> (-2.0f, 2.0f, 1e-3f), 0.0f));
+                juce::NormalisableRange<float> (-1.0f, 1.0f, 1e-3f), 0.0f, gainAttrs));
         }
 
         params.push_back (std::make_unique<FloatParam> (levelId (r), "Res " + juce::String (r) + " Level",

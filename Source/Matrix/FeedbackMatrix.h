@@ -66,6 +66,41 @@ public:
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params);
 
+    // Routing-gain cells are a bipolar, centre-mute control: the stored value v in
+    // [-1, 1] maps to a linear-in-dB magnitude (|v| -> gainMinDb..gainMaxDb, with
+    // gainMinDb treated as -inf so the centre is a true zero) and v's sign sets the
+    // feedback polarity. Conversion lives here so the parameter readout and the DSP
+    // agree.
+    static constexpr float gainMinDb = -60.0f;   // centre (|v|->0): -inf / true mute
+    static constexpr float gainMaxDb =   6.0f;   // edges (|v|->1): full level (~2x)
+
+    static float gainFromParam (float v) noexcept
+    {
+        const float mag = std::abs (v);
+        const float dB  = gainMinDb + mag * (gainMaxDb - gainMinDb);
+        const float g   = juce::Decibels::decibelsToGain (dB, gainMinDb);   // 0 at the floor
+        return v < 0.0f ? -g : g;
+    }
+
+    // Full-scale linear gain (|v| = 1, i.e. gainMaxDb). Modulation is scaled against
+    // this so a full-depth modulator can swing the whole linear range.
+    static float gainMaxLinear() noexcept { return gainFromParam (1.0f); }
+
+    // Combine a gain cell's unmodulated knob (base01, normalised) with its modulated
+    // value (mod01, normalised) so that the modulation acts on the LINEAR gain and the
+    // phase (sign) stays locked to the knob: the magnitude is offset linearly and
+    // clamped at 0, so a modulator never drags the cell through the centre and flips
+    // its sign. With no modulation (mod01 == base01) this is exactly gainFromParam.
+    static float modulatedGain (float base01, float mod01) noexcept
+    {
+        const float baseV = base01 * 2.0f - 1.0f;                       // range is [-1, 1]
+        const float sign  = (baseV < 0.0f) ? -1.0f : 1.0f;
+        const float off   = (mod01 - base01) * gainMaxLinear();         // normalised -> linear
+        const float mag   = juce::jlimit (0.0f, gainMaxLinear(),
+                                          std::abs (gainFromParam (baseV)) + off);
+        return sign * mag;
+    }
+
     static bool isSelfCell (int row, int col) { return col == numSources + row; }
     static juce::String gainId  (int row, int col) { return "mtx_g_" + juce::String (row) + "_" + juce::String (col); }
     static juce::String levelId (int row) { return "mtx_level_" + juce::String (row); }
@@ -93,6 +128,9 @@ private:
     std::array<float, numResonators> prevResonatorOut {};
 
     std::array<std::array<std::atomic<float>*, numColumns>, numRows> gainParam {};
+    // The base (unmodulated) gain parameters: getValue() is unaffected by the engines'
+    // atomic overwrites, so it gives the knob's true position for sign + base magnitude.
+    std::array<std::array<juce::RangedAudioParameter*, numColumns>, numRows> gainParamObj {};
     std::array<std::atomic<float>*, numRows> levelParam {};
     std::array<std::atomic<float>*, numRows> panParam   {};
     std::array<std::atomic<float>*, numRows> sendParam  {};
