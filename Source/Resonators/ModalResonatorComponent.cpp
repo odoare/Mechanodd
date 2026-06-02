@@ -12,17 +12,6 @@
 ModalResonatorComponent::ModalResonatorComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), prefix (pfx)
 {
-    shapeLabel.setText ("Shape", juce::dontSendNotification);
-    shapeLabel.setJustificationType (juce::Justification::centredLeft);
-    addAndMakeVisible (shapeLabel);
-
-    if (auto* param = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (Resonator::makeId (prefix, "shape"))))
-        shapeBox.addItemList (param->choices, 1);
-    shapeBox.setLookAndFeel (&fxmeLookAndFeel);
-    addAndMakeVisible (shapeBox);
-    shapeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
-        apvts, Resonator::makeId (prefix, "shape"), shapeBox);
-
     addKnob (coarse,   Resonator::makeId (prefix, "coarse"),   "Coarse");
     addKnob (fine,     Resonator::makeId (prefix, "fine"),     "Fine");
     addKnob (aspect,   Resonator::makeId (prefix, "aspect"),   "Aspect");
@@ -40,7 +29,6 @@ ModalResonatorComponent::ModalResonatorComponent (juce::AudioProcessorValueTreeS
 
 ModalResonatorComponent::~ModalResonatorComponent()
 {
-    shapeBox.setLookAndFeel (nullptr);
     for (auto* k : knobs)
         if (k->slider != nullptr)
             k->slider->setLookAndFeel (nullptr);
@@ -61,10 +49,6 @@ void ModalResonatorComponent::addKnob (Knob& k, const juce::String& paramId, con
 void ModalResonatorComponent::resized()
 {
     auto area = getLocalBounds();
-
-    auto header = area.removeFromTop (22);
-    shapeLabel.setBounds (header.removeFromLeft (50));
-    shapeBox.setBounds (header.removeFromLeft (140));
 
     const int n = (int) knobs.size();
     const int w = juce::jmax (1, area.getWidth() / n);

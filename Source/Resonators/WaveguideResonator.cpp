@@ -46,16 +46,40 @@ void WaveguideResonator::updateGeometry()
     const float f  = juce::jlimit (minFrequency, (float) (spec.sampleRate * 0.45), getTunedFrequency());
     const float w0 = juce::MathConstants<float>::twoPi * f / (float) spec.sampleRate;
 
+    // Normalise the per-round-trip feedback to the played frequency. Gain: raise to
+    // (f_ref / f) so the per-second decay (T60) is pitch-independent - at low f there
+    // are fewer round trips per second, so each must lose more. Cutoff: scale by
+    // (f / f_ref) so it stays at a fixed harmonic ratio, keeping timbre consistent.
+    const float gExp   = referenceFrequency / f;
+    const float cRatio = f / referenceFrequency;
+    fbGainOnNorm    = std::pow (juce::jlimit (0.0f, 1.0f, fbGainOn),  gExp);
+    fbGainOffNorm   = std::pow (juce::jlimit (0.0f, 1.0f, fbGainOff), gExp);
+    fbCutoffOnNorm  = fbCutoffOn  * cRatio;
+    fbCutoffOffNorm = fbCutoffOff * cRatio;
+
     // (lpCoeff is recomputed per-sample in processSample from the gated cutoff.)
 
     // Dispersion all-pass coefficient (negative -> high partials less delayed -> stiffness).
-    apCoeff = -0.4f * juce::jlimit (0.0f, 1.0f, dispersion);
+    // Inharmonicity scales steeply with |apCoeff| (the per-section group delay goes like
+    // (1-a)/(1+a) near the fundamental), so we drive it hard; the clamp below is what
+    // keeps the loop in tune rather than a timid coefficient.
+    apCoeff = -0.85f * juce::jlimit (0.0f, 1.0f, dispersion);
 
-    // Compensate loop filter delay so the round trip stays at fs/f.
-    const float dispDelay = (float) numAllpass * allpassGroupDelay (apCoeff, w0);
-    const float lpDelay   = 1.0f;
     const float roundTrip = (float) spec.sampleRate / f;
 
+    // The chain's delay is compensated out of the rail length to keep the pitch; but on
+    // short round trips (high notes) it can exceed the whole loop and detune it. Cap the
+    // chain to a fraction of the round trip by clamping the coefficient to the largest
+    // magnitude that fits: from N*(1-a)/(1+a) <= maxDisp, a >= (1-r)/(1+r) with r = maxDisp/N.
+    const float maxDisp = 0.6f * roundTrip;
+    const float r       = maxDisp / (float) numAllpass;
+    const float aCap    = juce::jmin (0.0f, (1.0f - r) / (1.0f + r));
+    apCoeff = juce::jmax (apCoeff, aCap);
+
+    // The chain's *frequency dependence* (more delay low, less high) is what bends the
+    // partials; its delay at the fundamental is compensated out so the pitch stays put.
+    const float dispDelay = (float) numAllpass * allpassGroupDelay (apCoeff, w0);
+    const float lpDelay   = 1.0f;
     oneWayLength = juce::jmax (8.0f, 0.5f * (roundTrip - dispDelay - lpDelay));
 
     cInPos  = juce::jlimit (0.02f, 0.98f, inPos);
@@ -70,8 +94,8 @@ float WaveguideResonator::processSample (float input)
 
     // Crossfade feedback gain / cutoff between the note-off and note-on values.
     const float g           = advanceGate();
-    const float curFbGain   = fbGainOff   + g * (fbGainOn   - fbGainOff);
-    const float curFbCutoff = fbCutoffOff + g * (fbCutoffOn - fbCutoffOff);
+    const float curFbGain   = fbGainOffNorm   + g * (fbGainOnNorm   - fbGainOffNorm);
+    const float curFbCutoff = fbCutoffOffNorm + g * (fbCutoffOnNorm - fbCutoffOffNorm);
     if (! juce::approximatelyEqual (curFbCutoff, lastLpCutoff))
     {
         const float fc = juce::jlimit (50.0f, (float) (spec.sampleRate * 0.45), curFbCutoff);

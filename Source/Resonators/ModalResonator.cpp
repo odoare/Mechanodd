@@ -156,9 +156,6 @@ void ModalResonator::addModalParameters (std::vector<std::unique_ptr<juce::Range
 {
     using FloatParam = juce::AudioParameterFloat;
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
-        makeId (prefix, "shape"), prefix + " Shape", juce::StringArray { "Rectangular" }, 0));
-
     params.push_back (std::make_unique<FloatParam> (makeId (prefix, "aspect"), prefix + " Aspect",
         juce::NormalisableRange<float> (1.0f, 5.0f, 1e-2f), 1.0f));
 
@@ -188,7 +185,6 @@ void ModalResonator::addModalParameters (std::vector<std::unique_ptr<juce::Range
 
 void ModalResonator::assignModalParameters (ParamSource& apvts, const juce::String& prefix)
 {
-    pShape       = apvts.getRawParameterValue (makeId (prefix, "shape"));
     pAspect      = apvts.getRawParameterValue (makeId (prefix, "aspect"));
     pNumModes    = apvts.getRawParameterValue (makeId (prefix, "modes"));
     pResOn       = apvts.getRawParameterValue (makeId (prefix, "resOn"));
@@ -203,13 +199,12 @@ void ModalResonator::assignModalParameters (ParamSource& apvts, const juce::Stri
 
 bool ModalResonator::checkModalParameters()
 {
-    if (pShape == nullptr)
+    if (pAspect == nullptr)
         return false;
 
     // dB -> damping ratio: 0 dB = 1e-1 (heavy), 100 dB = 1e-6 (resonant).
     const auto dbToDamping = [] (float dB) { return 0.1f * std::pow (10.0f, -dB / 20.0f); };
 
-    const int   newShape    = (int) pShape->load();
     const float newAspect   = pAspect->load();
     const int   newNumModes = (int) pNumModes->load();
     const float newDamp0On  = dbToDamping (pResOn      ->load());
@@ -222,8 +217,7 @@ bool ModalResonator::checkModalParameters()
     const float newOutY = pOutY->load();
 
     const bool changed =
-           newShape    != shape
-        || newNumModes != numModes
+           newNumModes != numModes
         || ! juce::approximatelyEqual (newAspect,   aspect)
         || ! juce::approximatelyEqual (newDamp0On,  damp0On)
         || ! juce::approximatelyEqual (newDamp0Off, damp0Off)
@@ -234,7 +228,7 @@ bool ModalResonator::checkModalParameters()
         || ! juce::approximatelyEqual (newOutX, outX)
         || ! juce::approximatelyEqual (newOutY, outY);
 
-    shape = newShape; aspect = newAspect; numModes = newNumModes;
+    aspect = newAspect; numModes = newNumModes;
     damp0On = newDamp0On; damp0Off = newDamp0Off;
     damp1On = newDamp1On; damp1Off = newDamp1Off;
     inX = newInX; inY = newInY; outX = newOutX; outY = newOutY;

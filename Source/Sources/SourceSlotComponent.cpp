@@ -9,6 +9,7 @@
 #include "SourceSlotComponent.h"
 #include "SourceFactory.h"
 #include "SourceSlot.h"
+#include "WavetableOscSourceComponent.h"
 
 SourceSlotComponent::SourceSlotComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), slotPrefix (pfx)
@@ -56,12 +57,21 @@ void SourceSlotComponent::paint (juce::Graphics& g)
 
 void SourceSlotComponent::resized()
 {
-    auto area = getLocalBounds().reduced (6);
+    auto full = getLocalBounds().reduced (6);
+    auto area = full;
 
-    auto header = area.removeFromLeft (90);
-    slotLabel.setBounds (header.removeFromTop (20));
-    typeBox.setBounds (header.removeFromTop (24));
+    auto header = area.removeFromLeft (headerWidth);
+    slotLabel.setBounds (header.removeFromTop (labelHeight));
+    typeBox.setBounds (header.removeFromTop (typeBoxHeight));
 
+    // Most type components live to the right of the header column. The
+    // wavetable source stacks its Wave/Mode selectors under the type
+    // selector, so it gets the full slot and reserves the header corner.
     for (auto& comp : typeComponents)
-        comp->setBounds (area);
+    {
+        if (dynamic_cast<WavetableOscSourceComponent*> (comp.get()) != nullptr)
+            comp->setBounds (full);
+        else
+            comp->setBounds (area);
+    }
 }

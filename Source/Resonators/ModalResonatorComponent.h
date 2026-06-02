@@ -3,9 +3,9 @@
 
     ModalResonatorComponent.h
 
-    GUI shared by plate and membrane resonators (identical parameter set). A
-    shape selector plus the modal knobs; all controls bind to the APVTS by
-    prefixed id.
+    GUI shared by plate and membrane resonators (identical parameter set): the
+    modal knobs, all bound to the APVTS by prefixed id. The geometry/shape is now
+    chosen by the resonator type selector, so there is no per-resonator shape box.
 
   ==============================================================================
 */
@@ -33,10 +33,6 @@ private:
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String prefix;
-
-    juce::Label shapeLabel;
-    juce::ComboBox shapeBox;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> shapeAtt;
 
     Knob coarse, fine, aspect, modes, resOn, resOff, resSlopeOn, resSlopeOff, inX, inY, outX, outY, noteRel;
     std::array<Knob*, 13> knobs {

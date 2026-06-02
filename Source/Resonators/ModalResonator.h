@@ -76,7 +76,6 @@ private:
     // Parameters. Damping and damping-slope each have a note-on and note-off
     // value, crossfaded by the gate (curDamp0/curDamp1 are the current blend).
     int   numModes { 32 };
-    int   shape    { 0 };      // 0 = Rectangular (only option for now)
     float aspect   { 1.0f };   // b/a, in [1,5]
     float damp0On  { 1.0e-4f }, damp0Off { 1.0e-2f };   // constant damping ratio
     float damp1On  { 1.0e-4f }, damp1Off { 1.0e-3f };   // damping growth with frequency
@@ -86,7 +85,6 @@ private:
     float gateAtUpdate { -1.0f };   // gate value when damping was last recomputed
 
     std::atomic<float>* pNumModes    { nullptr };
-    std::atomic<float>* pShape       { nullptr };
     std::atomic<float>* pAspect      { nullptr };
     std::atomic<float>* pResOn       { nullptr };
     std::atomic<float>* pResOff      { nullptr };

@@ -35,6 +35,14 @@ private:
     float phase { 0.0f };
     bool  oneShotDone { false };
 
+    // Short anti-click window applied to the raw signal: ramped up at note start
+    // and (for one-shot) ramped down at the end of the cycle, so the source never
+    // steps to/from a non-zero table value and clicks the resonator. A no-op for
+    // ordinary attacks, since the ADSR already keeps the onset near zero.
+    bool  fadingOut  { false };
+    float declick    { 0.0f };   // 0..1 window gain
+    float declickInc { 1.0f };   // per-sample ramp step (set at note on)
+
     int   waveIndex { 0 };
     bool  loop { true };
     float tune { 0.0f };   // semitones

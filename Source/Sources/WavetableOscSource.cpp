@@ -12,8 +12,13 @@
 
 void WavetableOscSource::onNoteOn()
 {
-    phase = 0.0f;
+    phase       = 0.0f;
     oneShotDone = false;
+    fadingOut   = false;
+    declick     = 0.0f;
+
+    constexpr float declickSeconds = 0.001f;
+    declickInc = 1.0f / juce::jmax (1.0f, declickSeconds * (float) spec.sampleRate);
 }
 
 void WavetableOscSource::addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
@@ -74,15 +79,33 @@ void WavetableOscSource::renderSource (juce::AudioBuffer<float>& outBuffer, int 
             continue;
         }
 
-        out[startSample + i] = WavetableLibrary::read (table, phase);
+        float s = WavetableLibrary::read (table, phase);
+
+        // Anti-click window: ramp out to zero once a one-shot cycle ends,
+        // otherwise ramp in at note start. Avoids stepping the resonator.
+        if (fadingOut)
+        {
+            declick -= declickInc;
+            if (declick <= 0.0f)
+            {
+                declick     = 0.0f;
+                oneShotDone = true;
+            }
+        }
+        else if (declick < 1.0f)
+        {
+            declick = juce::jmin (1.0f, declick + declickInc);
+        }
+
+        out[startSample + i] = s * declick;
 
         phase += inc;
         if (phase >= 1.0f)
         {
-            if (loop)
-                phase -= std::floor (phase);
-            else
-                oneShotDone = true;
+            // Keep reading (wrapping) through the fade so the tail stays continuous.
+            phase -= std::floor (phase);
+            if (! loop)
+                fadingOut = true;
         }
     }
 }

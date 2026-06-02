@@ -39,6 +39,12 @@ private:
     static constexpr int   numAllpass = 8;
     static constexpr float minFrequency = 20.0f;
 
+    // The loop's feedback gain and low-pass act once per round trip, so their effect
+    // per second scales with the played frequency: without compensation high notes
+    // decay faster and darker. We normalise both against a reference pitch so sustain
+    // (T60) and timbre stay consistent across the range. The knobs read true at f_ref.
+    static constexpr float referenceFrequency = 261.626f;   // middle C
+
     void updateGeometry();
 
     using DelayLine = juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd>;
@@ -68,6 +74,14 @@ private:
     float fbGainOff   { 0.9f };
     float fbCutoffOn  { 8000.0f };
     float fbCutoffOff { 2000.0f };
+
+    // Pitch-normalised versions of the four feedback values above, recomputed from the
+    // played frequency in updateGeometry() and used by processSample().
+    float fbGainOnNorm    { 0.995f };
+    float fbGainOffNorm   { 0.9f };
+    float fbCutoffOnNorm  { 8000.0f };
+    float fbCutoffOffNorm { 2000.0f };
+
     float inPos       { 0.12f };
     float outPos      { 0.85f };
     float dispersion  { 0.0f };

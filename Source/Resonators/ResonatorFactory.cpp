@@ -45,12 +45,14 @@ const std::vector<ResonatorTypeInfo>& ResonatorFactory::types()
         { PlateResonator::typeName,
           []                                                              { return std::unique_ptr<Resonator> (new PlateResonator()); },
           [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
-                                                                          { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); } },
+                                                                          { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); },
+          "Rectangular plate" },
 
         { MembraneResonator::typeName,
           []                                                              { return std::unique_ptr<Resonator> (new MembraneResonator()); },
           [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
-                                                                          { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); } }
+                                                                          { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); },
+          "Rectangular membrane" }
     };
     return registry;
 }
@@ -59,7 +61,7 @@ juce::StringArray ResonatorFactory::typeChoices()
 {
     juce::StringArray choices;
     for (const auto& info : types())
-        choices.add (info.name);
+        choices.add (info.displayName.isNotEmpty() ? info.displayName : info.name);
     return choices;
 }
 

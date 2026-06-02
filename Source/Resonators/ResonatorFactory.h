@@ -18,9 +18,10 @@
 
 struct ResonatorTypeInfo
 {
-    juce::String name;
+    juce::String name;   // id-safe key: parameter prefixes and lookups use this
     std::function<std::unique_ptr<Resonator>()> createResonator;
     std::function<std::unique_ptr<juce::Component> (juce::AudioProcessorValueTreeState&, const juce::String&)> createComponent;
+    juce::String displayName;   // shown in the type selector; falls back to name if empty
 };
 
 namespace ResonatorFactory

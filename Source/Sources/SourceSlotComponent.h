@@ -19,6 +19,14 @@ public:
     SourceSlotComponent (juce::AudioProcessorValueTreeState& apvts, const juce::String& slotPrefix);
     ~SourceSlotComponent() override;
 
+    // Geometry of the top-left header (slot label + source-type selector).
+    // Shared so a type component that spans the full slot can reserve this
+    // corner and align its own controls directly under the type selector.
+    static constexpr int headerWidth    = 90;
+    static constexpr int labelHeight     = 20;
+    static constexpr int typeBoxHeight   = 24;
+    static constexpr int headerHeight    = labelHeight + typeBoxHeight;
+
     void paint (juce::Graphics&) override;
     void resized() override;
 
