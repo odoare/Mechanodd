@@ -55,7 +55,7 @@ target_include_directories(Mechanosc PRIVATE ${MECHANOSC_INCLUDE_DIRS})
 # ── Reused FxmeFX effects ─────────────────────────────────────────────────────
 # Compile each effect's DSP class and its component (not the standalone plugin
 # wrappers PluginProcessor/PluginEditor/PdMain) into Mechanosc.
-set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct)
+set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter)
 set(FXMEFX_ASSETS "")
 foreach(_fx IN LISTS FXMEFX_EFFECTS)
     set(_fxdir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/${_fx})

@@ -54,6 +54,18 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    // Per-column "entering signal" level (linear peak), refreshed every block for
+    // the matrix meters. Columns are the matrix feedback sources: source slots
+    // first, then resonator slots. The level is summed over all voices (taken from
+    // the voice-summed buffers), so it is a whole-synth aggregate, not per-voice.
+    // The GUI scales it by each cell's knob gain to show the post-gain contribution.
+    // Audio thread writes, GUI reads.
+    float getColumnLevelLinear (int col) const
+    {
+        return columnLevel[(size_t) juce::jlimit (0, FeedbackMatrix::numColumns - 1, col)]
+                   .load (std::memory_order_relaxed);
+    }
+
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
@@ -67,6 +79,9 @@ private:
     juce::AudioBuffer<float> columnSum;     // FeedbackMatrix::numColumns channels
     juce::AudioBuffer<float> globalOutA, globalOutB;  // ping-pong: numResonators channels
     bool useAasPrev { true };
+
+    std::array<std::atomic<float>, FeedbackMatrix::numColumns> columnLevel {};
+    std::array<float, FeedbackMatrix::numColumns> columnEnv {};   // meter peak-hold state (audio thread)
 
     // Effect chains: send bus and master.
     EffectChain busChain, masterChain;

@@ -162,6 +162,10 @@ void MechanoscAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     sendBus.clear();
     useAasPrev = true;
 
+    for (auto& l : columnLevel)
+        l.store (0.0f, std::memory_order_relaxed);
+    columnEnv.fill (0.0f);
+
     busChain.prepare (sampleRate, 2, samplesPerBlock);
     masterChain.prepare (sampleRate, 2, samplesPerBlock);
     busChain.assignParameters (apvts, "bus");
@@ -295,6 +299,36 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float* sendR = stereoBus ? sendBus.getWritePointer (1) : sendL;
 
         globalMatrix.processGlobal (colPtrs, globalResonators, outL, outR, sendL, sendR, gOutPtrs, numSamples);
+
+        // Per-column "entering signal" level for the matrix meters. Sources and
+        // per-voice resonators are summed in columnSum; global resonators are in
+        // this block's global output (curBuf).
+        //
+        // Peak-hold ballistics: jump to the block peak instantly, then release
+        // slowly, so brief transients (e.g. very short-attack sources) stay
+        // visible between the 30 Hz GUI frames instead of flashing for one block.
+        constexpr double meterReleaseSeconds = 0.6;
+        const double sr = getSampleRate();
+        const float relCoeff = sr > 0.0
+            ? (float) (1.0 - std::exp (-((double) numSamples / sr) / meterReleaseSeconds))
+            : 1.0f;
+
+        for (int c = 0; c < FeedbackMatrix::numColumns; ++c)
+        {
+            float mag;
+            if (c < FeedbackMatrix::numSources)
+                mag = columnSum.getMagnitude (c, 0, numSamples);
+            else
+            {
+                const int k = c - FeedbackMatrix::numSources;
+                mag = globalMatrix.isGlobal (k) ? curBuf.getMagnitude (k, 0, numSamples)
+                                                : columnSum.getMagnitude (FeedbackMatrix::numSources + k, 0, numSamples);
+            }
+
+            float& env = columnEnv[(size_t) c];
+            env = (mag > env) ? mag : env + relCoeff * (mag - env);
+            columnLevel[(size_t) c].store (env, std::memory_order_relaxed);
+        }
     }
 
     useAasPrev = ! useAasPrev;

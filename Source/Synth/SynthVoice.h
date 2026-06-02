@@ -24,7 +24,7 @@
 class SynthVoice : public juce::SynthesiserVoice
 {
 public:
-    static constexpr int numSourceSlots    = 3;
+    static constexpr int numSourceSlots    = 4;
     static constexpr int numResonatorSlots = ResonatorSlot::numSlots;
 
     static juce::String sourceSlotPrefix (int slot) { return "src" + juce::String (slot); }

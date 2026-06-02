@@ -34,7 +34,7 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
 
     freqSlider = std::make_unique<fxme::FxmeSlider> (
         apvts, ResonatorSlot::globalFreqParamId (slotPrefix), "Base Hz", juce::Colours::orange);
-    freqSlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    freqSlider->setSliderStyle (juce::Slider::LinearHorizontal);
     freqSlider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*freqSlider);
 
@@ -81,7 +81,7 @@ void ResonatorSlotComponent::resized()
     typeBox.setBounds (header.removeFromTop (24));
     globalButton.setBounds (header.removeFromTop (22));
     freqLabel.setBounds (header.removeFromTop (14));
-    freqSlider->setBounds (header.removeFromTop (44).reduced (2));
+    freqSlider->setBounds (header.removeFromTop (24).reduced (2));
 
     for (auto& comp : typeComponents)
         comp->setBounds (area);

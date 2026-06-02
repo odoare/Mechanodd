@@ -15,6 +15,16 @@
 #include "FeedbackMatrixComponent.h"
 #include "EffectChainComponent.h"
 #include "ModulationComponent.h"
+#include "Theme.h"
+
+// TabbedComponent that paints the shared StrinGO gradient behind every tab
+// instead of the default per-tab background fill.
+class GradientTabbedComponent : public juce::TabbedComponent
+{
+public:
+    GradientTabbedComponent() : juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop) {}
+    void paint (juce::Graphics& g) override { MechanoscTheme::paintBackground (g, getLocalBounds().toFloat()); }
+};
 
 class MechanoscAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
@@ -28,7 +38,7 @@ public:
 private:
     MechanoscAudioProcessor& audioProcessor;
 
-    juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
+    GradientTabbedComponent tabs;
 
     std::unique_ptr<juce::Component> sourcesTab;
     std::vector<std::unique_ptr<SourceSlotComponent>> sourceSlots;

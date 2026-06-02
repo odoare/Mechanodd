@@ -39,7 +39,7 @@
 class FeedbackMatrix
 {
 public:
-    static constexpr int numSources    = 3;                    // == SynthVoice::numSourceSlots
+    static constexpr int numSources    = 4;                    // == SynthVoice::numSourceSlots
     static constexpr int numResonators = ResonatorSlot::numSlots;
     static constexpr int numColumns    = numSources + numResonators;
     static constexpr int numRows        = numResonators;
