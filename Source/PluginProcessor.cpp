@@ -57,6 +57,23 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanoscAudioProcessor::cre
 
     ModEngine::addParameters (params, modTargets);
 
+    // Global output controls. Added after the modulation-target snapshot so they
+    // are not themselves modulation destinations.
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        outputVolumeId, "Output Volume",
+        juce::NormalisableRange<float> (-60.0f, 6.0f, 0.1f), 0.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("dB")
+            .withStringFromValueFunction ([] (float v, int) { return v <= -59.9f ? juce::String ("-inf") : juce::String (v, 1); })));
+
+    params.push_back (std::make_unique<juce::AudioParameterInt> (
+        numVoicesId, "Voices", 1, MechanoscAudioProcessor::numVoices, MechanoscAudioProcessor::numVoices));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        portamentoId, "Portamento",
+        juce::NormalisableRange<float> (0.0f, 2000.0f, 1.0f, 0.4f), 0.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("ms")
+            .withStringFromValueFunction ([] (float v, int) { return juce::String (juce::roundToInt (v)); })));
+
     return { params.begin(), params.end() };
 }
 
@@ -166,6 +183,16 @@ void MechanoscAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
         l.store (0.0f, std::memory_order_relaxed);
     columnEnv.fill (0.0f);
 
+    pOutputVolume = apvts.getRawParameterValue (outputVolumeId);
+    pNumVoices    = apvts.getRawParameterValue (numVoicesId);
+    outputGain.reset (sampleRate, 0.02);
+    outputGain.setCurrentAndTargetValue (
+        juce::Decibels::decibelsToGain (pOutputVolume != nullptr ? pOutputVolume->load() : 0.0f, -60.0f));
+    outEnv.fill (0.0f);
+    outHoldEnv.fill (0.0f);
+    for (auto& l : outLevel) l.store (-100.0f, std::memory_order_relaxed);
+    for (auto& l : outHold)  l.store (-100.0f, std::memory_order_relaxed);
+
     busChain.prepare (sampleRate, 2, samplesPerBlock);
     masterChain.prepare (sampleRate, 2, samplesPerBlock);
     busChain.assignParameters (apvts, "bus");
@@ -218,6 +245,9 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     const int numSamples = buffer.getNumSamples();
 
+    if (pNumVoices != nullptr)
+        synth.setMaxActiveVoices ((int) pNumVoices->load());
+
     // Capture the host's audio input before clearing the buffer, so the
     // "Input L/R" sources can read it. Missing channels stay silent.
     inputCapture.clear();
@@ -266,6 +296,7 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         if (auto* voice = dynamic_cast<SynthVoice*> (synth.getVoice (i)))
         {
             voice->updateModulation (numSamples);   // fill per-voice shadows before modules cache them
+            voice->updatePortamento (numSamples);    // glide pitch, retuning slots, before they re-read freq
             voice->checkParameters();
             voice->setSharedBuffers (&columnSum, &prevBuf, &sendBus);
             voice->setInputBuffer (&inputCapture);
@@ -340,6 +371,43 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     // Master effect chain on the full mix.
     masterChain.process (buffer);
+
+    // Output volume (smoothed) applied to the full mix.
+    outputGain.setTargetValue (
+        juce::Decibels::decibelsToGain (pOutputVolume != nullptr ? pOutputVolume->load() : 0.0f, -60.0f));
+    const int outChannels = buffer.getNumChannels();
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const float g = outputGain.getNextValue();
+        for (int ch = 0; ch < outChannels; ++ch)
+            buffer.getWritePointer (ch)[i] *= g;
+    }
+
+    // Post-gain stereo level for the output meter: fast peak (moving bar) and a
+    // slow peak-hold (trailing marker), stored in dB. Same peak-hold idea as the
+    // matrix meters: jump to the block peak, then release.
+    {
+        const double sr = getSampleRate();
+        const auto relCoeff = [sr, numSamples] (double seconds)
+        {
+            return sr > 0.0 ? (float) (1.0 - std::exp (-((double) numSamples / sr) / seconds)) : 1.0f;
+        };
+        const float relFast = relCoeff (0.15);
+        const float relHold = relCoeff (1.2);
+
+        for (int ch = 0; ch < 2; ++ch)
+        {
+            const float mag = ch < outChannels ? buffer.getMagnitude (ch, 0, numSamples) : 0.0f;
+
+            float& e = outEnv[(size_t) ch];
+            e = (mag > e) ? mag : e + relFast * (mag - e);
+            float& h = outHoldEnv[(size_t) ch];
+            h = (mag > h) ? mag : h + relHold * (mag - h);
+
+            outLevel[(size_t) ch].store (juce::Decibels::gainToDecibels (e, -100.0f), std::memory_order_relaxed);
+            outHold [(size_t) ch].store (juce::Decibels::gainToDecibels (h, -100.0f), std::memory_order_relaxed);
+        }
+    }
 }
 
 //==============================================================================

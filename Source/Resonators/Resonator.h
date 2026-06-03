@@ -91,5 +91,5 @@ private:
     std::atomic<float>* pGateRel { nullptr };
     float gateValue    { 1.0f };
     float gateTarget   { 1.0f };
-    float gateRelCoeff { 1.0f };
+    float gateRelCoeff { 1.0f };   // exponential note-off release coefficient
 };

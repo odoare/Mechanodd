@@ -60,13 +60,20 @@ private:
     // First-order all-pass dispersion chain.
     std::array<float, numAllpass> apState {};
     float apCoeff { 0.0f };
+    float targetApCoeff { 0.0f };
 
-    // Geometry (samples) and clamped positions.
+    // Geometry (samples) and clamped positions. oneWayLength and apCoeff are
+    // smoothed per-sample toward the targets set by updateGeometry(), so rapid
+    // tuning changes - knob / modulation sweeps, portamento - don't step the
+    // fractional delay reads or the dispersion coefficient and click. lenA/lenB
+    // (nut->input / input->bridge) are derived from the smoothed length each
+    // sample. snapGeometry forces an immediate jump (note start / prepare).
     float oneWayLength { 100.0f };
-    float lenA { 50.0f };   // nut->input
-    float lenB { 50.0f };   // input->bridge
+    float targetOneWayLength { 100.0f };
     float cInPos  { 0.12f };
     float cOutPos { 0.85f };
+    float geoSmoothCoeff { 1.0f };
+    bool  snapGeometry { true };
 
     // Parameters. Feedback gain and feedback cutoff each have a note-on and a
     // note-off value, crossfaded per-sample by the gate (see processSample).

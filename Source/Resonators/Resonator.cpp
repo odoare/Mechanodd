@@ -33,10 +33,14 @@ void Resonator::setBaseFrequency (float hz)
 
 void Resonator::noteOn()
 {
-    // Snap directly to the "on" tuning: the resonator must be in its sustaining
-    // state from sample 0 so the source's attack transient sees the intended
-    // damping. Morphing in over an attack ramp leaves the filters in the heavier
-    // "off" state during the transient, which absorbs most of the input energy.
+    // Snap straight to the "on" tuning. The note starts on a freshly reset (zero
+    // energy) loop / filter bank, so the parameter jump has no signal to act on -
+    // there is no click to smooth here. Snapping is also what keeps the level
+    // consistent: the source's attack transient is always injected into the loop
+    // at full feedback / resonance, regardless of how far the gate had released
+    // since the previous note. Ramping the gate up instead made the captured
+    // energy (hence the sustained level) depend on the gate's starting value, so
+    // a quick retrigger - gate still high - rang far louder than a fresh note.
     gateValue  = 1.0f;
     gateTarget = 1.0f;
 }
@@ -48,6 +52,8 @@ void Resonator::noteOff()
 
 float Resonator::advanceGate() noexcept
 {
+    // Only the release ramps (exponential, over the Note Rel time, doubling as
+    // the musical decay); note-on snaps in noteOn().
     gateValue += gateRelCoeff * (gateTarget - gateValue);
     return gateValue;
 }

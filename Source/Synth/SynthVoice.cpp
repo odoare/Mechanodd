@@ -31,6 +31,14 @@ void SynthVoice::prepare (const juce::dsp::ProcessSpec& spec)
 
     voiceMod.prepare (spec.sampleRate);
 
+    // ~2.5 ms exponential decay for the note-start output bridge (see header).
+    constexpr double declickTau = 0.0025;
+    declickCoeff = (float) std::exp (-1.0 / (declickTau * sampleRate));
+
+    // ~5 ms linear fade-out when a still-ringing voice is stolen (see header).
+    constexpr double stealFadeSeconds = 0.005;
+    stealFadeLen = juce::jmax (1, (int) (stealFadeSeconds * sampleRate));
+
     isPrepared = true;
 }
 
@@ -47,6 +55,9 @@ void SynthVoice::assignParameters (juce::AudioProcessorValueTreeState& apvts)
     for (int i = 0; i < numResonatorSlots; ++i)
         resonatorSlots[(size_t) i].assignParameters (src, ResonatorSlot::slotPrefix (i));
     matrix.assignParameters (src);
+
+    // Portamento is a shared (non-per-voice) parameter, read straight from the APVTS.
+    pPortamento = apvts.getRawParameterValue ("portamento");
 }
 
 void SynthVoice::updateModulation (int numSamples)
@@ -63,27 +74,100 @@ void SynthVoice::checkParameters()
     matrix.checkParameters();
 }
 
+void SynthVoice::pushFrequency (float hz)
+{
+    for (auto& slot : sourceSlots)
+        slot.setNoteFrequency (hz);
+    for (auto& slot : resonatorSlots)
+        slot.setVoiceFrequency (hz);
+}
+
 void SynthVoice::startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound*, int)
 {
-    const float freq = (float) juce::MidiMessage::getMidiNoteInHertz (midiNoteNumber);
+    // If this voice is still ringing (it was stolen), let the old content release
+    // over a short fade first, then begin the new note - otherwise resetting it now
+    // would cut the ring to ~0 in one sample (a click, worst on a large pitch jump).
+    // The steal's preceding stopNote() has already started the old gate releasing.
+    if (audible)
+    {
+        pendingStart      = true;
+        pendingNote       = midiNoteNumber;
+        pendingVelocity   = velocity;
+        stealFadeRemaining = stealFadeLen;
+        stealGain         = 1.0f;
+        return;
+    }
+
+    beginNote (midiNoteNumber, velocity);
+}
+
+void SynthVoice::beginNote (int midiNoteNumber, float velocity)
+{
+    targetFreq = (float) juce::MidiMessage::getMidiNoteInHertz (midiNoteNumber);
+
+    // Glide from the voice's previous note when portamento is engaged; otherwise
+    // (or on the voice's first note) snap to the new pitch.
+    const float portaMs = pPortamento != nullptr ? pPortamento->load() : 0.0f;
+    if (! hasPlayed || portaMs < 1.0f)
+        glideFreq = targetFreq;
+    hasPlayed = true;
+
+    pushFrequency (glideFreq);
+
+    // Bridge any residual output step from the resets below: continue from the last
+    // emitted sample and decay it out. After a steal-fade this is ~0 already.
+    declickL = lastOutL;
+    declickR = lastOutR;
 
     for (auto& slot : sourceSlots)
-    {
-        slot.setNoteFrequency (freq);
         slot.noteOn (velocity);
-    }
 
     for (auto& slot : resonatorSlots)
     {
-        slot.setVoiceFrequency (freq);
         slot.reset();
         slot.noteOn();
     }
     matrix.reset();
     voiceMod.noteOn();
 
+    // Retune the resonators to the new note now. checkParameters() for the block
+    // already ran (before renderNextBlock, where this note starts), so without
+    // this the resonators would render their first block at the previous note's
+    // tuning and only retune next block - a deferred geometry jump that clicks
+    // once they have rung up, and grows with the size of the pitch change.
+    for (auto& slot : resonatorSlots)
+        slot.checkParameters();
+
     sourcesPlaying = true;
     silentSamples  = 0;
+}
+
+void SynthVoice::updatePortamento (int numSamples)
+{
+    if (! isVoiceActive() || juce::approximatelyEqual (glideFreq, targetFreq))
+        return;
+
+    const float portaMs = pPortamento != nullptr ? pPortamento->load() : 0.0f;
+    if (portaMs < 1.0f)
+    {
+        glideFreq = targetFreq;
+    }
+    else
+    {
+        // One-pole approach in log-frequency (perceptually even glide).
+        const double tau = (double) portaMs * 0.001;
+        const double dt  = (double) numSamples / sampleRate;
+        const float  k   = (float) (1.0 - std::exp (-dt / tau));
+
+        const float lg = std::log (glideFreq);
+        const float lt = std::log (targetFreq);
+        glideFreq = std::exp (lg + k * (lt - lg));
+
+        if (std::abs (lt - std::log (glideFreq)) < 1.0e-4f)
+            glideFreq = targetFreq;
+    }
+
+    pushFrequency (glideFreq);
 }
 
 void SynthVoice::stopNote (float, bool allowTailOff)
@@ -101,13 +185,13 @@ void SynthVoice::stopNote (float, bool allowTailOff)
 void SynthVoice::pitchWheelMoved (int) {}
 void SynthVoice::controllerMoved (int, int) {}
 
-void SynthVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
+float SynthVoice::renderSegment (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples, bool fading)
 {
-    if (! isPrepared)
-        return;
+    if (numSamples <= 0)
+        return 0.0f;
 
-    // Offset host-input pointers to this sub-block; hand them to the slots so
-    // the Plugin Input sources read the right samples.
+    // Offset host-input pointers to this segment; hand them to the slots so the
+    // Plugin Input sources read the right samples.
     const float* inL = nullptr;
     const float* inR = nullptr;
     if (inputBuf != nullptr && inputBuf->getNumChannels() > 0)
@@ -155,26 +239,91 @@ void SynthVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
     float* vR = voiceOut.getWritePointer (1);
     matrix.processVoice (srcPtrs, resonatorSlots, globalPrevPtrs, vL, vR, sendL, sendR, colSumPtrs, numSamples);
 
-    // 3) Add to the shared output.
+    // 3) Mix into the shared output. When fading, scale the old content by the
+    //    descending steal ramp; otherwise add the decaying note-start bridge so
+    //    the per-voice output stays continuous across resets. Remember the last
+    //    emitted value to bridge from on the next note start.
     const int outChannels = outputBuffer.getNumChannels();
-    outputBuffer.addFrom (0, startSample, vL, numSamples);
-    if (outChannels > 1)
-        outputBuffer.addFrom (1, startSample, vR, numSamples);
+    float* oL = outputBuffer.getWritePointer (0) + startSample;
+    float* oR = outChannels > 1 ? outputBuffer.getWritePointer (1) + startSample : nullptr;
 
-    // 4) Tail handling: keep the voice alive while the resonators still ring.
+    const float gainStep = (stealFadeLen > 0) ? 1.0f / (float) stealFadeLen : 1.0f;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float l = vL[i];
+        float r = vR[i];
+
+        if (fading)
+        {
+            l *= stealGain;
+            r *= stealGain;
+            stealGain = juce::jmax (0.0f, stealGain - gainStep);
+        }
+        else
+        {
+            l += declickL;
+            r += declickR;
+            declickL *= declickCoeff;
+            declickR *= declickCoeff;
+        }
+
+        oL[i] += l;
+        if (oR != nullptr)
+            oR[i] += r;
+
+        lastOutL = l;
+        lastOutR = r;
+    }
+
+    return juce::jmax (voiceOut.getMagnitude (0, 0, numSamples),
+                       voiceOut.getMagnitude (1, 0, numSamples));
+}
+
+void SynthVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
+{
+    if (! isPrepared)
+        return;
+
+    int pos       = startSample;
+    int remaining = numSamples;
+    float peak    = 0.0f;
+
+    // Phase 1: fade out a stolen voice's still-ringing content, then begin the
+    // pending note once the fade completes (possibly mid-block).
+    if (pendingStart)
+    {
+        const int n = juce::jmin (remaining, stealFadeRemaining);
+        peak = juce::jmax (peak, renderSegment (outputBuffer, pos, n, true));
+        pos += n;
+        remaining -= n;
+        stealFadeRemaining -= n;
+
+        if (stealFadeRemaining <= 0)
+        {
+            beginNote (pendingNote, pendingVelocity);
+            pendingStart = false;
+        }
+    }
+
+    // Phase 2: render the live note for the rest of the block.
+    if (remaining > 0)
+        peak = juce::jmax (peak, renderSegment (outputBuffer, pos, remaining, false));
+
+    // Tail handling: keep the voice alive while sources / resonators still ring.
     bool sourcesActive = false;
     for (auto& slot : sourceSlots)
         sourcesActive = sourcesActive || slot.isActive();
     sourcesPlaying = sourcesActive;
 
-    const float peak = juce::jmax (voiceOut.getMagnitude (0, 0, numSamples),
-                                   voiceOut.getMagnitude (1, 0, numSamples));
+    audible = sourcesActive || peak > 1.0e-4f;
 
-    if (sourcesActive || peak > 1.0e-4f)
+    if (audible)
         silentSamples = 0;
     else
         silentSamples += numSamples;
 
-    if (! sourcesActive && silentSamples > (int) (0.2 * sampleRate))
+    // Never free the voice while a note is still pending its steal-fade.
+    if (! pendingStart && ! sourcesActive && silentSamples > (int) (0.2 * sampleRate))
         clearCurrentNote();
 }

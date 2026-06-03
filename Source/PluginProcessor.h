@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "SynthVoice.h"
 #include "SynthSound.h"
+#include "PolySynth.h"
 #include "ResonatorSlot.h"
 #include "FeedbackMatrix.h"
 #include "EffectChain.h"
@@ -66,10 +67,20 @@ public:
                    .load (std::memory_order_relaxed);
     }
 
+    // Post-master output level for the bottom-bar stereo meter, in dB. Two
+    // ballistics per channel: a fast peak (the moving bar) and a slow peak-hold
+    // (the trailing marker). Audio thread writes, GUI reads.
+    float getOutputLevelDb (int ch) const { return outLevel[(size_t) juce::jlimit (0, 1, ch)].load (std::memory_order_relaxed); }
+    float getOutputHoldDb  (int ch) const { return outHold [(size_t) juce::jlimit (0, 1, ch)].load (std::memory_order_relaxed); }
+
+    static constexpr const char* outputVolumeId = "outputVolume";
+    static constexpr const char* numVoicesId    = "numVoices";
+    static constexpr const char* portamentoId   = "portamento";
+
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    juce::Synthesiser synth;
+    PolySynth synth;
 
     // Global (not per-voice) resonators and their matrix role.
     std::array<ResonatorSlot, ResonatorSlot::numSlots> globalResonators;
@@ -82,6 +93,14 @@ private:
 
     std::array<std::atomic<float>, FeedbackMatrix::numColumns> columnLevel {};
     std::array<float, FeedbackMatrix::numColumns> columnEnv {};   // meter peak-hold state (audio thread)
+
+    // Output section.
+    std::atomic<float>* pOutputVolume { nullptr };
+    std::atomic<float>* pNumVoices    { nullptr };
+    juce::LinearSmoothedValue<float> outputGain { 1.0f };
+    std::array<std::atomic<float>, 2> outLevel {};   // dB, fast peak (GUI reads)
+    std::array<std::atomic<float>, 2> outHold  {};   // dB, slow peak-hold
+    std::array<float, 2> outEnv {}, outHoldEnv {};   // linear envelope state (audio thread)
 
     // Effect chains: send bus and master.
     EffectChain busChain, masterChain;

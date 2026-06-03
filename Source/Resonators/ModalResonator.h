@@ -41,30 +41,54 @@ protected:
     void prepareImpl (const juce::dsp::ProcessSpec& spec) override;
     void resetImpl() override;
 
-    // Eigenfrequency of mode (m, n) in Hz, given the fundamental and aspect ratio (b/a >= 1).
-    virtual float modeFrequency (int m, int n, float fundamental, float aspectRatio) const = 0;
-    // Mode shape value at normalised position (x, y) in [0,1]^2. Default: rectangular.
-    virtual float modeShape (int m, int n, float x, float y) const;
+    static constexpr int maxCandidates = 1024;
+
+    // One candidate mode: its frequency (Hz) and geometric amplitude, i.e. the
+    // mode-shape product phi_in * phi_out (damping-independent).
+    struct Candidate { float freq; float amp; };
+
+    // Build the candidate mode set into `out` (at most `maxOut`); return the
+    // count. The base selects the lowest `numModes` audible candidates from it,
+    // so subclasses may emit more (sorting/range filtering happens in the base).
+    // Default: the rectangular 2D set (plate/membrane). 1D subclasses override.
+    virtual int collectCandidates (float fundamental, Candidate* out, int maxOut) const;
+
+    // Rectangular 2D mode set helper, shared by plate/membrane: indexes modes by
+    // (m, n), uses modeFrequency + modeShape + the aspect / in-out positions.
+    int collect2DCandidates (float fundamental, Candidate* out, int maxOut) const;
+
+    // Eigenfrequency of mode (m, n) in Hz, given the fundamental and aspect ratio
+    // (b/a >= 1). Rectangular subclasses override; ignored by subclasses that
+    // override collectCandidates.
+    virtual float modeFrequency (int /*m*/, int /*n*/, float fundamental, float /*aspectRatio*/) const { return fundamental; }
+    // Mode shape value at normalised position (x, y) in [0,1]^2 (rectangular).
+    float modeShape (int m, int n, float x, float y) const;
     // Per-mode level compensation for the band-pass bandwidth varying with zeta.
     // Subclasses with dense mode spectra (membrane) override to boost more
     // aggressively at low damping where mode interference reduces total RMS.
     virtual float modeGainCompensation (float zeta) const noexcept;
 
-    // Subclasses may add their own parameters; call these for the shared modal set.
+    // Subclasses call these for the shared modal set (modes + resonance). The
+    // geometry parameters (aspect / positions) are added through the geometry
+    // hooks below so 1D subclasses can substitute their own.
     void addModalParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix);
     void assignModalParameters (ParamSource& apvts, const juce::String& prefix);
     // Returns true if anything affecting the mode set changed.
     bool checkModalParameters();
 
-private:
-    static constexpr int maxCandidates = 1024;
+    // Geometry parameter hooks. Default: the rectangular set (aspect + in/out X/Y).
+    // 1D subclasses override all three to swap in their own controls.
+    virtual void addGeometryParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix);
+    virtual void assignGeometryParameters (ParamSource& apvts, const juce::String& prefix);
+    virtual bool checkGeometryParameters();   // returns true if the geometry changed
 
+    int numModesValue() const noexcept { return numModes; }   // for subclass candidate bounds
+
+private:
     void recomputeModes();
     void updateDamping();      // cheap: re-tune only the Q of the active modes
     float modeDamping (float freq, float fundamental) const;
     void refreshCurrentDamping (float gate);
-
-    struct Candidate { float freq; int m; int n; };
 
     std::array<Biquad, maxModes> filters {};
     std::array<float,  maxModes> amp {};        // ampGeom[k] * gain compensation for current damping

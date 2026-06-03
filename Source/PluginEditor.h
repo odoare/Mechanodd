@@ -15,6 +15,7 @@
 #include "FeedbackMatrixComponent.h"
 #include "EffectChainComponent.h"
 #include "ModulationComponent.h"
+#include "BottomBarComponent.h"
 #include "Theme.h"
 
 // TabbedComponent that paints the shared StrinGO gradient behind every tab
@@ -53,6 +54,8 @@ private:
     std::unique_ptr<EffectChainComponent> masterChainComponent;
 
     std::unique_ptr<ModulationComponent> modulationComponent;
+
+    std::unique_ptr<BottomBarComponent> bottomBar;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanoscAudioProcessorEditor)
 };

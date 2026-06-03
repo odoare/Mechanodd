@@ -52,6 +52,9 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     tabs.addTab ("Modulation", MechanoscTheme::tabButton, modulationComponent.get(), false);
     addAndMakeVisible (tabs);
 
+    bottomBar = std::make_unique<BottomBarComponent> (audioProcessor);
+    addAndMakeVisible (*bottomBar);
+
     setResizable (true, true);
     setSize (1280, 600);
 }
@@ -65,7 +68,12 @@ void MechanoscAudioProcessorEditor::paint (juce::Graphics& g)
 
 void MechanoscAudioProcessorEditor::resized()
 {
-    tabs.setBounds (getLocalBounds());
+    auto area = getLocalBounds();
+
+    if (bottomBar != nullptr)
+        bottomBar->setBounds (area.removeFromBottom (84));
+
+    tabs.setBounds (area);
 
     if (sourcesTab != nullptr)
     {

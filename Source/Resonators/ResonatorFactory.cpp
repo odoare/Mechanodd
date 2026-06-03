@@ -12,8 +12,10 @@
 #include "WaveguideResonator.h"
 #include "PlateResonator.h"
 #include "MembraneResonator.h"
+#include "BeamStringResonator.h"
 #include "WaveguideComponent.h"
 #include "ModalResonatorComponent.h"
+#include "BeamStringComponent.h"
 
 namespace
 {
@@ -52,7 +54,13 @@ const std::vector<ResonatorTypeInfo>& ResonatorFactory::types()
           []                                                              { return std::unique_ptr<Resonator> (new MembraneResonator()); },
           [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
                                                                           { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); },
-          "Rectangular membrane" }
+          "Rectangular membrane" },
+
+        { BeamStringResonator::typeName,
+          []                                                              { return std::unique_ptr<Resonator> (new BeamStringResonator()); },
+          [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+                                                                          { return std::unique_ptr<juce::Component> (new BeamStringComponent (apvts, prefix)); },
+          BeamStringResonator::displayName }
     };
     return registry;
 }

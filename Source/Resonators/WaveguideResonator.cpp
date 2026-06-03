@@ -31,6 +31,12 @@ void WaveguideResonator::prepareImpl (const juce::dsp::ProcessSpec& s)
 
     lpState = 0.0f;
     apState.fill (0.0f);
+
+    // ~5 ms one-pole smoothing for the per-sample geometry glide.
+    constexpr float geoSmoothSeconds = 0.005f;
+    geoSmoothCoeff = 1.0f - std::exp (-1.0f / (geoSmoothSeconds * (float) s.sampleRate));
+
+    snapGeometry = true;
     updateGeometry();
 }
 
@@ -39,6 +45,9 @@ void WaveguideResonator::resetImpl()
     upA.reset(); upB.reset(); dnB.reset(); dnA.reset();
     lpState = 0.0f;
     apState.fill (0.0f);
+
+    // Next geometry update jumps straight to the new note's tuning (no glide).
+    snapGeometry = true;
 }
 
 void WaveguideResonator::updateGeometry()
@@ -63,7 +72,7 @@ void WaveguideResonator::updateGeometry()
     // Inharmonicity scales steeply with |apCoeff| (the per-section group delay goes like
     // (1-a)/(1+a) near the fundamental), so we drive it hard; the clamp below is what
     // keeps the loop in tune rather than a timid coefficient.
-    apCoeff = -0.85f * juce::jlimit (0.0f, 1.0f, dispersion);
+    float ap = -0.85f * juce::jlimit (0.0f, 1.0f, dispersion);
 
     const float roundTrip = (float) spec.sampleRate / f;
 
@@ -74,23 +83,39 @@ void WaveguideResonator::updateGeometry()
     const float maxDisp = 0.6f * roundTrip;
     const float r       = maxDisp / (float) numAllpass;
     const float aCap    = juce::jmin (0.0f, (1.0f - r) / (1.0f + r));
-    apCoeff = juce::jmax (apCoeff, aCap);
+    ap = juce::jmax (ap, aCap);
+    targetApCoeff = ap;
 
     // The chain's *frequency dependence* (more delay low, less high) is what bends the
     // partials; its delay at the fundamental is compensated out so the pitch stays put.
-    const float dispDelay = (float) numAllpass * allpassGroupDelay (apCoeff, w0);
+    const float dispDelay = (float) numAllpass * allpassGroupDelay (ap, w0);
     const float lpDelay   = 1.0f;
-    oneWayLength = juce::jmax (8.0f, 0.5f * (roundTrip - dispDelay - lpDelay));
+    targetOneWayLength = juce::jmax (8.0f, 0.5f * (roundTrip - dispDelay - lpDelay));
 
     cInPos  = juce::jlimit (0.02f, 0.98f, inPos);
     cOutPos = juce::jlimit (0.02f, 0.98f, outPos);
-    lenA = juce::jlimit (2.0f, oneWayLength - 2.0f, cInPos * oneWayLength);
-    lenB = juce::jmax (2.0f, oneWayLength - lenA);
+
+    // Note start / prepare: jump straight to the target so the new note is in tune
+    // from sample 0. Otherwise processSample glides there.
+    if (snapGeometry)
+    {
+        oneWayLength = targetOneWayLength;
+        apCoeff      = targetApCoeff;
+        snapGeometry = false;
+    }
 }
 
 float WaveguideResonator::processSample (float input)
 {
-    const float L = oneWayLength;
+    // Glide the pitch-determining length and the dispersion coefficient toward
+    // their targets so rapid tuning changes (sweeps, portamento) stay click-free;
+    // derive the rail split from the smoothed length.
+    oneWayLength += geoSmoothCoeff * (targetOneWayLength - oneWayLength);
+    apCoeff      += geoSmoothCoeff * (targetApCoeff - apCoeff);
+
+    const float L    = oneWayLength;
+    const float lenA = juce::jlimit (2.0f, L - 2.0f, cInPos * L);
+    const float lenB = juce::jmax (2.0f, L - lenA);
 
     // Crossfade feedback gain / cutoff between the note-off and note-on values.
     const float g           = advanceGate();
