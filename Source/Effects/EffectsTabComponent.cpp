@@ -79,8 +79,10 @@ void EffectsTabComponent::initSlot (int idx, const juce::String& chain, int pos)
     for (const auto& info : EffectFactory::types())
     {
         e->guiEffects.push_back (info.create());
-        auto comp = info.createComponent (*e->guiEffects.back(), apvts,
-                                          EffectSlot::perTypePrefix (slotPfx, info.name));
+        const juce::String perTypePfx = EffectSlot::perTypePrefix (slotPfx, info.name);
+        // Assign parameters so the GUI-side instance can poll for IR changes.
+        e->guiEffects.back()->assignParameters (apvts, perTypePfx);
+        auto comp = info.createComponent (*e->guiEffects.back(), apvts, perTypePfx);
         comp->setVisible (false);
         addChildComponent (*comp);
         e->typeComponents.push_back (std::move (comp));
