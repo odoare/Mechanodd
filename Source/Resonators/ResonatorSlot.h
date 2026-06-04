@@ -37,7 +37,7 @@ public:
     void prepare (const juce::dsp::ProcessSpec& spec);
     void assignParameters (ParamSource& apvts, const juce::String& slotPrefix);
     void checkParameters();
-    float processSample (float input) { return active()->processSample (input); }
+    float processSample (float input) { return active()->processSample (input) * levelGain.getNextValue(); }
     void reset();
 
     // Note gate forwarded to every type instance so the active one is correct
@@ -54,7 +54,12 @@ public:
     static juce::String typeParamId       (const juce::String& slotPrefix) { return slotPrefix + "_type"; }
     static juce::String globalParamId     (const juce::String& slotPrefix) { return slotPrefix + "_global"; }
     static juce::String globalFreqParamId (const juce::String& slotPrefix) { return slotPrefix + "_globalFreq"; }
+    static juce::String levelParamId      (const juce::String& slotPrefix) { return slotPrefix + "_level"; }
     static juce::String perTypePrefix     (const juce::String& slotPrefix, const juce::String& typeName) { return slotPrefix + "_" + typeName; }
+
+    // -60 dB is treated as -inf (a true mute), matching the level parameter's readout.
+    static constexpr float levelMinDb = -60.0f;
+    static constexpr float levelMaxDb =  12.0f;
 
 private:
     Resonator* active() { return resonators[(size_t) activeType].get(); }
@@ -65,6 +70,14 @@ private:
     std::atomic<float>* typeParam       { nullptr };
     std::atomic<float>* globalParam     { nullptr };
     std::atomic<float>* globalFreqParam { nullptr };
+    std::atomic<float>* levelParam      { nullptr };
+
+    // Per-slot output gain, applied to everything the resonator emits (both the
+    // mix and its feedback columns). Smoothed to avoid zipper on knob/modulation
+    // moves; the first check after prepare snaps, and reset() snaps too so a
+    // (re)started voice plays at the right level from sample 0.
+    juce::LinearSmoothedValue<float> levelGain { 1.0f };
+    bool  levelPrimed    { false };
 
     int   activeType     { 0 };
     bool  global         { false };

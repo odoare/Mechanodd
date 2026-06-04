@@ -38,6 +38,22 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
     freqSlider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*freqSlider);
 
+    levelLabel.setText ("Level", juce::dontSendNotification);
+    levelLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (levelLabel);
+
+    levelSlider = std::make_unique<fxme::FxmeSlider> (
+        apvts, ResonatorSlot::levelParamId (slotPrefix), "Level", juce::Colours::orange);
+    levelSlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    levelSlider->setLookAndFeel (&fxmeLookAndFeel);
+    addAndMakeVisible (*levelSlider);
+
+    levelMeter.setRange (ResonatorSlot::levelMinDb, ResonatorSlot::levelMaxDb);
+    levelMeter.stopTimer();        // driven by this component's timer instead
+    addAndMakeVisible (levelMeter);
+
+    startTimerHz (30);
+
     for (const auto& info : ResonatorFactory::types())
     {
         auto comp = info.createComponent (apvts, ResonatorSlot::perTypePrefix (slotPrefix, info.name));
@@ -55,6 +71,19 @@ ResonatorSlotComponent::~ResonatorSlotComponent()
     globalButton.setLookAndFeel (nullptr);
     if (freqSlider != nullptr)
         freqSlider->setLookAndFeel (nullptr);
+    if (levelSlider != nullptr)
+        levelSlider->setLookAndFeel (nullptr);
+}
+
+void ResonatorSlotComponent::timerCallback()
+{
+    if (! levelProvider)
+        return;
+
+    // setValue stores; the meter's own timer is stopped, so repaint here (as the
+    // matrix does) to actually refresh the bar.
+    levelMeter.setValue (juce::Decibels::gainToDecibels (levelProvider(), ResonatorSlot::levelMinDb));
+    levelMeter.repaint();
 }
 
 void ResonatorSlotComponent::updateActiveComponent()
@@ -82,6 +111,17 @@ void ResonatorSlotComponent::resized()
     globalButton.setBounds (header.removeFromTop (22));
     freqLabel.setBounds (header.removeFromTop (14));
     freqSlider->setBounds (header.removeFromTop (24).reduced (2));
+
+    // Right side: a narrow vertical output meter, then the Level knob. Size the
+    // knob column to the knob height so it renders as a full circle the same size
+    // as the type's own (height-limited) knobs, with its label below.
+    constexpr int labelH = 14;
+    levelMeter.setBounds (area.removeFromRight (10).reduced (1, 2));
+
+    const int knobSide = juce::jmax (1, area.getHeight() - labelH);
+    auto levelCol = area.removeFromRight (knobSide + 4);
+    levelLabel.setBounds (levelCol.removeFromBottom (labelH));
+    levelSlider->setBounds (levelCol.reduced (2));
 
     for (auto& comp : typeComponents)
         comp->setBounds (area);

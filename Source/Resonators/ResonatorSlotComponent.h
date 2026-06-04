@@ -14,8 +14,10 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "VuMeterComponent.h"
 
-class ResonatorSlotComponent : public juce::Component
+class ResonatorSlotComponent : public juce::Component,
+                                private juce::Timer
 {
 public:
     ResonatorSlotComponent (juce::AudioProcessorValueTreeState& apvts, const juce::String& slotPrefix);
@@ -24,8 +26,17 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    // Supplies this resonator's post-level output level (linear peak) for the
+    // vertical meter. Set by the editor from the processor's column-level data.
+    void setLevelProvider (std::function<float()> fn) { levelProvider = std::move (fn); }
+
+    // Tint the output meter with this slot's group colour (the knobs are tinted
+    // separately by MechanoscTheme::applyAccent, which doesn't touch the meter).
+    void setMeterColour (juce::Colour c) { levelMeter.setMeterColor (c); }
+
 private:
     void updateActiveComponent();
+    void timerCallback() override;
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String slotPrefix;
@@ -35,6 +46,12 @@ private:
     juce::ToggleButton globalButton { "Global" };
     juce::Label freqLabel;
     std::unique_ptr<fxme::FxmeSlider> freqSlider;
+
+    juce::Label levelLabel;
+    std::unique_ptr<fxme::FxmeSlider> levelSlider;
+
+    VuMeterComponent levelMeter;
+    std::function<float()> levelProvider;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeAtt;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>   globalAtt;
