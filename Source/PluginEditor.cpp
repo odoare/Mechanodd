@@ -28,6 +28,10 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     {
         auto slot = std::make_unique<ResonatorSlotComponent> (audioProcessor.apvts, ResonatorSlot::slotPrefix (i));
         MechanoscTheme::applyAccent (*slot, MechanoscTheme::resonatorColour (i));
+        slot->setMeterColour (MechanoscTheme::resonatorColour (i));
+        // This resonator's output is column (numSources + i) of the feedback matrix.
+        slot->setLevelProvider ([&p = audioProcessor, col = FeedbackMatrix::numSources + i]
+                                { return p.getColumnLevelLinear (col); });
         resonatorsTab->addAndMakeVisible (*slot);
         resonatorSlots.push_back (std::move (slot));
     }
@@ -35,11 +39,7 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     matrixComponent = std::make_unique<FeedbackMatrixComponent> (audioProcessor.apvts);
     matrixComponent->setColumnLevelProvider ([&p = audioProcessor] (int c) { return p.getColumnLevelLinear (c); });
 
-    effectsTab = std::make_unique<juce::Component>();
-    busChainComponent    = std::make_unique<EffectChainComponent> (audioProcessor.apvts, "bus",    "Send Bus");
-    masterChainComponent = std::make_unique<EffectChainComponent> (audioProcessor.apvts, "master", "Master");
-    effectsTab->addAndMakeVisible (*busChainComponent);
-    effectsTab->addAndMakeVisible (*masterChainComponent);
+    effectsTabComponent = std::make_unique<EffectsTabComponent> (audioProcessor.apvts);
 
     modulationComponent = std::make_unique<ModulationComponent> (audioProcessor.apvts);
     // The modulation page stays homogeneous; the matrix colours itself per row.
@@ -48,7 +48,7 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     tabs.addTab ("Sources",    MechanoscTheme::tabButton, sourcesTab.get(),          false);
     tabs.addTab ("Resonators", MechanoscTheme::tabButton, resonatorsTab.get(),       false);
     tabs.addTab ("Matrix",     MechanoscTheme::tabButton, matrixComponent.get(),     false);
-    tabs.addTab ("Effects",    MechanoscTheme::tabButton, effectsTab.get(),          false);
+    tabs.addTab ("Effects",    MechanoscTheme::tabButton, effectsTabComponent.get(), false);
     tabs.addTab ("Modulation", MechanoscTheme::tabButton, modulationComponent.get(), false);
     addAndMakeVisible (tabs);
 
@@ -91,11 +91,5 @@ void MechanoscAudioProcessorEditor::resized()
             slot->setBounds (area.removeFromTop (rowH).reduced (0, 3));
     }
 
-    if (effectsTab != nullptr)
-    {
-        auto area = effectsTab->getLocalBounds().reduced (8);
-        const int half = area.getHeight() / 2;
-        busChainComponent->setBounds (area.removeFromTop (half).reduced (0, 3));
-        masterChainComponent->setBounds (area.reduced (0, 3));
-    }
+    // EffectsTabComponent manages its own layout internally.
 }

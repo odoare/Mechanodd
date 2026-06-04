@@ -13,7 +13,7 @@
 #include "SourceSlotComponent.h"
 #include "ResonatorSlotComponent.h"
 #include "FeedbackMatrixComponent.h"
-#include "EffectChainComponent.h"
+#include "EffectsTabComponent.h"
 #include "ModulationComponent.h"
 #include "BottomBarComponent.h"
 #include "Theme.h"
@@ -49,9 +49,7 @@ private:
 
     std::unique_ptr<FeedbackMatrixComponent> matrixComponent;
 
-    std::unique_ptr<juce::Component> effectsTab;
-    std::unique_ptr<EffectChainComponent> busChainComponent;
-    std::unique_ptr<EffectChainComponent> masterChainComponent;
+    std::unique_ptr<EffectsTabComponent> effectsTabComponent;
 
     std::unique_ptr<ModulationComponent> modulationComponent;
 

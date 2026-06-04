@@ -23,6 +23,7 @@ juce_add_plugin(Mechanosc
     PLUGIN_MANUFACTURER_CODE    FXME
     PLUGIN_CODE                 MECO
     FORMATS                     VST3 Standalone
+    COPY_PLUGIN_AFTER_BUILD     TRUE
     PRODUCT_NAME                "Mechanosc"
     DESCRIPTION                 "FX-Mechanics modular physical-modelling synth"
     IS_SYNTH                    TRUE
@@ -55,7 +56,7 @@ target_include_directories(Mechanosc PRIVATE ${MECHANOSC_INCLUDE_DIRS})
 # ── Reused FxmeFX effects ─────────────────────────────────────────────────────
 # Compile each effect's DSP class and its component (not the standalone plugin
 # wrappers PluginProcessor/PluginEditor/PdMain) into Mechanosc.
-set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter)
+set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter Compressor Transient Cab ConvolReverb)
 set(FXMEFX_ASSETS "")
 foreach(_fx IN LISTS FXMEFX_EFFECTS)
     set(_fxdir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/${_fx})
@@ -64,15 +65,32 @@ foreach(_fx IN LISTS FXMEFX_EFFECTS)
     target_sources(Mechanosc PRIVATE ${_fxsrcs})
     target_include_directories(Mechanosc PRIVATE ${_fxdir})
 
-    # Collect any embedded image assets the effect components reference.
-    file(GLOB _fxassets ${_fxdir}/img/*.png ${_fxdir}/img/*.jpg ${_fxdir}/Assets/*.png)
+    # Collect image assets and IR WAV files (Cab uses IR/, ConvolReverb uses ir/).
+    file(GLOB _fxassets
+        ${_fxdir}/img/*.png ${_fxdir}/img/*.jpg ${_fxdir}/Assets/*.png
+        ${_fxdir}/IR/*.wav  ${_fxdir}/ir/*.wav)
     list(APPEND FXMEFX_ASSETS ${_fxassets})
 endforeach()
 
 if(FXMEFX_ASSETS)
     juce_add_binary_data(MechanoscBinaryData SOURCES ${FXMEFX_ASSETS})
+    # Embedded WAV byte arrays don't benefit from LTO and can exhaust RAM at
+    # compile time — disable both for the binary-data target only.
+    set_target_properties(MechanoscBinaryData PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION OFF)
+    target_compile_options(MechanoscBinaryData PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O0 -fno-lto>
+        $<$<CXX_COMPILER_ID:MSVC>:/Od>)
     target_link_libraries(Mechanosc PRIVATE MechanoscBinaryData)
 endif()
+
+# ── WDL convolution engine (required by Cab and ConvolReverb) ─────────────────
+set(_wdldir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/WDL/WDL)
+target_sources(Mechanosc PRIVATE
+    ${_wdldir}/convoengine.cpp
+    ${_wdldir}/fft.c
+    ${_wdldir}/resample.cpp
+)
 
 # FxmeJuceTools DSP helpers not exposed by the module umbrella header.
 set(FXME_DSP ${CMAKE_CURRENT_SOURCE_DIR}/../JUCE/usermodules/FxmeJuceTools/Dsp)
