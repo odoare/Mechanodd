@@ -48,13 +48,13 @@ const std::vector<ResonatorTypeInfo>& ResonatorFactory::types()
           []                                                              { return std::unique_ptr<Resonator> (new PlateResonator()); },
           [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
                                                                           { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); },
-          "Rectangular plate" },
+          "Plate rect." },
 
         { MembraneResonator::typeName,
           []                                                              { return std::unique_ptr<Resonator> (new MembraneResonator()); },
           [] (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
                                                                           { return std::unique_ptr<juce::Component> (new ModalResonatorComponent (apvts, prefix)); },
-          "Rectangular membrane" },
+          "Membrane rect." },
 
         { BeamStringResonator::typeName,
           []                                                              { return std::unique_ptr<Resonator> (new BeamStringResonator()); },

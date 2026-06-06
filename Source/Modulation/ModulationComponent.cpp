@@ -7,9 +7,21 @@
 */
 
 #include "ModulationComponent.h"
+#include "../Resonators/ResonatorFactory.h"
 
 namespace
 {
+    // Returns the APVTS slot prefix for a typed-slot group label, or "" for
+    // groups with no per-type parameter filtering (Matrix, None, etc.).
+    juce::String slotPrefixFromGroupLabel (const juce::String& label)
+    {
+        if (label.startsWith ("Bus FX "))    return "bus_fx"    + label.substring  (7).trim();
+        if (label.startsWith ("Master FX ")) return "master_fx" + label.substring (10).trim();
+        if (label.startsWith ("Resonator ")) return "res"       + label.substring (10).trim();
+        if (label.startsWith ("Source "))    return "src"       + label.substring  (7).trim();
+        return {};
+    }
+
     // Map a target parameter id onto a human-readable module group label.
     juce::String moduleLabelForId (const juce::String& id)
     {
@@ -30,6 +42,47 @@ namespace
 
         return id.upToFirstOccurrenceOf ("_", false, false);
     }
+}
+
+bool ModulationComponent::shouldShowParam (const juce::String& groupLabel,
+                                            const juce::String& paramId) const
+{
+    const auto slotPfx = slotPrefixFromGroupLabel (groupLabel);
+    if (slotPfx.isEmpty())
+        return true;    // Matrix / None / unknown group — show everything
+
+    // Global slot params (e.g. res0_globalFreq, res0_level) have no underscore
+    // in the segment that follows the slot prefix, so they are always relevant.
+    const auto afterPrefix = paramId.substring (slotPfx.length() + 1);
+    if (! afterPrefix.contains ("_"))
+        return true;
+
+    auto* typeParam = dynamic_cast<juce::AudioParameterChoice*> (
+        apvts.getParameter (slotPfx + "_type"));
+    if (typeParam == nullptr)
+        return true;
+
+    juce::String activeName;
+    if (slotPfx.startsWith ("res"))
+    {
+        // Resonator choices use display names ("Plate rect.") that differ from
+        // the internal type names ("Plate") used in parameter IDs.  Look up the
+        // canonical name via the factory index instead.
+        const int idx = typeParam->getIndex();
+        const auto& types = ResonatorFactory::types();
+        if (idx >= 0 && idx < (int) types.size())
+            activeName = types[(size_t) idx].name;
+    }
+    else
+    {
+        // Effects and sources: "Off" is index 0, choice names equal type names.
+        activeName = typeParam->getCurrentChoiceName();
+    }
+
+    if (activeName.isEmpty() || activeName == "Off")
+        return false;   // slot is Off or unrecognised — nothing to modulate
+
+    return paramId.startsWith (slotPfx + "_" + activeName + "_");
 }
 
 void ModulationComponent::buildTargetGroups()
@@ -58,7 +111,7 @@ void ModulationComponent::buildTargetGroups()
             targetGroups.push_back ({ moduleLabel, {} });
             it = std::prev (targetGroups.end());
         }
-        it->params.push_back ({ paramLabel, fi });
+        it->params.push_back ({ paramLabel, fi, id });
     }
 }
 
@@ -98,12 +151,15 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
             const int g = row.moduleBox.getSelectedId() - 1;
             if (g < 0 || g >= (int) targetGroups.size())
                 return;
-            // Repopulate the parameter box for the chosen module, select its first entry.
+            // Repopulate the parameter box for the chosen module, filtered to
+            // only the parameters that belong to the currently active effect type.
             row.updatingTarget = true;
             row.paramBox.clear (juce::dontSendNotification);
-            for (size_t pi = 0; pi < targetGroups[(size_t) g].params.size(); ++pi)
-                row.paramBox.addItem (targetGroups[(size_t) g].params[pi].first, (int) pi + 1);
-            row.paramBox.setSelectedId (1, juce::dontSendNotification);
+            const auto& grp = targetGroups[(size_t) g];
+            for (size_t pi = 0; pi < grp.params.size(); ++pi)
+                if (shouldShowParam (grp.label, grp.params[pi].paramId))
+                    row.paramBox.addItem (grp.params[pi].label, (int) pi + 1);
+            row.paramBox.setSelectedItemIndex (0, juce::dontSendNotification);
             row.updatingTarget = false;
             applyTargetFromBoxes (row);
         };
@@ -208,13 +264,19 @@ void ModulationComponent::syncTargetBoxesFromFlat (Row& row)
 
     for (size_t g = 0; g < targetGroups.size(); ++g)
         for (size_t pi = 0; pi < targetGroups[g].params.size(); ++pi)
-            if (targetGroups[g].params[pi].second == flat)
+            if (targetGroups[g].params[pi].flatIndex == flat)
             {
                 row.updatingTarget = true;
                 row.moduleBox.setSelectedId ((int) g + 1, juce::dontSendNotification);
                 row.paramBox.clear (juce::dontSendNotification);
-                for (size_t p = 0; p < targetGroups[g].params.size(); ++p)
-                    row.paramBox.addItem (targetGroups[g].params[p].first, (int) p + 1);
+                const auto& grp = targetGroups[g];
+                for (size_t p = 0; p < grp.params.size(); ++p)
+                {
+                    // Always show the currently-saved target even if the effect type
+                    // has since changed (so a stale preset target remains visible).
+                    if (shouldShowParam (grp.label, grp.params[p].paramId) || p == pi)
+                        row.paramBox.addItem (grp.params[p].label, (int) p + 1);
+                }
                 row.paramBox.setSelectedId ((int) pi + 1, juce::dontSendNotification);
                 row.updatingTarget = false;
                 return;
@@ -230,7 +292,7 @@ void ModulationComponent::applyTargetFromBoxes (Row& row)
     if (p < 0 || p >= (int) targetGroups[(size_t) g].params.size())
         return;
 
-    const int flat = targetGroups[(size_t) g].params[(size_t) p].second;
+    const int flat = targetGroups[(size_t) g].params[(size_t) p].flatIndex;
     if (row.targetAtt != nullptr)
         row.targetAtt->setValueAsCompleteGesture ((float) flat);
 }
@@ -262,9 +324,9 @@ void ModulationComponent::paint (juce::Graphics& g)
     auto header = getLocalBounds().reduced (8).removeFromTop (16);
     header.removeFromLeft (24);
     auto col = [&header] (int w) { return header.removeFromLeft (w); };
-    g.drawText ("Type",   col (70),  juce::Justification::centredLeft);
+    g.drawText ("Type",   col (105), juce::Justification::centredLeft);
     g.drawText ("Module", col (110), juce::Justification::centredLeft);
-    g.drawText ("Param",  col (150), juce::Justification::centredLeft);
+    g.drawText ("Param",  col (195), juce::Justification::centredLeft);
     g.drawText ("Settings", col (400), juce::Justification::centredLeft);
 }
 
@@ -285,9 +347,9 @@ void ModulationComponent::resized()
             continue;
 
         row.index.setBounds     (r.removeFromLeft (24));
-        row.typeBox.setBounds    (r.removeFromLeft (70).reduced (2, 0));
+        row.typeBox.setBounds    (r.removeFromLeft (105).reduced (2, 0));
         row.moduleBox.setBounds  (r.removeFromLeft (110).reduced (2, 0));
-        row.paramBox.setBounds   (r.removeFromLeft (150).reduced (2, 0));
+        row.paramBox.setBounds   (r.removeFromLeft (195).reduced (2, 0));
 
         // Variable cluster occupies the remaining width.
         auto cluster = r;

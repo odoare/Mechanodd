@@ -56,7 +56,7 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     addAndMakeVisible (*bottomBar);
 
     setResizable (true, true);
-    setSize (1280, 600);
+    setSize (1280, 700);
 }
 
 MechanoscAudioProcessorEditor::~MechanoscAudioProcessorEditor() = default;
@@ -71,7 +71,7 @@ void MechanoscAudioProcessorEditor::resized()
     auto area = getLocalBounds();
 
     if (bottomBar != nullptr)
-        bottomBar->setBounds (area.removeFromBottom (84));
+        bottomBar->setBounds (area.removeFromBottom (100));
 
     tabs.setBounds (area);
 

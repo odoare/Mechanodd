@@ -30,13 +30,22 @@ private:
     using ButtonAtt = juce::AudioProcessorValueTreeState::ButtonAttachment;
 
     // Two-level mapping of the flat target choice list (index 0 == "None").
+    struct ParamEntry
+    {
+        juce::String label;      // human-readable param name
+        int          flatIndex;  // index in the flat target choice list
+        juce::String paramId;    // APVTS parameter ID (used for effect-type filtering)
+    };
     struct ModuleGroup
     {
-        juce::String label;                                  // e.g. "Source 0", "Matrix"
-        std::vector<std::pair<juce::String, int>> params;    // (param label, flat target index)
+        juce::String            label;    // e.g. "Source 0", "Matrix", "Bus FX 0"
+        std::vector<ParamEntry> params;
     };
     std::vector<ModuleGroup> targetGroups;
     void buildTargetGroups();
+
+    // Returns false for effect-slot params whose effect type is not currently active.
+    bool shouldShowParam (const juce::String& groupLabel, const juce::String& paramId) const;
 
     struct Row
     {

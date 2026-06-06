@@ -14,6 +14,7 @@
 
 #include <JuceHeader.h>
 #include "Effect.h"
+#include "EffectFactory.h"
 
 class EffectsTabComponent : public juce::Component
 {
@@ -53,6 +54,7 @@ private:
     void refreshRightPanel();
 
     juce::Rectangle<int> rightBounds() const;
+    juce::Rectangle<int> centredBounds (const EffectTypeInfo& info) const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectsTabComponent)
 };

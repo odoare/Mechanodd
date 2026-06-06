@@ -29,7 +29,7 @@ namespace
 {
     // Builds a registry entry for effect class FX with component class FXComponent.
     template <class FX, class FXComponent>
-    EffectTypeInfo makeEntry (const juce::String& name)
+    EffectTypeInfo makeEntry (const juce::String& name, int preferredWidth, int preferredHeight)
     {
         return {
             name,
@@ -38,7 +38,9 @@ namespace
             {
                 auto& impl = static_cast<EffectAdapter<FX>&> (e).get();
                 return std::unique_ptr<juce::Component> (new FXComponent (impl, apvts, prefix));
-            }
+            },
+            preferredWidth,
+            preferredHeight
         };
     }
 
@@ -173,7 +175,7 @@ namespace
 
     // Factory entry for the two IR-backed effects whose adapters are hand-written.
     template <class Adapter, class FXComponent>
-    EffectTypeInfo makeIREntry (const juce::String& name)
+    EffectTypeInfo makeIREntry (const juce::String& name, int preferredWidth, int preferredHeight)
     {
         return {
             name,
@@ -182,7 +184,9 @@ namespace
             {
                 auto& impl = static_cast<Adapter&> (e).get();
                 return std::unique_ptr<juce::Component> (new FXComponent (impl, apvts, prefix));
-            }
+            },
+            preferredWidth,
+            preferredHeight
         };
     }
 }
@@ -190,14 +194,14 @@ namespace
 const std::vector<EffectTypeInfo>& EffectFactory::types()
 {
     static const std::vector<EffectTypeInfo> registry = {
-        makeEntry<StereoDelay,  StereoDelayComponent>  ("Delay"),
-        makeEntry<Tube,         TubeComponent>          ("Tube"),
-        makeEntry<Equalizer,    EqualizerComponent>     ("EQ"),
-        makeEntry<Oct,          OctComponent>           ("Oct"),
-        makeEntry<Compressor,   CompressorComponent>    ("Comp"),
-        makeEntry<Transient,    TransientComponent>     ("Transient"),
-        makeIREntry<CabAdapter,         CabComponent>         ("Cab"),
-        makeIREntry<ConvolReverbAdapter, ConvolReverbComponent> ("Reverb"),
+        makeEntry<StereoDelay,  StereoDelayComponent>  ("Delay",    600, 300),
+        makeEntry<Tube,         TubeComponent>          ("Tube",     640, 300),
+        makeEntry<Equalizer,    EqualizerComponent>     ("EQ",       600, 700),
+        makeEntry<Oct,          OctComponent>           ("Oct",      520, 320),
+        makeEntry<Compressor,   CompressorComponent>    ("Comp",     600, 300),
+        makeEntry<Transient,    TransientComponent>     ("Transient",480, 300),
+        makeIREntry<CabAdapter,          CabComponent>          ("Cab",    600, 400),
+        makeIREntry<ConvolReverbAdapter, ConvolReverbComponent>  ("Reverb", 600, 400),
     };
     return registry;
 }

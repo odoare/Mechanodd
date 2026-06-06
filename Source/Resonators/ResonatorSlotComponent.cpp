@@ -105,7 +105,7 @@ void ResonatorSlotComponent::resized()
 {
     auto area = getLocalBounds().reduced (6);
 
-    auto header = area.removeFromLeft (96);
+    auto header = area.removeFromLeft (115);
     slotLabel.setBounds (header.removeFromTop (18));
     typeBox.setBounds (header.removeFromTop (24));
     globalButton.setBounds (header.removeFromTop (22));

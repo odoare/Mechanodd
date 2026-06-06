@@ -8,6 +8,7 @@
 
 #include "BottomBarComponent.h"
 #include "Theme.h"
+#include <BinaryData.h>
 
 BottomBarComponent::BottomBarComponent (MechanoscAudioProcessor& processor)
     : audioProcessor (processor)
@@ -43,6 +44,55 @@ BottomBarComponent::BottomBarComponent (MechanoscAudioProcessor& processor)
     }
     meterLabelL.setText ("L", juce::dontSendNotification);
     meterLabelR.setText ("R", juce::dontSendNotification);
+
+    logoImage = juce::ImageCache::getFromMemory (BinaryData::logo686_png,
+                                                  BinaryData::logo686_pngSize);
+
+    // Preset buttons.
+    auto stylePresetButton = [this] (juce::TextButton& btn)
+    {
+        btn.setLookAndFeel (&fxmeLookAndFeel);
+        btn.setColour (juce::TextButton::buttonColourId,   juce::Colours::black.withAlpha (0.4f));
+        btn.setColour (juce::TextButton::textColourOffId,  MechanoscTheme::modulation.brighter (0.3f));
+        addAndMakeVisible (btn);
+    };
+    stylePresetButton (loadButton);
+    stylePresetButton (saveButton);
+
+    loadButton.setTooltip ("Load preset");
+    saveButton.setTooltip ("Save preset");
+
+    loadButton.onClick = [this]
+    {
+        fileChooser = std::make_unique<juce::FileChooser> (
+            "Load preset",
+            juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+            "*.xml");
+        fileChooser->launchAsync (
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this] (const juce::FileChooser& fc)
+            {
+                if (fc.getResults().isEmpty()) return;
+                if (auto xml = juce::XmlDocument::parse (fc.getResults()[0]))
+                    audioProcessor.apvts.replaceState (juce::ValueTree::fromXml (*xml));
+            });
+    };
+
+    saveButton.onClick = [this]
+    {
+        fileChooser = std::make_unique<juce::FileChooser> (
+            "Save preset",
+            juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+            "*.xml");
+        fileChooser->launchAsync (
+            juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles,
+            [this] (const juce::FileChooser& fc)
+            {
+                if (fc.getResults().isEmpty()) return;
+                fc.getResults()[0].withFileExtension ("xml")
+                    .replaceWithText (audioProcessor.apvts.state.toXmlString());
+            });
+    };
 }
 
 BottomBarComponent::~BottomBarComponent()
@@ -50,6 +100,8 @@ BottomBarComponent::~BottomBarComponent()
     for (auto* k : { &outputVolume, &voices, &portamento })
         if (k->slider != nullptr)
             k->slider->setLookAndFeel (nullptr);
+    loadButton.setLookAndFeel (nullptr);
+    saveButton.setLookAndFeel (nullptr);
 }
 
 void BottomBarComponent::addKnob (Knob& k, const juce::String& paramId, const juce::String& text)
@@ -73,12 +125,23 @@ void BottomBarComponent::paint (juce::Graphics& g)
     g.fillRoundedRectangle (b, 4.0f);
     g.setColour (juce::Colours::white.withAlpha (0.12f));
     g.drawRoundedRectangle (b, 4.0f, 1.0f);
+
+    if (logoImage.isValid() && ! logoRect.isEmpty())
+    {
+        g.setOpacity (0.85f);
+        g.drawImageWithin (logoImage,
+                           logoRect.getX(), logoRect.getY(),
+                           logoRect.getWidth(), logoRect.getHeight(),
+                           juce::RectanglePlacement::centred
+                               | juce::RectanglePlacement::onlyReduceInSize);
+        g.setOpacity (1.0f);
+    }
 }
 
 void BottomBarComponent::resized()
 {
     auto area = getLocalBounds().reduced (8, 6);
-    constexpr int knobW   = 72;
+    constexpr int knobW   = 88;
     constexpr int labelH  = 14;
 
     // Place a labelled knob (label under the knob) in a fixed-width column.
@@ -89,13 +152,33 @@ void BottomBarComponent::resized()
     };
 
     placeKnob (outputVolume, area.removeFromLeft (knobW));
+
+    // Preset L/S buttons: two small squares stacked vertically.
+    {
+        constexpr int btnSize = 30;
+        constexpr int gap     = 4;
+        auto col = area.removeFromLeft (btnSize + 8);
+        auto stack = col.withSizeKeepingCentre (btnSize, btnSize * 2 + gap);
+        loadButton.setBounds (stack.removeFromTop (btnSize));
+        stack.removeFromTop (gap);
+        saveButton.setBounds (stack.removeFromTop (btnSize));
+    }
+
+    // Logo on the far right.
+    if (logoImage.isValid())
+    {
+        const int h = area.getHeight();
+        const int w = h * logoImage.getWidth() / juce::jmax (1, logoImage.getHeight());
+        logoRect = area.removeFromRight (w + 6);
+    }
+
     placeKnob (portamento,   area.removeFromRight (knobW));
     placeKnob (voices,       area.removeFromRight (knobW));
 
     // Stereo meter fills the middle: two stacked horizontal bars with a small
     // L/R gutter on the left.
     auto meterArea = area.reduced (10, 4);
-    auto gutter = meterArea.removeFromLeft (16);
+    auto gutter = meterArea.removeFromLeft (24);
     const int half = meterArea.getHeight() / 2;
     auto top = meterArea.removeFromTop (half).reduced (0, 1);
     auto bot = meterArea.reduced (0, 1);

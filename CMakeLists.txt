@@ -72,6 +72,11 @@ foreach(_fx IN LISTS FXMEFX_EFFECTS)
     list(APPEND FXMEFX_ASSETS ${_fxassets})
 endforeach()
 
+# Add Mechanosc's own image assets.
+file(GLOB MECHANOSC_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.png
+                            ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg)
+list(APPEND FXMEFX_ASSETS ${MECHANOSC_ASSETS})
+
 if(FXMEFX_ASSETS)
     juce_add_binary_data(MechanoscBinaryData SOURCES ${FXMEFX_ASSETS})
     # Embedded WAV byte arrays don't benefit from LTO and can exhaust RAM at

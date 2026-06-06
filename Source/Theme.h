@@ -69,13 +69,20 @@ namespace MechanoscTheme
         c.setColour (juce::ComboBox::arrowColourId,   accent.brighter (0.3f));
     }
 
-    // Tint every slider / combo box in a component subtree.
+    inline void accentToggleButton (juce::ToggleButton& b, juce::Colour accent)
+    {
+        b.setColour (juce::ToggleButton::tickColourId,         accent);
+        b.setColour (juce::ToggleButton::tickDisabledColourId, accent.withAlpha (0.4f));
+    }
+
+    // Tint every slider / combo box / toggle button in a component subtree.
     inline void applyAccent (juce::Component& root, juce::Colour accent)
     {
         for (auto* child : root.getChildren())
         {
-            if (auto* s = dynamic_cast<juce::Slider*> (child))        accentSlider (*s, accent);
-            else if (auto* c = dynamic_cast<juce::ComboBox*> (child)) accentComboBox (*c, accent);
+            if      (auto* s = dynamic_cast<juce::Slider*>        (child)) accentSlider (*s, accent);
+            else if (auto* c = dynamic_cast<juce::ComboBox*>       (child)) accentComboBox (*c, accent);
+            else if (auto* b = dynamic_cast<juce::ToggleButton*>   (child)) accentToggleButton (*b, accent);
 
             applyAccent (*child, accent);
         }

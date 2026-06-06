@@ -127,7 +127,7 @@ void EffectsTabComponent::refreshRightPanel()
     {
         placeholderLabel.setVisible (false);
         auto* comp = e.typeComponents[(size_t) ti].get();
-        comp->setBounds (rightBounds());
+        comp->setBounds (centredBounds (EffectFactory::types()[(size_t) ti]));
         comp->setVisible (true);
     }
     else
@@ -142,6 +142,16 @@ void EffectsTabComponent::refreshRightPanel()
 juce::Rectangle<int> EffectsTabComponent::rightBounds() const
 {
     return getLocalBounds().reduced (kPad).withTrimmedLeft (kLeftW);
+}
+
+juce::Rectangle<int> EffectsTabComponent::centredBounds (const EffectTypeInfo& info) const
+{
+    const auto rb = rightBounds();
+    const int w = juce::jmin (info.preferredWidth,  rb.getWidth());
+    const int h = juce::jmin (info.preferredHeight, rb.getHeight());
+    return { rb.getX() + (rb.getWidth()  - w) / 2,
+             rb.getY() + (rb.getHeight() - h) / 2,
+             w, h };
 }
 
 // ── painting ──────────────────────────────────────────────────────────────────
@@ -195,6 +205,7 @@ void EffectsTabComponent::resized()
         auto& e  = *slots[(size_t) activeSlot];
         const int ti = e.typeBox.getSelectedItemIndex() - 1;
         if (ti >= 0 && ti < (int) e.typeComponents.size())
-            e.typeComponents[(size_t) ti]->setBounds (rightBounds());
+            e.typeComponents[(size_t) ti]->setBounds (
+                centredBounds (EffectFactory::types()[(size_t) ti]));
     }
 }
