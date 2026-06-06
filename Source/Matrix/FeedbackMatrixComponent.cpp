@@ -34,13 +34,13 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
         sendKnobs[(size_t) r]  = makeKnob (FeedbackMatrix::sendId (r));
 
         // Each row feeds resonator r, so tint the whole row in its colour.
-        const auto rc = MechanoscTheme::resonatorColour (r);
+        const auto rc = MechanOddTheme::resonatorColour (r);
         for (int c = 0; c < cols; ++c)
             if (gainKnobs[(size_t) r][(size_t) c] != nullptr)
-                MechanoscTheme::accentSlider (*gainKnobs[(size_t) r][(size_t) c], rc);
-        MechanoscTheme::accentSlider (*levelKnobs[(size_t) r], rc);
-        MechanoscTheme::accentSlider (*panKnobs[(size_t) r],   rc);
-        MechanoscTheme::accentSlider (*sendKnobs[(size_t) r],  rc);
+                MechanOddTheme::accentSlider (*gainKnobs[(size_t) r][(size_t) c], rc);
+        MechanOddTheme::accentSlider (*levelKnobs[(size_t) r], rc);
+        MechanOddTheme::accentSlider (*panKnobs[(size_t) r],   rc);
+        MechanOddTheme::accentSlider (*sendKnobs[(size_t) r],  rc);
 
         auto makeMeter = [this] (juce::Colour colour)
         {
@@ -58,8 +58,8 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
         for (int c = 0; c < cols; ++c)
             if (gainKnobs[(size_t) r][(size_t) c] != nullptr)
                 meters[(size_t) r][(size_t) c] = makeMeter (
-                    (c < FeedbackMatrix::numSources) ? MechanoscTheme::sourceColour (c)
-                                                     : MechanoscTheme::resonatorColour (c - FeedbackMatrix::numSources));
+                    (c < FeedbackMatrix::numSources) ? MechanOddTheme::sourceColour (c)
+                                                     : MechanOddTheme::resonatorColour (c - FeedbackMatrix::numSources));
 
         // Level and send meters show this resonator's output (scaled by the knob),
         // coloured by the row.
@@ -111,9 +111,9 @@ void FeedbackMatrixComponent::paint (juce::Graphics& g)
     {
         juce::Colour hc = juce::Colours::white.withAlpha (0.7f);
         if (c < FeedbackMatrix::numSources)
-            hc = MechanoscTheme::sourceColour (c);
+            hc = MechanOddTheme::sourceColour (c);
         else if (c < cols)
-            hc = MechanoscTheme::resonatorColour (c - FeedbackMatrix::numSources);
+            hc = MechanOddTheme::resonatorColour (c - FeedbackMatrix::numSources);
 
         g.setColour (hc);
         g.drawText (colHeaders[c], gridX + c * cellW, area.getY(), cellW, colLabelH, juce::Justification::centred);
@@ -122,7 +122,7 @@ void FeedbackMatrixComponent::paint (juce::Graphics& g)
     // Row headers — each row's destination resonator colour.
     for (int r = 0; r < rows; ++r)
     {
-        g.setColour (MechanoscTheme::resonatorColour (r));
+        g.setColour (MechanOddTheme::resonatorColour (r));
         g.drawText (rowHeaders[r], area.getX(), gridY + r * cellH, rowLabelW, cellH, juce::Justification::centred);
     }
 

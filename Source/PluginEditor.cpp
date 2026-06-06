@@ -11,14 +11,14 @@
 #include "ResonatorSlot.h"
 #include "Theme.h"
 
-MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProcessor& p)
+MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     sourcesTab = std::make_unique<juce::Component>();
     for (int i = 0; i < SynthVoice::numSourceSlots; ++i)
     {
         auto slot = std::make_unique<SourceSlotComponent> (audioProcessor.apvts, SynthVoice::sourceSlotPrefix (i));
-        MechanoscTheme::applyAccent (*slot, MechanoscTheme::sourceColour (i));
+        MechanOddTheme::applyAccent (*slot, MechanOddTheme::sourceColour (i));
         sourcesTab->addAndMakeVisible (*slot);
         sourceSlots.push_back (std::move (slot));
     }
@@ -27,8 +27,8 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     for (int i = 0; i < ResonatorSlot::numSlots; ++i)
     {
         auto slot = std::make_unique<ResonatorSlotComponent> (audioProcessor.apvts, ResonatorSlot::slotPrefix (i));
-        MechanoscTheme::applyAccent (*slot, MechanoscTheme::resonatorColour (i));
-        slot->setMeterColour (MechanoscTheme::resonatorColour (i));
+        MechanOddTheme::applyAccent (*slot, MechanOddTheme::resonatorColour (i));
+        slot->setMeterColour (MechanOddTheme::resonatorColour (i));
         // This resonator's output is column (numSources + i) of the feedback matrix.
         slot->setLevelProvider ([&p = audioProcessor, col = FeedbackMatrix::numSources + i]
                                 { return p.getColumnLevelLinear (col); });
@@ -43,13 +43,13 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
 
     modulationComponent = std::make_unique<ModulationComponent> (audioProcessor.apvts);
     // The modulation page stays homogeneous; the matrix colours itself per row.
-    MechanoscTheme::applyAccent (*modulationComponent, MechanoscTheme::modulation);
+    MechanOddTheme::applyAccent (*modulationComponent, MechanOddTheme::modulation);
 
-    tabs.addTab ("Sources",    MechanoscTheme::tabButton, sourcesTab.get(),          false);
-    tabs.addTab ("Resonators", MechanoscTheme::tabButton, resonatorsTab.get(),       false);
-    tabs.addTab ("Matrix",     MechanoscTheme::tabButton, matrixComponent.get(),     false);
-    tabs.addTab ("Effects",    MechanoscTheme::tabButton, effectsTabComponent.get(), false);
-    tabs.addTab ("Modulation", MechanoscTheme::tabButton, modulationComponent.get(), false);
+    tabs.addTab ("Sources",    MechanOddTheme::tabButton, sourcesTab.get(),          false);
+    tabs.addTab ("Resonators", MechanOddTheme::tabButton, resonatorsTab.get(),       false);
+    tabs.addTab ("Matrix",     MechanOddTheme::tabButton, matrixComponent.get(),     false);
+    tabs.addTab ("Effects",    MechanOddTheme::tabButton, effectsTabComponent.get(), false);
+    tabs.addTab ("Modulation", MechanOddTheme::tabButton, modulationComponent.get(), false);
     addAndMakeVisible (tabs);
 
     bottomBar = std::make_unique<BottomBarComponent> (audioProcessor);
@@ -59,14 +59,14 @@ MechanoscAudioProcessorEditor::MechanoscAudioProcessorEditor (MechanoscAudioProc
     setSize (1280, 700);
 }
 
-MechanoscAudioProcessorEditor::~MechanoscAudioProcessorEditor() = default;
+MechanOddAudioProcessorEditor::~MechanOddAudioProcessorEditor() = default;
 
-void MechanoscAudioProcessorEditor::paint (juce::Graphics& g)
+void MechanOddAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    MechanoscTheme::paintBackground (g, getLocalBounds().toFloat());
+    MechanOddTheme::paintBackground (g, getLocalBounds().toFloat());
 }
 
-void MechanoscAudioProcessorEditor::resized()
+void MechanOddAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 

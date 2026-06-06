@@ -24,20 +24,20 @@ class GradientTabbedComponent : public juce::TabbedComponent
 {
 public:
     GradientTabbedComponent() : juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop) {}
-    void paint (juce::Graphics& g) override { MechanoscTheme::paintBackground (g, getLocalBounds().toFloat()); }
+    void paint (juce::Graphics& g) override { MechanOddTheme::paintBackground (g, getLocalBounds().toFloat()); }
 };
 
-class MechanoscAudioProcessorEditor  : public juce::AudioProcessorEditor
+class MechanOddAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    MechanoscAudioProcessorEditor (MechanoscAudioProcessor&);
-    ~MechanoscAudioProcessorEditor() override;
+    MechanOddAudioProcessorEditor (MechanOddAudioProcessor&);
+    ~MechanOddAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    MechanoscAudioProcessor& audioProcessor;
+    MechanOddAudioProcessor& audioProcessor;
 
     GradientTabbedComponent tabs;
 
@@ -55,5 +55,5 @@ private:
 
     std::unique_ptr<BottomBarComponent> bottomBar;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanoscAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanOddAudioProcessorEditor)
 };

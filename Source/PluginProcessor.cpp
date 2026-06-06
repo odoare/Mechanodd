@@ -10,9 +10,10 @@
 #include "PluginEditor.h"
 #include "ResonatorSlot.h"
 #include "Modulation/ParamSource.h"
+#include <BinaryData.h>
 
 //==============================================================================
-MechanoscAudioProcessor::MechanoscAudioProcessor()
+MechanOddAudioProcessor::MechanOddAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -31,9 +32,11 @@ MechanoscAudioProcessor::MechanoscAudioProcessor()
     synth.addSound (new SynthSound());
     for (int i = 0; i < numVoices; ++i)
         synth.addVoice (new SynthVoice());
+
+    buildFactoryPresets();
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout MechanoscAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
@@ -66,7 +69,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanoscAudioProcessor::cre
             .withStringFromValueFunction ([] (float v, int) { return v <= -59.9f ? juce::String ("-inf") : juce::String (v, 1); })));
 
     params.push_back (std::make_unique<juce::AudioParameterInt> (
-        numVoicesId, "Voices", 1, MechanoscAudioProcessor::numVoices, MechanoscAudioProcessor::numVoices));
+        numVoicesId, "Voices", 1, MechanOddAudioProcessor::numVoices, MechanOddAudioProcessor::numVoices));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat> (
         portamentoId, "Portamento",
@@ -77,17 +80,17 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanoscAudioProcessor::cre
     return { params.begin(), params.end() };
 }
 
-MechanoscAudioProcessor::~MechanoscAudioProcessor()
+MechanOddAudioProcessor::~MechanOddAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String MechanoscAudioProcessor::getName() const
+const juce::String MechanOddAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool MechanoscAudioProcessor::acceptsMidi() const
+bool MechanOddAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -96,7 +99,7 @@ bool MechanoscAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool MechanoscAudioProcessor::producesMidi() const
+bool MechanOddAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -105,7 +108,7 @@ bool MechanoscAudioProcessor::producesMidi() const
    #endif
 }
 
-bool MechanoscAudioProcessor::isMidiEffect() const
+bool MechanOddAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -114,40 +117,83 @@ bool MechanoscAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double MechanoscAudioProcessor::getTailLengthSeconds() const
+double MechanOddAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int MechanoscAudioProcessor::getNumPrograms()
+void MechanOddAudioProcessor::buildFactoryPresets()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    factoryPresets.clear();
+    for (int i = 0; i < BinaryData::namedResourceListSize; ++i)
+    {
+        const juce::String res = BinaryData::namedResourceList[i];
+        if (! res.endsWith ("_xml"))
+            continue;
+
+        // "Cool_Preset_xml" → "Cool Preset"
+        const juce::String name = res.dropLastCharacters (4).replace ("_", " ");
+        factoryPresets.push_back ({ name, res });
+    }
 }
 
-int MechanoscAudioProcessor::getCurrentProgram()
+// Program layout: index 0 is always "Default" (current state, no load).
+// Factory presets occupy indices 1..N.  This guarantees getNumPrograms() >= 2
+// whenever at least one preset XML exists, which is required by the JUCE VST3
+// wrapper to register the program-selection parameter with the host.
+
+int MechanOddAudioProcessor::getNumPrograms()
 {
-    return 0;
+    return 1 + (int) factoryPresets.size();   // 0 = Default, 1..N = factory presets
 }
 
-void MechanoscAudioProcessor::setCurrentProgram (int index)
+int MechanOddAudioProcessor::getCurrentProgram()
 {
-    juce::ignoreUnused (index);
+    return currentProgram;
 }
 
-const juce::String MechanoscAudioProcessor::getProgramName (int index)
+void MechanOddAudioProcessor::setCurrentProgram (int index)
 {
-    juce::ignoreUnused (index);
+    if (index == 0)
+    {
+        currentProgram = 0;   // "Default" — no state change
+        return;
+    }
+
+    const int fi = index - 1;
+    if (fi < 0 || fi >= (int) factoryPresets.size())
+        return;
+
+    int dataSize = 0;
+    const char* data = BinaryData::getNamedResource (
+        factoryPresets[(size_t) fi].resourceName.toRawUTF8(), dataSize);
+    if (data == nullptr)
+        return;
+
+    if (auto xml = juce::XmlDocument::parse (juce::String (data, (size_t) dataSize)))
+    {
+        currentProgram = index;
+        apvts.replaceState (juce::ValueTree::fromXml (*xml));
+    }
+}
+
+const juce::String MechanOddAudioProcessor::getProgramName (int index)
+{
+    if (index == 0)
+        return "Default";
+    const int fi = index - 1;
+    if (fi >= 0 && fi < (int) factoryPresets.size())
+        return factoryPresets[(size_t) fi].name;
     return {};
 }
 
-void MechanoscAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void MechanOddAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
-    juce::ignoreUnused (index, newName);
+    juce::ignoreUnused (index, newName);  // factory presets are read-only
 }
 
 //==============================================================================
-void MechanoscAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     synth.setCurrentPlaybackSampleRate (sampleRate);
 
@@ -209,14 +255,14 @@ void MechanoscAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
         }
 }
 
-void MechanoscAudioProcessor::releaseResources()
+void MechanOddAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool MechanoscAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool MechanOddAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -239,7 +285,7 @@ bool MechanoscAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 }
 #endif
 
-void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -411,24 +457,24 @@ void MechanoscAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 }
 
 //==============================================================================
-bool MechanoscAudioProcessor::hasEditor() const
+bool MechanOddAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* MechanoscAudioProcessor::createEditor()
+juce::AudioProcessorEditor* MechanOddAudioProcessor::createEditor()
 {
-    return new MechanoscAudioProcessorEditor (*this);
+    return new MechanOddAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void MechanoscAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void MechanOddAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     if (auto xml = apvts.copyState().createXml())
         copyXmlToBinary (*xml, destData);
 }
 
-void MechanoscAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void MechanOddAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
         if (xml->hasTagName (apvts.state.getType()))
@@ -439,5 +485,5 @@ void MechanoscAudioProcessor::setStateInformation (const void* data, int sizeInB
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new MechanoscAudioProcessor();
+    return new MechanOddAudioProcessor();
 }

@@ -10,12 +10,12 @@
 #include "Theme.h"
 #include <BinaryData.h>
 
-BottomBarComponent::BottomBarComponent (MechanoscAudioProcessor& processor)
+BottomBarComponent::BottomBarComponent (MechanOddAudioProcessor& processor)
     : audioProcessor (processor)
 {
-    addKnob (outputVolume, MechanoscAudioProcessor::outputVolumeId, "Output");
-    addKnob (voices,       MechanoscAudioProcessor::numVoicesId,    "Voices");
-    addKnob (portamento,   MechanoscAudioProcessor::portamentoId,   "Porta");
+    addKnob (outputVolume, MechanOddAudioProcessor::outputVolumeId, "Output");
+    addKnob (voices,       MechanOddAudioProcessor::numVoicesId,    "Voices");
+    addKnob (portamento,   MechanOddAudioProcessor::portamentoId,   "Porta");
 
     // Stereo output meter: green moving peak, yellow peak-hold, red over.
     auto makeMeter = [&processor] (int ch)
@@ -53,7 +53,7 @@ BottomBarComponent::BottomBarComponent (MechanoscAudioProcessor& processor)
     {
         btn.setLookAndFeel (&fxmeLookAndFeel);
         btn.setColour (juce::TextButton::buttonColourId,   juce::Colours::black.withAlpha (0.4f));
-        btn.setColour (juce::TextButton::textColourOffId,  MechanoscTheme::modulation.brighter (0.3f));
+        btn.setColour (juce::TextButton::textColourOffId,  MechanOddTheme::modulation.brighter (0.3f));
         addAndMakeVisible (btn);
     };
     stylePresetButton (loadButton);
@@ -109,7 +109,7 @@ void BottomBarComponent::addKnob (Knob& k, const juce::String& paramId, const ju
     k.slider = std::make_unique<fxme::FxmeSlider> (audioProcessor.apvts, paramId, text, juce::Colours::orange);
     k.slider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     k.slider->setLookAndFeel (&fxmeLookAndFeel);
-    MechanoscTheme::accentSlider (*k.slider, MechanoscTheme::modulation);
+    MechanOddTheme::accentSlider (*k.slider, MechanOddTheme::modulation);
     addAndMakeVisible (*k.slider);
 
     k.label.setText (text, juce::dontSendNotification);

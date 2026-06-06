@@ -19,7 +19,7 @@
 class BottomBarComponent : public juce::Component
 {
 public:
-    explicit BottomBarComponent (MechanoscAudioProcessor& processor);
+    explicit BottomBarComponent (MechanOddAudioProcessor& processor);
     ~BottomBarComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -34,7 +34,7 @@ private:
 
     void addKnob (Knob& k, const juce::String& paramId, const juce::String& text);
 
-    MechanoscAudioProcessor& audioProcessor;
+    MechanOddAudioProcessor& audioProcessor;
 
     Knob outputVolume, voices, portamento;
 

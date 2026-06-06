@@ -17,13 +17,13 @@
 #include "EffectChain.h"
 #include "ModEngine.h"
 
-class MechanoscAudioProcessor  : public juce::AudioProcessor
+class MechanOddAudioProcessor  : public juce::AudioProcessor
 {
 public:
     static constexpr int numVoices = 8;
 
-    MechanoscAudioProcessor();
-    ~MechanoscAudioProcessor() override;
+    MechanOddAudioProcessor();
+    ~MechanOddAudioProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -80,6 +80,15 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    struct FactoryPreset
+    {
+        juce::String name;         // display name derived from filename
+        juce::String resourceName; // BinaryData symbol name (e.g. "Cool_Preset_xml")
+    };
+    std::vector<FactoryPreset> factoryPresets;
+    int currentProgram { 0 };
+    void buildFactoryPresets();
+
     PolySynth synth;
 
     // Global (not per-voice) resonators and their matrix role.
@@ -109,5 +118,5 @@ private:
     ModEngine modEngine;
     int       heldNoteCount { 0 };   // held MIDI notes, drives the global ADSR gate
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanoscAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanOddAudioProcessor)
 };

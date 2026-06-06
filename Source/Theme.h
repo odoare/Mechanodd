@@ -16,7 +16,7 @@
 
 #include <JuceHeader.h>
 
-namespace MechanoscTheme
+namespace MechanOddTheme
 {
     // ---- StrinGO-style background ------------------------------------------------
     inline void paintBackground (juce::Graphics& g, juce::Rectangle<float> b)

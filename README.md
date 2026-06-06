@@ -1,6 +1,6 @@
-# Mechanosc
+# MechanOdd
 
-**Mechanosc** is a polyphonic physical-modelling synthesizer plugin (VST3/AU) built with JUCE. It synthesizes sound by exciting simulated mechanical resonators — strings, plates, membranes, and beams — and routing the results through a feedback matrix, effects chains, and a modulation engine.
+**MechanOdd** is a polyphonic physical-modelling synthesizer plugin (VST3/AU) built with JUCE. It synthesizes sound by exciting simulated mechanical resonators — strings, plates, membranes, and beams — and routing the results through a feedback matrix, effects chains, and a modulation engine.
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## Concept
 
-Mechanosc is built around the idea that interesting timbres arise from the **interaction** between excitation signals and resonant structures, rather than from either alone.
+MechanOdd is built around the idea that interesting timbres arise from the **interaction** between excitation signals and resonant structures, rather than from either alone.
 
 A typical path through the synth:
 

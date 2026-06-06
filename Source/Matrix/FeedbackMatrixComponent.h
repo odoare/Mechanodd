@@ -27,7 +27,7 @@ public:
     void resized() override;
 
     // Source of the per-column "entering signal" level (linear peak; see
-    // MechanoscAudioProcessor::getColumnLevelLinear). The meters scale it by each
+    // MechanOddAudioProcessor::getColumnLevelLinear). The meters scale it by each
     // cell's knob gain to show the post-gain contribution into the row's resonator.
     void setColumnLevelProvider (std::function<float (int)> fn) { columnLevelLinear = std::move (fn); }
 

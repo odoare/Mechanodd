@@ -31,7 +31,7 @@ public:
     void setLevelProvider (std::function<float()> fn) { levelProvider = std::move (fn); }
 
     // Tint the output meter with this slot's group colour (the knobs are tinted
-    // separately by MechanoscTheme::applyAccent, which doesn't touch the meter).
+    // separately by MechanOddTheme::applyAccent, which doesn't touch the meter).
     void setMeterColour (juce::Colour c) { levelMeter.setMeterColor (c); }
 
 private:
