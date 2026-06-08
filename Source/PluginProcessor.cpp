@@ -77,6 +77,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::cre
         juce::AudioParameterFloatAttributes().withLabel ("ms")
             .withStringFromValueFunction ([] (float v, int) { return juce::String (juce::roundToInt (v)); })));
 
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        busPostMasterId, "Bus Post Master", false));
+
     return { params.begin(), params.end() };
 }
 
@@ -219,18 +222,21 @@ void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     globalOutA.setSize (FeedbackMatrix::numResonators, samplesPerBlock, false, false, true);
     globalOutB.setSize (FeedbackMatrix::numResonators, samplesPerBlock, false, false, true);
     sendBus.setSize (2, samplesPerBlock, false, false, true);
+    prevSendBusOut.setSize (1, samplesPerBlock, false, false, true);
     columnSum.clear();
     globalOutA.clear();
     globalOutB.clear();
     sendBus.clear();
+    prevSendBusOut.clear();
     useAasPrev = true;
 
     for (auto& l : columnLevel)
         l.store (0.0f, std::memory_order_relaxed);
     columnEnv.fill (0.0f);
 
-    pOutputVolume = apvts.getRawParameterValue (outputVolumeId);
-    pNumVoices    = apvts.getRawParameterValue (numVoicesId);
+    pOutputVolume  = apvts.getRawParameterValue (outputVolumeId);
+    pNumVoices     = apvts.getRawParameterValue (numVoicesId);
+    pBusPostMaster = apvts.getRawParameterValue (busPostMasterId);
     outputGain.reset (sampleRate, 0.02);
     outputGain.setCurrentAndTargetValue (
         juce::Decibels::decibelsToGain (pOutputVolume != nullptr ? pOutputVolume->load() : 0.0f, -60.0f));
@@ -344,7 +350,7 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             voice->updateModulation (numSamples);   // fill per-voice shadows before modules cache them
             voice->updatePortamento (numSamples);    // glide pitch, retuning slots, before they re-read freq
             voice->checkParameters();
-            voice->setSharedBuffers (&columnSum, &prevBuf, &sendBus);
+            voice->setSharedBuffers (&columnSum, &prevBuf, &sendBus, &prevSendBusOut);
             voice->setInputBuffer (&inputCapture);
         }
 
@@ -375,7 +381,8 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         float* sendL = sendBus.getWritePointer (0);
         float* sendR = stereoBus ? sendBus.getWritePointer (1) : sendL;
 
-        globalMatrix.processGlobal (colPtrs, globalResonators, outL, outR, sendL, sendR, gOutPtrs, numSamples);
+        globalMatrix.processGlobal (colPtrs, globalResonators, prevSendBusOut.getReadPointer (0),
+                                    outL, outR, sendL, sendR, gOutPtrs, numSamples);
 
         // Per-column "entering signal" level for the matrix meters. Sources and
         // per-voice resonators are summed in columnSum; global resonators are in
@@ -395,6 +402,8 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             float mag;
             if (c < FeedbackMatrix::numSources)
                 mag = columnSum.getMagnitude (c, 0, numSamples);
+            else if (c == FeedbackMatrix::busFeedbackCol)
+                mag = prevSendBusOut.getMagnitude (0, 0, numSamples);   // previous block's bus output
             else
             {
                 const int k = c - FeedbackMatrix::numSources;
@@ -411,12 +420,38 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     useAasPrev = ! useAasPrev;
 
     // Send bus: process its effect chain, then mix back into the main output.
-    busChain.process (sendBus);
-    for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
-        buffer.addFrom (ch, 0, sendBus, juce::jmin (ch, sendBus.getNumChannels() - 1), 0, numSamples);
+    // When "post master" is enabled the bus chain runs after the master chain so
+    // it is not coloured by the master processing; otherwise (default) the bus
+    // output is folded into the mix before the master chain runs.
+    const bool busPostMaster = pBusPostMaster != nullptr && pBusPostMaster->load() > 0.5f;
 
-    // Master effect chain on the full mix.
-    masterChain.process (buffer);
+    // Helper: store a mono (L+R)/2 mix of the processed send bus for next block's
+    // resonator feedback column. This must happen right after busChain.process().
+    auto captureSendMono = [&]()
+    {
+        auto* dst  = prevSendBusOut.getWritePointer (0);
+        const auto* busL = sendBus.getReadPointer (0);
+        const auto* busR = sendBus.getNumChannels() > 1 ? sendBus.getReadPointer (1) : busL;
+        for (int i = 0; i < numSamples; ++i)
+            dst[i] = 0.5f * (busL[i] + busR[i]);
+    };
+
+    if (busPostMaster)
+    {
+        masterChain.process (buffer);
+        busChain.process (sendBus);
+        captureSendMono();
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            buffer.addFrom (ch, 0, sendBus, juce::jmin (ch, sendBus.getNumChannels() - 1), 0, numSamples);
+    }
+    else
+    {
+        busChain.process (sendBus);
+        captureSendMono();
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            buffer.addFrom (ch, 0, sendBus, juce::jmin (ch, sendBus.getNumChannels() - 1), 0, numSamples);
+        masterChain.process (buffer);
+    }
 
     // Output volume (smoothed) applied to the full mix.
     outputGain.setTargetValue (

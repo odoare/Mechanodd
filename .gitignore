@@ -3,7 +3,8 @@ build/
 **/build/
 **/build-pd/
 **/JuceLibraryCode/
-
+**/JUCE/
+**/CMakeFiles/
 
 # Projucer-generated build trees
 Builds/

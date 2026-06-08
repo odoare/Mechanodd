@@ -222,6 +222,10 @@ float SynthVoice::renderSegment (juce::AudioBuffer<float>& outputBuffer, int sta
         for (int k = 0; k < numResonatorSlots; ++k)
             globalPrevPtrs[k] = globalPrevBuf->getReadPointer (k) + startSample;
 
+    const float* busFeedbackPtr = nullptr;
+    if (busFeedbackBuf != nullptr)
+        busFeedbackPtr = busFeedbackBuf->getReadPointer (0) + startSample;
+
     float* colSumPtrs[FeedbackMatrix::numColumns] = {};
     if (columnSumBuf != nullptr)
         for (int c = 0; c < FeedbackMatrix::numColumns; ++c)
@@ -237,7 +241,7 @@ float SynthVoice::renderSegment (juce::AudioBuffer<float>& outputBuffer, int sta
 
     float* vL = voiceOut.getWritePointer (0);
     float* vR = voiceOut.getWritePointer (1);
-    matrix.processVoice (srcPtrs, resonatorSlots, globalPrevPtrs, vL, vR, sendL, sendR, colSumPtrs, numSamples);
+    matrix.processVoice (srcPtrs, resonatorSlots, globalPrevPtrs, busFeedbackPtr, vL, vR, sendL, sendR, colSumPtrs, numSamples);
 
     // 3) Mix into the shared output. When fading, scale the old content by the
     //    descending steal ramp; otherwise add the decaying note-start bridge so

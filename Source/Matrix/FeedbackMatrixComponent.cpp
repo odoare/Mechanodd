@@ -16,6 +16,7 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
         colHeaders.add ("S" + juce::String (c));
     for (int c = 0; c < FeedbackMatrix::numResonators; ++c)
         colHeaders.add ("R" + juce::String (c));
+    colHeaders.add ("Fx");   // send-bus feedback column
     colHeaders.add ("Lvl");
     colHeaders.add ("Pan");
     colHeaders.add ("Snd");
@@ -56,10 +57,18 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
         // A horizontal meter above each gain knob, coloured by its column (the
         // entering signal that forces this row's resonator).
         for (int c = 0; c < cols; ++c)
-            if (gainKnobs[(size_t) r][(size_t) c] != nullptr)
-                meters[(size_t) r][(size_t) c] = makeMeter (
-                    (c < FeedbackMatrix::numSources) ? MechanOddTheme::sourceColour (c)
-                                                     : MechanOddTheme::resonatorColour (c - FeedbackMatrix::numSources));
+        {
+            if (gainKnobs[(size_t) r][(size_t) c] == nullptr)
+                continue;
+            juce::Colour mc;
+            if (c < FeedbackMatrix::numSources)
+                mc = MechanOddTheme::sourceColour (c);
+            else if (c == FeedbackMatrix::busFeedbackCol)
+                mc = MechanOddTheme::busColour();
+            else
+                mc = MechanOddTheme::resonatorColour (c - FeedbackMatrix::numSources);
+            meters[(size_t) r][(size_t) c] = makeMeter (mc);
+        }
 
         // Level and send meters show this resonator's output (scaled by the knob),
         // coloured by the row.
@@ -112,6 +121,8 @@ void FeedbackMatrixComponent::paint (juce::Graphics& g)
         juce::Colour hc = juce::Colours::white.withAlpha (0.7f);
         if (c < FeedbackMatrix::numSources)
             hc = MechanOddTheme::sourceColour (c);
+        else if (c == FeedbackMatrix::busFeedbackCol)
+            hc = MechanOddTheme::busColour();
         else if (c < cols)
             hc = MechanOddTheme::resonatorColour (c - FeedbackMatrix::numSources);
 

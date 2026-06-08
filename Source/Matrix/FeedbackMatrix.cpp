@@ -141,6 +141,7 @@ void FeedbackMatrix::mixRow (int r, float out, int n, float* outL, float* outR, 
 void FeedbackMatrix::processVoice (const float* const* sourceSamples,
                                    std::array<ResonatorSlot, numResonators>& resonators,
                                    const float* const* globalPrev,
+                                   const float* busFeedback,
                                    float* outL, float* outR, float* sendL, float* sendR,
                                    float* const* columnSum,
                                    int numSamples)
@@ -160,6 +161,8 @@ void FeedbackMatrix::processVoice (const float* const* sourceSamples,
                 float colSample;
                 if (c < numSources)
                     colSample = sourceSamples[c][i];
+                else if (c == busFeedbackCol)
+                    colSample = busFeedback != nullptr ? busFeedback[i] : 0.0f;
                 else
                 {
                     const int k = c - numSources;
@@ -189,6 +192,7 @@ void FeedbackMatrix::processVoice (const float* const* sourceSamples,
 
 void FeedbackMatrix::processGlobal (const float* const* columnSum,
                                     std::array<ResonatorSlot, numResonators>& resonators,
+                                    const float* busFeedback,
                                     float* outL, float* outR, float* sendL, float* sendR,
                                     float* const* globalOut,
                                     int numSamples)
@@ -208,6 +212,8 @@ void FeedbackMatrix::processGlobal (const float* const* columnSum,
                 float colSample;
                 if (c < numSources)
                     colSample = columnSum[c][i];
+                else if (c == busFeedbackCol)
+                    colSample = busFeedback != nullptr ? busFeedback[i] : 0.0f;
                 else
                 {
                     const int k = c - numSources;

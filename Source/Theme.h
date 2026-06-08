@@ -44,6 +44,9 @@ namespace MechanOddTheme
         return c[(size_t) juce::jlimit (0, (int) (sizeof c / sizeof c[0]) - 1, i)];
     }
 
+    // Accent for the send-bus feedback column in the matrix.
+    inline juce::Colour busColour() noexcept { return juce::Colour (0xffb8a040); }   // amber
+
     inline juce::Colour resonatorColour (int i) noexcept
     {
         static const juce::Colour c[] = { juce::Colour (0xff35c0c0),   // R0 teal

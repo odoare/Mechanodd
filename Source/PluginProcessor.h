@@ -73,9 +73,10 @@ public:
     float getOutputLevelDb (int ch) const { return outLevel[(size_t) juce::jlimit (0, 1, ch)].load (std::memory_order_relaxed); }
     float getOutputHoldDb  (int ch) const { return outHold [(size_t) juce::jlimit (0, 1, ch)].load (std::memory_order_relaxed); }
 
-    static constexpr const char* outputVolumeId = "outputVolume";
-    static constexpr const char* numVoicesId    = "numVoices";
-    static constexpr const char* portamentoId   = "portamento";
+    static constexpr const char* outputVolumeId  = "outputVolume";
+    static constexpr const char* numVoicesId     = "numVoices";
+    static constexpr const char* portamentoId    = "portamento";
+    static constexpr const char* busPostMasterId = "bus_postMaster";
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -104,8 +105,9 @@ private:
     std::array<float, FeedbackMatrix::numColumns> columnEnv {};   // meter peak-hold state (audio thread)
 
     // Output section.
-    std::atomic<float>* pOutputVolume { nullptr };
-    std::atomic<float>* pNumVoices    { nullptr };
+    std::atomic<float>* pOutputVolume  { nullptr };
+    std::atomic<float>* pNumVoices     { nullptr };
+    std::atomic<float>* pBusPostMaster { nullptr };
     juce::LinearSmoothedValue<float> outputGain { 1.0f };
     std::array<std::atomic<float>, 2> outLevel {};   // dB, fast peak (GUI reads)
     std::array<std::atomic<float>, 2> outHold  {};   // dB, slow peak-hold
@@ -113,7 +115,8 @@ private:
 
     // Effect chains: send bus and master.
     EffectChain busChain, masterChain;
-    juce::AudioBuffer<float> sendBus;       // stereo
+    juce::AudioBuffer<float> sendBus;           // stereo
+    juce::AudioBuffer<float> prevSendBusOut;    // mono, previous block's bus-chain output for matrix column
 
     ModEngine modEngine;
     int       heldNoteCount { 0 };   // held MIDI notes, drives the global ADSR gate

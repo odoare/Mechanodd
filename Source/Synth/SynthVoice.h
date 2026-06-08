@@ -56,14 +56,18 @@ public:
     void updatePortamento (int numSamples);
 
     // Shared block buffers owned by the processor:
-    //  columnSum  - summed-over-voices column signals (sources + PV resonators) for the global rows.
-    //  globalPrev - previous block's global resonator outputs, broadcast to PV rows.
-    void setSharedBuffers (juce::AudioBuffer<float>* columnSum, const juce::AudioBuffer<float>* globalPrev,
-                           juce::AudioBuffer<float>* sendBus)
+    //  columnSum       - summed-over-voices column signals (sources + PV resonators) for the global rows.
+    //  globalPrev      - previous block's global resonator outputs, broadcast to PV rows.
+    //  busFeedback     - previous block's mono send-bus output for the bus feedback matrix column.
+    void setSharedBuffers (juce::AudioBuffer<float>*       columnSum,
+                           const juce::AudioBuffer<float>* globalPrev,
+                           juce::AudioBuffer<float>*       sendBus,
+                           const juce::AudioBuffer<float>* busFeedback)
     {
-        columnSumBuf = columnSum;
-        globalPrevBuf = globalPrev;
-        sendBusBuf = sendBus;
+        columnSumBuf   = columnSum;
+        globalPrevBuf  = globalPrev;
+        sendBusBuf     = sendBus;
+        busFeedbackBuf = busFeedback;
     }
 
     // Host audio input for this block (stereo), read by the Plugin Input sources.
@@ -84,9 +88,10 @@ private:
     juce::AudioBuffer<float> sourceScratch;  // numSourceSlots channels
     juce::AudioBuffer<float> voiceOut;       // stereo
 
-    juce::AudioBuffer<float>*       columnSumBuf  { nullptr };
-    const juce::AudioBuffer<float>* globalPrevBuf { nullptr };
-    juce::AudioBuffer<float>*       sendBusBuf    { nullptr };
+    juce::AudioBuffer<float>*       columnSumBuf   { nullptr };
+    const juce::AudioBuffer<float>* globalPrevBuf  { nullptr };
+    juce::AudioBuffer<float>*       sendBusBuf     { nullptr };
+    const juce::AudioBuffer<float>* busFeedbackBuf { nullptr };
     const juce::AudioBuffer<float>* inputBuf      { nullptr };
 
     double sampleRate { 44100.0 };

@@ -46,6 +46,9 @@ private:
     juce::Label sendLabel, masterLabel;
     juce::Label placeholderLabel;
 
+    juce::ToggleButton prePostButton;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> prePostAtt;
+
     int  activeSlot = -1;
     fxme::FxmeLookAndFeel laf;
 

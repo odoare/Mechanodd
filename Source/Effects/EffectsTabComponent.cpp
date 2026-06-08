@@ -10,6 +10,7 @@
 #include "EffectFactory.h"
 #include "EffectSlot.h"
 #include "EffectChain.h"
+#include "../PluginProcessor.h"
 
 namespace
 {
@@ -42,6 +43,14 @@ EffectsTabComponent::EffectsTabComponent (juce::AudioProcessorValueTreeState& ap
                                 juce::Colours::white.withAlpha (0.2f));
     addAndMakeVisible (placeholderLabel);
 
+    prePostButton.setButtonText ("POST MASTER");
+    prePostButton.setLookAndFeel (&laf);
+    prePostButton.setColour (juce::ToggleButton::tickColourId,
+                             juce::Colours::white.withAlpha (0.6f));
+    addAndMakeVisible (prePostButton);
+    prePostAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
+        apvts, MechanOddAudioProcessor::busPostMasterId, prePostButton);
+
     for (int i = 0; i < kSlotsPerChain; ++i)
         initSlot (i,                "bus",    i);
     for (int i = 0; i < kSlotsPerChain; ++i)
@@ -50,6 +59,7 @@ EffectsTabComponent::EffectsTabComponent (juce::AudioProcessorValueTreeState& ap
 
 EffectsTabComponent::~EffectsTabComponent()
 {
+    prePostButton.setLookAndFeel (nullptr);
     for (auto& s : slots)
         if (s) s->typeBox.setLookAndFeel (nullptr);
 }
@@ -175,10 +185,17 @@ void EffectsTabComponent::resized()
 {
     auto left = getLocalBounds().reduced (kPad).withWidth (kLeftW - kPad * 2);
 
-    auto layoutSection = [&] (juce::Label& label, int firstSlot)
+    auto layoutSection = [&] (juce::Label& label, int firstSlot,
+                              juce::Component* extraRow = nullptr)
     {
         label.setBounds (left.removeFromTop (kLabelH));
         left.removeFromTop (4);
+
+        if (extraRow != nullptr)
+        {
+            extraRow->setBounds (left.removeFromTop (kRowH));
+            left.removeFromTop (kRowGap);
+        }
 
         for (int i = 0; i < kSlotsPerChain; ++i)
         {
@@ -193,7 +210,7 @@ void EffectsTabComponent::resized()
         }
     };
 
-    layoutSection (sendLabel,   0);
+    layoutSection (sendLabel,   0,               &prePostButton);
     left.removeFromTop (kSectionGap);
     layoutSection (masterLabel, kSlotsPerChain);
 

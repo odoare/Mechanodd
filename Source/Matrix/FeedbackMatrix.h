@@ -39,10 +39,12 @@
 class FeedbackMatrix
 {
 public:
-    static constexpr int numSources    = 4;                    // == SynthVoice::numSourceSlots
-    static constexpr int numResonators = ResonatorSlot::numSlots;
-    static constexpr int numColumns    = numSources + numResonators;
-    static constexpr int numRows        = numResonators;
+    static constexpr int numSources      = 4;                    // == SynthVoice::numSourceSlots
+    static constexpr int numResonators   = ResonatorSlot::numSlots;
+    static constexpr int numBusFeedback  = 1;                    // processed send-bus output (prev block)
+    static constexpr int busFeedbackCol  = numSources + numResonators;   // index of the bus column
+    static constexpr int numColumns      = numSources + numResonators + numBusFeedback;
+    static constexpr int numRows         = numResonators;
 
     void prepare (const juce::dsp::ProcessSpec& spec);
     void reset();
@@ -54,12 +56,14 @@ public:
     void processVoice (const float* const* sourceSamples,
                        std::array<ResonatorSlot, numResonators>& resonators,
                        const float* const* globalPrev,
+                       const float* busFeedback,
                        float* outL, float* outR, float* sendL, float* sendR,
                        float* const* columnSum,
                        int numSamples);
 
     void processGlobal (const float* const* columnSum,
                         std::array<ResonatorSlot, numResonators>& resonators,
+                        const float* busFeedback,
                         float* outL, float* outR, float* sendL, float* sendR,
                         float* const* globalOut,
                         int numSamples);
