@@ -1,6 +1,6 @@
 # MechanOdd
 
-**MechanOdd** is a polyphonic physical-modelling synthesizer plugin (VST3/AU) built with JUCE. It synthesizes sound by exciting simulated mechanical resonators — strings, plates, membranes, and beams — and routing the results through a feedback matrix, effects chains, and a modulation engine.
+**MechanOdd** is a polyphonic physical-modelling synthesizer plugin (VST3/AU) built with JUCE. It synthesizes sound by exciting simulated mechanical resonators (strings, plates, membranes, and beams) and routing the results through a feedback matrix, effects chains, and a modulation engine.
 
 ---
 
@@ -33,7 +33,7 @@ MechanOdd is built around the idea that interesting timbres arise from the **int
 
 A typical path through the synth:
 
-1. **Sources** generate raw signals — noise bursts, wavetable oscillators, crackling textures.
+1. **Sources** generate raw signals (noise bursts, wavetable oscillators, crackling textures).
 2. **Resonators** shape those signals using models of physical objects: a vibrating string, a struck plate, a drum membrane, a stiff beam.
 3. A **feedback matrix** lets resonators feed back into each other and into the sources, creating coupled systems with complex emergent behaviour.
 4. **Effects** polish the result (reverb, delay, EQ, saturation, cabinet simulation).
@@ -45,7 +45,7 @@ The synth is fully polyphonic (up to 8 voices). Each voice runs its own set of s
 
 ## Signal Flow
 
-The full routing — both feedback paths (the resonator columns and the re-entrant send-bus column) and the per-resonator safety stage — is shown below. See [doc/AUDIO_ROUTING.md](doc/AUDIO_ROUTING.md) for the annotated version.
+The full routing (the feedback paths, the resonator columns and the re-entrant send-bus column and the per-resonator safety stage) is shown below. See [doc/AUDIO_ROUTING.md](doc/AUDIO_ROUTING.md) for the annotated version.
 
 ```mermaid
 flowchart TD
@@ -72,60 +72,9 @@ flowchart TD
     OUTG --> AOUT([Audio Out])
 ```
 
-<details>
-<summary>Detailed per-voice / global ASCII view</summary>
-
-```
-MIDI Note On/Off
-      │
-      ▼
-  ModEngine (global LFOs + ADSRs)
-  ─── updates shared parameter atomics ───────────────────────────────────┐
-                                                                           │
-  ┌── For each Voice (×8) ───────────────────────────────────────────┐    │
-  │                                                                   │    │
-  │  VoiceModEngine (per-voice ADSRs)                                 │    │
-  │  ─── overlays voice-local parameter shadows ──────────────────┐  │    │
-  │                                                                │  │    │
-  │  Sources ──────────────────────────────────────────────────┐   │  │    │
-  │  [Noise / Wavetable / Cracks]                              │   │  │    │
-  │                                                            ▼   │  │    │
-  │             Per-Voice Feedback Matrix                          │  │    │
-  │      ┌──────────────────────────────────────┐              │  │    │
-  │      │  4 source cols × 4 resonator rows    │              │  │    │
-  │      │  + 4 global res cols (prev block)    │              │  │    │
-  │      └────────────┬─────────────────────────┘              │  │    │
-  │                   │                                         │  │    │
-  │  Per-Voice Resonators (string, plate, …) ◄─────────────────┘  │  │    │
-  │          │                                                      │  │    │
-  │          ▼                                                      │  │    │
-  │  Voice Output ────────────────────────────────────────────────►│  │    │
-  │  columnSum accumulator (for global resonators)                  │  │    │
-  └─────────────────────────────────────────────────────────────────┘  │    │
-                                                                         │    │
-  Global Feedback Matrix                                                 │    │
-    ┌──────────────────────────────────────────┐                        │    │
-    │  4 columnSum cols × 4 global res rows    │                        │    │
-    │  + 4 global res cols (1-sample delay)    │                        │    │
-    └────────────┬─────────────────────────────┘                        │    │
-                 │                                                        │    │
-  Global Resonators (shared across voices)                               │    │
-         │                                                                │    │
-         ▼                                                                │    │
-  Send Bus ──► Bus Effect Chain ──► Main Mix                             │    │
-                                        │                                │    │
-                               Master Effect Chain                        │    │
-                                        │                                │    │
-                               Output Gain + Meter                        │    │
-                                        │                                │    │
-                                    Audio Out                             │    │
-```
-
-</details>
-
 The **one-block feedback delay** between the matrix output and the resonator (and send-bus) inputs is inherent to the per-block processing model: it keeps the feedback loops stable and avoids circular dependencies within a single block.
 
-Every resonator output also passes through a **loop-safety stage** before it re-enters the matrix or the mix — a NaN/Inf guard, a one-pole DC blocker, and a soft `tanh` limiter — so the matrix cross-feedback and the re-entrant send-bus chain cannot run away or accumulate DC. See [Feedback Matrix: Routing and Gain Encoding](#feedback-matrix-routing-and-gain-encoding).
+Every resonator output also passes through a **loop-safety stage** before it re-enters the matrix or the mix (a NaN/Inf guard, a one-pole DC blocker, and a soft `tanh` limiter) so the matrix cross-feedback and the re-entrant send-bus chain cannot run away or accumulate DC. See [Feedback Matrix: Routing and Gain Encoding](#feedback-matrix-routing-and-gain-encoding).
 
 ---
 
@@ -137,9 +86,9 @@ Every resonator output also passes through a **loop-safety stage** before it re-
 
 Four source slots (coloured orange, gold, rose, magenta) generate the excitation signals. Each slot can be independently tuned and shaped. Typical source types:
 
-- **Wavetable** — band-limited oscillator reading a stored waveform cycle.
-- **Noise** — spectrally shaped random signal, useful as a bow or breath approximation.
-- **Cracks** — sparse impulse train imitating plectrum picks or percussion strikes.
+- **Wavetable**: band-limited oscillator reading a stored waveform cycle.
+- **Noise**: spectrally shaped random signal, useful as a bow or breath approximation.
+- **Cracks**: sparse impulse train imitating plectrum picks or percussion strikes.
 
 Sources feed into the columns of the feedback matrix.
 
@@ -150,8 +99,8 @@ Sources feed into the columns of the feedback matrix.
 Four resonator slots (coloured teal, azure, lime, violet) model the physical structure being "played." Each slot independently selects a resonator type and its associated parameters.
 
 Resonators can run in two modes:
-- **Per-voice** — each polyphonic voice gets its own independent resonator instance, tuned to the note's pitch.
-- **Global** — a single instance shared across all voices, processed once per audio block.
+- **Per-voice**: each polyphonic voice gets its own independent resonator instance, tuned to the note's pitch.
+- **Global**: a single instance shared across all voices, processed once per audio block.
 
 See [Resonators: DSP and Mathematics](#resonators-dsp-and-mathematics) for the models.
 
@@ -187,12 +136,14 @@ Available effects per slot: Delay, Tube saturation, EQ, Octaver, Compressor, Lim
 
 Twelve global modulators, each targeting any float parameter in the plugin. Two types:
 
-- **LFO** — continuously oscillating; selectable shape (Sine, Triangle, Square, Saw Up, Saw Down); rate in Hz or tempo-synced to host (1/1 down to 1/16T).
-- **ADSR** — triggered by MIDI note gates; global gate rises on the first note after silence, falls on the last note release.
+- **LFO**: continuously oscillating; selectable shape (Sine, Triangle, Square, Saw Up, Saw Down); rate in Hz or tempo-synced to host (1/1 down to 1/16T).
+- **ADSR**: triggered by MIDI note gates; global gate rises on the first note after silence, falls on the last note release.
 
 Per-voice ADSRs mirror the global ADSR modulators but track individual note gates, so each voice can have independent envelope shapes even on the same target parameter.
 
 ### Bottom Bar
+
+![Bottom bar](doc/master.png)
 
 Persistent controls visible on all tabs:
 
@@ -224,8 +175,8 @@ Four fractional delay lines form a bidirectional loop:
   └────────────────────────────► Loop filter
 ```
 
-- **upA / upB** — right-going wave, split at the input position.
-- **dnA / dnB** — left-going wave, split symmetrically.
+- **upA / upB**: right-going wave, split at the input position.
+- **dnA / dnB**: left-going wave, split symmetrically.
 - The **nut** reflects with sign inversion (rigid termination).
 - The **bridge** applies a one-pole low-pass filter and a gain `g`, then inverts (second rigid termination).
 
@@ -476,15 +427,15 @@ Uses the same modal filter bank and damping model as the Plate and Membrane reso
 
 Each cell stores a bipolar parameter `v ∈ [−1, +1]`:
 
-- **`v = 0`** — true zero (mute), regardless of the dB scale.
-- **`|v| → 1`** — maximum gain (~+6 dB = ×2 linear).
-- **Sign** — controls polarity: positive routing preserves phase, negative inverts it.
+- **`v = 0`**: true zero (mute), regardless of the dB scale.
+- **`|v| = 1`**: maximum gain (~+6 dB = ×2 linear).
+- **Sign**: controls polarity: positive routing preserves phase, negative inverts it.
 
 The mapping from parameter `v` to linear gain is:
 
 ```
-|v| = 0                    → gain = 0
-|v| > 0                    → gain = sign(v) · 10^( k · (|v| - 1) )
+|v| = 0                    : gain = 0
+|v| > 0                    : gain = sign(v) · 10^( k · (|v| - 1) )
 
 k = log10(gainMax / gainMin) / 1.0     (covers −60 dB to +6 dB over |v| ∈ [0, 1])
 ```
@@ -499,9 +450,9 @@ Because resonator outputs are delayed by one block before re-entering the matrix
 
 Every resonator output passes through a fixed safety stage at the single node where it splits into the mix, the feedback column and the one-block delay:
 
-- **NaN/Inf guard** — the resonator input is sanitised and any non-finite output is mapped to 0, so a transient glitch cannot get latched permanently into the feedback state.
-- **DC blocker** — a one-pole high-pass (~8 Hz) stops DC from accumulating in the loop and eating headroom.
-- **Soft limiter** — a `tanh` curve with ~+12 dBFS of headroom (`ceiling · tanh(x / ceiling)`) bounds the signal. It is essentially linear at normal levels and pulls the effective loop gain below unity once the signal grows large, so the matrix cross-feedback and the re-entrant send chain self-limit (the way a real string or membrane saturates) instead of clipping the DAC. This is the in-loop counterpart to the optional **Limiter** mastering effect available in the effect chains.
+- **NaN/Inf guard**: the resonator input is sanitised and any non-finite output is mapped to 0, so a transient glitch cannot get latched permanently into the feedback state.
+- **DC blocker**: a one-pole high-pass (~8 Hz) stops DC from accumulating in the loop and eating headroom.
+- **Soft limiter**: a `tanh` curve with ~+12 dBFS of headroom (`ceiling · tanh(x / ceiling)`) bounds the signal. It is essentially linear at normal levels and pulls the effective loop gain below unity once the signal grows large, so the matrix cross-feedback and the re-entrant send chain self-limit (the way a real string or membrane saturates) instead of clipping the DAC. This is the in-loop counterpart to the optional **Limiter** mastering effect available in the effect chains.
 
 ### Send-bus feedback column
 
