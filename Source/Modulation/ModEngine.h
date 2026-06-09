@@ -70,6 +70,21 @@ public:
                         : -amount * base01          * (1.0f - env);
     }
 
+    // Combine an LFO Depth knob (base01, normalised) with its modulated value (mod01)
+    // for the bipolar Depth control (value in [-1, 1], centre = 0 = no modulation).
+    // Mirrors FeedbackMatrix::modulatedGain: the modulation offsets the *magnitude* of
+    // the depth and the sign (which way the LFO swings) stays locked to the knob, so a
+    // modulator pulls Depth toward the centre (off) and can never flip its phase. With
+    // the default ADSR (amount 1, polarity -) Depth then rises from 0 to the knob value.
+    static float modulatedDepth (float base01, float mod01) noexcept
+    {
+        const float baseV = base01 * 2.0f - 1.0f;                  // knob depth in [-1, 1]
+        const float sign  = (baseV < 0.0f) ? -1.0f : 1.0f;
+        const float off   = (mod01 - base01) * 2.0f;               // normalised delta -> depth units
+        const float mag   = juce::jlimit (0.0f, 1.0f, std::abs (baseV) + off);
+        return sign * mag;
+    }
+
     // Targets whose modules live in the voices (sources / resonators / per-voice matrix)
     // get per-voice ADSR; global targets (effects) keep the global ADSR. Resonators are
     // only per-voice when their slot is in per-voice mode (see resGlobalFlagId): a global
@@ -103,6 +118,7 @@ private:
         std::atomic<float>* sync     { nullptr };
         std::atomic<float>* syncRate { nullptr };
         std::atomic<float>* depth    { nullptr };
+        juce::RangedAudioParameter* depthParam { nullptr };   // depth knob object (for modulatedDepth base)
         std::atomic<float>* attack   { nullptr };
         std::atomic<float>* decay    { nullptr };
         std::atomic<float>* sustain  { nullptr };

@@ -105,6 +105,7 @@ void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
         mods[(size_t) i].sync     = apvts.getRawParameterValue (syncId (i));
         mods[(size_t) i].syncRate = apvts.getRawParameterValue (syncRateId (i));
         mods[(size_t) i].depth    = apvts.getRawParameterValue (depthId (i));
+        mods[(size_t) i].depthParam = apvts.getParameter (depthId (i));
         mods[(size_t) i].attack   = apvts.getRawParameterValue (attackId (i));
         mods[(size_t) i].decay    = apvts.getRawParameterValue (decayId (i));
         mods[(size_t) i].sustain  = apvts.getRawParameterValue (sustainId (i));
@@ -175,7 +176,18 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
         {
             const int   shape  = (int) m.shape->load();
             const bool  synced = m.sync->load() > 0.5f;
-            const float depth  = m.depth->load();
+
+            // Depth is bipolar (centre = 0 = off). When another modulator targets this
+            // LFO's Depth, reinterpret the modulation as a magnitude offset with the sign
+            // locked to the knob, so it swings between 0 and the set value rather than
+            // dragging Depth to -1. (Same scheme as FeedbackMatrix::modulatedGain.)
+            float depth = m.depth->load();
+            if (m.depthParam != nullptr)
+            {
+                const float base01 = m.depthParam->getValue();
+                const float mod01  = m.depthParam->getNormalisableRange().convertTo0to1 (depth);
+                depth = modulatedDepth (base01, mod01);
+            }
 
             float freq;
             if (synced)

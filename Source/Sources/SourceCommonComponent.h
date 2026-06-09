@@ -21,10 +21,14 @@ public:
 
     void resized() override;
 
+    // Number of equally-spaced knobs laid out across the row. Source-type components
+    // that prepend their own knob (Density, Tune) use this so their extra knob ends
+    // up the same width as these.
+    static constexpr int numKnobs = 9;
+
 private:
     struct Knob
     {
-        juce::Label label;
         std::unique_ptr<fxme::FxmeSlider> slider;
     };
 

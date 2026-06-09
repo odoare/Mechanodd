@@ -49,6 +49,8 @@ private:
     juce::ToggleButton prePostButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> prePostAtt;
 
+    std::unique_ptr<fxme::FxmeSlider> sendVolumeSlider;
+
     int  activeSlot = -1;
     fxme::FxmeLookAndFeel laf;
 

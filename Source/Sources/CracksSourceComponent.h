@@ -20,7 +20,6 @@ public:
     void resized() override;
 
 private:
-    juce::Label densityLabel;
     std::unique_ptr<fxme::FxmeSlider> densitySlider;
 
     SourceCommonComponent common;

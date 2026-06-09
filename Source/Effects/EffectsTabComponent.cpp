@@ -11,6 +11,7 @@
 #include "EffectSlot.h"
 #include "EffectChain.h"
 #include "../PluginProcessor.h"
+#include "../Theme.h"
 
 namespace
 {
@@ -46,10 +47,17 @@ EffectsTabComponent::EffectsTabComponent (juce::AudioProcessorValueTreeState& ap
     prePostButton.setButtonText ("POST MASTER");
     prePostButton.setLookAndFeel (&laf);
     prePostButton.setColour (juce::ToggleButton::tickColourId,
-                             juce::Colours::white.withAlpha (0.6f));
+                             MechanOddTheme::busColour());
     addAndMakeVisible (prePostButton);
     prePostAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
         apvts, MechanOddAudioProcessor::busPostMasterId, prePostButton);
+
+    sendVolumeSlider = std::make_unique<fxme::FxmeSlider> (
+        apvts, MechanOddAudioProcessor::busOutVolId, "Send Level", juce::Colours::orange);
+    sendVolumeSlider->setSliderStyle (juce::Slider::LinearHorizontal);
+    sendVolumeSlider->setLookAndFeel (&laf);
+    MechanOddTheme::accentSlider (*sendVolumeSlider, MechanOddTheme::busColour());
+    addAndMakeVisible (*sendVolumeSlider);
 
     for (int i = 0; i < kSlotsPerChain; ++i)
         initSlot (i,                "bus",    i);
@@ -60,6 +68,7 @@ EffectsTabComponent::EffectsTabComponent (juce::AudioProcessorValueTreeState& ap
 EffectsTabComponent::~EffectsTabComponent()
 {
     prePostButton.setLookAndFeel (nullptr);
+    if (sendVolumeSlider) sendVolumeSlider->setLookAndFeel (nullptr);
     for (auto& s : slots)
         if (s) s->typeBox.setLookAndFeel (nullptr);
 }
@@ -185,17 +194,10 @@ void EffectsTabComponent::resized()
 {
     auto left = getLocalBounds().reduced (kPad).withWidth (kLeftW - kPad * 2);
 
-    auto layoutSection = [&] (juce::Label& label, int firstSlot,
-                              juce::Component* extraRow = nullptr)
+    auto layoutSection = [&] (juce::Label& label, int firstSlot)
     {
         label.setBounds (left.removeFromTop (kLabelH));
         left.removeFromTop (4);
-
-        if (extraRow != nullptr)
-        {
-            extraRow->setBounds (left.removeFromTop (kRowH));
-            left.removeFromTop (kRowGap);
-        }
 
         for (int i = 0; i < kSlotsPerChain; ++i)
         {
@@ -210,7 +212,11 @@ void EffectsTabComponent::resized()
         }
     };
 
-    layoutSection (sendLabel,   0,               &prePostButton);
+    layoutSection (sendLabel, 0);
+    left.removeFromTop (kRowGap * 2);
+    prePostButton.setBounds (left.removeFromTop (kRowH));
+    left.removeFromTop (kRowGap);
+    if (sendVolumeSlider) sendVolumeSlider->setBounds (left.removeFromTop (kRowH));
     left.removeFromTop (kSectionGap);
     layoutSection (masterLabel, kSlotsPerChain);
 

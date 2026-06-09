@@ -205,6 +205,8 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
 
         row.depth = std::make_unique<fxme::FxmeSlider> (apvts, ModEngine::depthId (i), "Depth", juce::Colours::orange);
         row.depth->setSliderStyle (juce::Slider::LinearHorizontal);
+        // Bipolar control (centre = 0 = no modulation): fill the bar from the centre.
+        row.depth->getProperties().set ("drawFromCentre", true);
         row.depth->setLookAndFeel (&fxmeLookAndFeel);
         addAndMakeVisible (*row.depth);
 

@@ -32,7 +32,7 @@ public:
     void setColumnLevelProvider (std::function<float (int)> fn) { columnLevelLinear = std::move (fn); }
 
 private:
-    std::unique_ptr<fxme::FxmeSlider> makeKnob (const juce::String& paramId);
+    std::unique_ptr<fxme::FxmeSlider> makeKnob (const juce::String& paramId, bool bipolar = false);
     void timerCallback() override;
 
     juce::AudioProcessorValueTreeState& apvts;

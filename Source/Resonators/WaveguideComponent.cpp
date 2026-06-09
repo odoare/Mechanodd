@@ -12,8 +12,8 @@
 WaveguideComponent::WaveguideComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), prefix (pfx)
 {
-    addKnob (coarse,     Resonator::makeId (prefix, "coarse"),      "Coarse");
-    addKnob (fine,       Resonator::makeId (prefix, "fine"),        "Fine");
+    addKnob (coarse,     Resonator::makeId (prefix, "coarse"),      "Coarse", true);
+    addKnob (fine,       Resonator::makeId (prefix, "fine"),        "Fine",   true);
     addKnob (fbOn,       Resonator::makeId (prefix, "fbGainOn"),    "Fb On");
     addKnob (fbOff,      Resonator::makeId (prefix, "fbGainOff"),   "Fb Off");
     addKnob (cutOn,      Resonator::makeId (prefix, "fbCutoffOn"),  "Cut On");
@@ -31,16 +31,15 @@ WaveguideComponent::~WaveguideComponent()
             k->slider->setLookAndFeel (nullptr);
 }
 
-void WaveguideComponent::addKnob (Knob& k, const juce::String& paramId, const juce::String& text)
+void WaveguideComponent::addKnob (Knob& k, const juce::String& paramId, const juce::String& text, bool bipolar)
 {
     k.slider = std::make_unique<fxme::FxmeSlider> (apvts, paramId, text, juce::Colours::orange);
     k.slider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    if (bipolar)
+        k.slider->setCentralValue (0.0);   // pitch offset: 0 semitones at centre
+    k.slider->setShowLabel (true);          // name drawn below the knob by FxmeLookAndFeel
     k.slider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*k.slider);
-
-    k.label.setText (text, juce::dontSendNotification);
-    k.label.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (k.label);
 }
 
 void WaveguideComponent::resized()
@@ -48,12 +47,12 @@ void WaveguideComponent::resized()
     auto area = getLocalBounds();
     const int n = (int) knobs.size();
     const int w = juce::jmax (1, area.getWidth() / n);
-    const int labelH = 14;
 
     for (int i = 0; i < n; ++i)
     {
         auto col = area.removeFromLeft (w);
-        knobs[(size_t) i]->label.setBounds (col.removeFromBottom (labelH));
+        // The knob's name is drawn below it by FxmeLookAndFeel (showLabel), so the
+        // slider takes the whole column.
         knobs[(size_t) i]->slider->setBounds (col.reduced (2));
     }
 }

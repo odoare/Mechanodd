@@ -112,7 +112,7 @@ void FeedbackMatrix::checkParameters()
         aim (panL[(size_t) r], std::cos (angle));
         aim (panR[(size_t) r], std::sin (angle));
 
-        aim (send[(size_t) r], sendParam[(size_t) r]->load());
+        aim (send[(size_t) r], juce::Decibels::decibelsToGain (sendParam[(size_t) r]->load(), -60.0f));
     }
 
     smoothPrimed = true;
@@ -283,6 +283,12 @@ void FeedbackMatrix::addParameters (std::vector<std::unique_ptr<juce::RangedAudi
         params.push_back (std::make_unique<FloatParam> (panId (r), "Res " + juce::String (r) + " Pan",
             juce::NormalisableRange<float> (-1.0f, 1.0f, 1e-3f), 0.0f));
         params.push_back (std::make_unique<FloatParam> (sendId (r), "Res " + juce::String (r) + " Send",
-            juce::NormalisableRange<float> (0.0f, 1.0f, 1e-3f), 0.0f));
+            juce::NormalisableRange<float> (-60.0f, 12.0f, 0.1f), -60.0f,
+            juce::AudioParameterFloatAttributes()
+                .withLabel ("dB")
+                .withStringFromValueFunction ([] (float v, int)
+                {
+                    return v <= -59.9f ? juce::String ("-inf") : juce::String (v, 1);
+                })));
     }
 }

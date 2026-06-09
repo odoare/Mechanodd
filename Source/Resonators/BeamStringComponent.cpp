@@ -12,8 +12,8 @@
 BeamStringComponent::BeamStringComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), prefix (pfx)
 {
-    addKnob (coarse,      Resonator::makeId (prefix, "coarse"),      "Coarse");
-    addKnob (fine,        Resonator::makeId (prefix, "fine"),        "Fine");
+    addKnob (coarse,      Resonator::makeId (prefix, "coarse"),      "Coarse", true);
+    addKnob (fine,        Resonator::makeId (prefix, "fine"),        "Fine",   true);
     addKnob (mix,         Resonator::makeId (prefix, "mix"),         "Str/Beam");
     addKnob (modes,       Resonator::makeId (prefix, "modes"),       "Modes");
     addKnob (resOn,       Resonator::makeId (prefix, "resOn"),       "Res On");
@@ -32,16 +32,15 @@ BeamStringComponent::~BeamStringComponent()
             k->slider->setLookAndFeel (nullptr);
 }
 
-void BeamStringComponent::addKnob (Knob& k, const juce::String& paramId, const juce::String& text)
+void BeamStringComponent::addKnob (Knob& k, const juce::String& paramId, const juce::String& text, bool bipolar)
 {
     k.slider = std::make_unique<fxme::FxmeSlider> (apvts, paramId, text, juce::Colours::orange);
     k.slider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    if (bipolar)
+        k.slider->setCentralValue (0.0);   // pitch offset: 0 semitones at centre
+    k.slider->setShowLabel (true);          // name drawn below the knob by FxmeLookAndFeel
     k.slider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*k.slider);
-
-    k.label.setText (text, juce::dontSendNotification);
-    k.label.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (k.label);
 }
 
 void BeamStringComponent::resized()
@@ -49,12 +48,11 @@ void BeamStringComponent::resized()
     auto area = getLocalBounds();
     const int n = (int) knobs.size();
     const int w = juce::jmax (1, area.getWidth() / n);
-    const int labelH = 14;
 
     for (int i = 0; i < n; ++i)
     {
         auto col = area.removeFromLeft (w);
-        knobs[(size_t) i]->label.setBounds (col.removeFromBottom (labelH));
+        // Name drawn below the knob by FxmeLookAndFeel (showLabel): slider takes the column.
         knobs[(size_t) i]->slider->setBounds (col.reduced (2));
     }
 }

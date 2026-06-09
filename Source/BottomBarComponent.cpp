@@ -108,14 +108,10 @@ void BottomBarComponent::addKnob (Knob& k, const juce::String& paramId, const ju
 {
     k.slider = std::make_unique<fxme::FxmeSlider> (audioProcessor.apvts, paramId, text, juce::Colours::orange);
     k.slider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    k.slider->setShowLabel (true);          // name drawn below the knob by FxmeLookAndFeel
     k.slider->setLookAndFeel (&fxmeLookAndFeel);
     MechanOddTheme::accentSlider (*k.slider, MechanOddTheme::modulation);
     addAndMakeVisible (*k.slider);
-
-    k.label.setText (text, juce::dontSendNotification);
-    k.label.setJustificationType (juce::Justification::centred);
-    k.label.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.85f));
-    addAndMakeVisible (k.label);
 }
 
 void BottomBarComponent::paint (juce::Graphics& g)
@@ -142,12 +138,11 @@ void BottomBarComponent::resized()
 {
     auto area = getLocalBounds().reduced (8, 6);
     constexpr int knobW   = 88;
-    constexpr int labelH  = 14;
 
-    // Place a labelled knob (label under the knob) in a fixed-width column.
-    auto placeKnob = [labelH] (Knob& k, juce::Rectangle<int> col)
+    // Place a knob in a fixed-width column; its name is drawn below it by
+    // FxmeLookAndFeel (showLabel), so the slider takes the whole column.
+    auto placeKnob = [] (Knob& k, juce::Rectangle<int> col)
     {
-        k.label.setBounds (col.removeFromBottom (labelH));
         k.slider->setBounds (col.reduced (2));
     };
 

@@ -47,7 +47,6 @@ private:
     juce::Label freqLabel;
     std::unique_ptr<fxme::FxmeSlider> freqSlider;
 
-    juce::Label levelLabel;
     std::unique_ptr<fxme::FxmeSlider> levelSlider;
 
     VuMeterComponent levelMeter;

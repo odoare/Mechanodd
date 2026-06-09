@@ -23,7 +23,7 @@ private:
     juce::AudioProcessorValueTreeState& apvts;
     juce::String prefix;
 
-    juce::Label   waveLabel, modeLabel, tuneLabel;
+    juce::Label   waveLabel, modeLabel;
     juce::ComboBox waveBox, modeBox;
     std::unique_ptr<fxme::FxmeSlider> tuneSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveAtt, modeAtt;

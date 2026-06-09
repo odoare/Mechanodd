@@ -51,12 +51,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::cre
     EffectChain::addParameters (params, "bus");
     EffectChain::addParameters (params, "master");
 
-    // Modulation targets = every float parameter created so far.
+    // Modulation targets = every float parameter created so far, plus the rate
+    // and depth of each LFO (added below by ModEngine::addParameters — their IDs
+    // are deterministic so we can list them now; the APVTS lookup happens later in
+    // assignParameters(), after all parameters are registered).
     juce::StringArray modTargets;
     modTargets.add ("None");
     for (auto& p : params)
         if (auto* fp = dynamic_cast<juce::AudioParameterFloat*> (p.get()))
             modTargets.add (fp->paramID);
+    for (int i = 0; i < ModEngine::numModulators; ++i)
+    {
+        modTargets.add (ModEngine::rateId  (i));
+        modTargets.add (ModEngine::depthId (i));
+    }
 
     ModEngine::addParameters (params, modTargets);
 
@@ -79,6 +87,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::cre
 
     params.push_back (std::make_unique<juce::AudioParameterBool> (
         busPostMasterId, "Bus Post Master", false));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        busOutVolId, "Send Output Volume",
+        juce::NormalisableRange<float> (-60.0f, 12.0f, 0.1f), 0.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("dB")
+            .withStringFromValueFunction ([] (float v, int) { return v <= -59.9f ? juce::String ("-inf") : juce::String (v, 1); })));
 
     return { params.begin(), params.end() };
 }
@@ -237,6 +251,10 @@ void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     pOutputVolume  = apvts.getRawParameterValue (outputVolumeId);
     pNumVoices     = apvts.getRawParameterValue (numVoicesId);
     pBusPostMaster = apvts.getRawParameterValue (busPostMasterId);
+    pBusOutVol     = apvts.getRawParameterValue (busOutVolId);
+    busOutputGain.reset (sampleRate, 0.02);
+    busOutputGain.setCurrentAndTargetValue (
+        juce::Decibels::decibelsToGain (pBusOutVol != nullptr ? pBusOutVol->load() : 0.0f, -60.0f));
     outputGain.reset (sampleRate, 0.02);
     outputGain.setCurrentAndTargetValue (
         juce::Decibels::decibelsToGain (pOutputVolume != nullptr ? pOutputVolume->load() : 0.0f, -60.0f));
@@ -425,11 +443,25 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // output is folded into the mix before the master chain runs.
     const bool busPostMaster = pBusPostMaster != nullptr && pBusPostMaster->load() > 0.5f;
 
-    // Helper: store a mono (L+R)/2 mix of the processed send bus for next block's
-    // resonator feedback column. This must happen right after busChain.process().
+    // Apply a per-sample smoothed output level to the send bus (runs in both branches).
+    auto applyBusOutputGain = [&]()
+    {
+        busOutputGain.setTargetValue (
+            juce::Decibels::decibelsToGain (pBusOutVol != nullptr ? pBusOutVol->load() : 0.0f, -60.0f));
+        const int nch = sendBus.getNumChannels();
+        for (int i = 0; i < numSamples; ++i)
+        {
+            const float g = busOutputGain.getNextValue();
+            for (int ch = 0; ch < nch; ++ch)
+                sendBus.getWritePointer (ch)[i] *= g;
+        }
+    };
+
+    // Store a mono (L+R)/2 mix of the levelled send bus for next block's
+    // resonator feedback column.
     auto captureSendMono = [&]()
     {
-        auto* dst  = prevSendBusOut.getWritePointer (0);
+        auto* dst        = prevSendBusOut.getWritePointer (0);
         const auto* busL = sendBus.getReadPointer (0);
         const auto* busR = sendBus.getNumChannels() > 1 ? sendBus.getReadPointer (1) : busL;
         for (int i = 0; i < numSamples; ++i)
@@ -441,6 +473,7 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         masterChain.process (buffer);
         busChain.process (sendBus);
         captureSendMono();
+        applyBusOutputGain();
         for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
             buffer.addFrom (ch, 0, sendBus, juce::jmin (ch, sendBus.getNumChannels() - 1), 0, numSamples);
     }
@@ -448,6 +481,7 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     {
         busChain.process (sendBus);
         captureSendMono();
+        applyBusOutputGain();
         for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
             buffer.addFrom (ch, 0, sendBus, juce::jmin (ch, sendBus.getNumChannels() - 1), 0, numSamples);
         masterChain.process (buffer);

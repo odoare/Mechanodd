@@ -38,13 +38,10 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
     freqSlider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*freqSlider);
 
-    levelLabel.setText ("Level", juce::dontSendNotification);
-    levelLabel.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (levelLabel);
-
     levelSlider = std::make_unique<fxme::FxmeSlider> (
         apvts, ResonatorSlot::levelParamId (slotPrefix), "Level", juce::Colours::orange);
     levelSlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    levelSlider->setShowLabel (true);       // name drawn below the knob by FxmeLookAndFeel
     levelSlider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*levelSlider);
 
@@ -120,7 +117,7 @@ void ResonatorSlotComponent::resized()
 
     const int knobSide = juce::jmax (1, area.getHeight() - labelH);
     auto levelCol = area.removeFromRight (knobSide + 4);
-    levelLabel.setBounds (levelCol.removeFromBottom (labelH));
+    // showLabel draws "Level" below the knob within the slider's own bounds.
     levelSlider->setBounds (levelCol.reduced (2));
 
     for (auto& comp : typeComponents)

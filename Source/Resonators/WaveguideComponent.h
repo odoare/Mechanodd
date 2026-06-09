@@ -23,11 +23,10 @@ public:
 private:
     struct Knob
     {
-        juce::Label label;
         std::unique_ptr<fxme::FxmeSlider> slider;
     };
 
-    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text);
+    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text, bool bipolar = false);
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String prefix;

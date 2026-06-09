@@ -77,6 +77,7 @@ public:
     static constexpr const char* numVoicesId     = "numVoices";
     static constexpr const char* portamentoId    = "portamento";
     static constexpr const char* busPostMasterId = "bus_postMaster";
+    static constexpr const char* busOutVolId     = "bus_outVol";
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -108,6 +109,8 @@ private:
     std::atomic<float>* pOutputVolume  { nullptr };
     std::atomic<float>* pNumVoices     { nullptr };
     std::atomic<float>* pBusPostMaster { nullptr };
+    std::atomic<float>* pBusOutVol     { nullptr };
+    juce::LinearSmoothedValue<float> busOutputGain { 1.0f };
     juce::LinearSmoothedValue<float> outputGain { 1.0f };
     std::array<std::atomic<float>, 2> outLevel {};   // dB, fast peak (GUI reads)
     std::array<std::atomic<float>, 2> outHold  {};   // dB, slow peak-hold

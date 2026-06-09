@@ -35,11 +35,10 @@ WavetableOscSourceComponent::WavetableOscSourceComponent (juce::AudioProcessorVa
     addAndMakeVisible (modeBox);
     modeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (apvts, Source::makeId (prefix, "mode"), modeBox);
 
-    tuneLabel.setText ("Tune", juce::dontSendNotification);
-    tuneLabel.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (tuneLabel);
     tuneSlider = std::make_unique<fxme::FxmeSlider> (apvts, Source::makeId (prefix, "tune"), "Tune", juce::Colours::orange);
     tuneSlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    tuneSlider->setCentralValue (0.0);   // bipolar: 0 semitones at centre
+    tuneSlider->setShowLabel (true);     // name drawn below the knob by FxmeLookAndFeel
     tuneSlider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*tuneSlider);
 
@@ -70,10 +69,11 @@ void WavetableOscSourceComponent::resized()
     modeLabel.setBounds (left.removeFromTop (14));
     modeBox.setBounds (left.removeFromTop (24));
 
-    // Tune sits at the head of the controls to the right of the column.
-    auto tuneCol = area.removeFromLeft (56);
-    tuneLabel.setBounds (tuneCol.removeFromBottom (14));
-    tuneSlider->setBounds (tuneCol.reduced (2));
+    // Tune sits at the head of the controls to the right of the column, sized to
+    // one knob-width so it matches the common knobs (Tune + the N common knobs
+    // share this area equally).
+    auto tuneCol = area.removeFromLeft (area.getWidth() / (SourceCommonComponent::numKnobs + 1));
+    tuneSlider->setBounds (tuneCol.reduced (2));   // showLabel draws "Tune" below the knob
 
     common.setBounds (area);
 }

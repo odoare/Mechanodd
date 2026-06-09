@@ -28,7 +28,6 @@ public:
 private:
     struct Knob
     {
-        juce::Label label;
         std::unique_ptr<fxme::FxmeSlider> slider;
     };
 

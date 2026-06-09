@@ -34,12 +34,9 @@ void SourceCommonComponent::addKnob (Knob& k, const juce::String& paramId, const
 {
     k.slider = std::make_unique<fxme::FxmeSlider> (apvts, paramId, text, juce::Colours::orange);
     k.slider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    k.slider->setShowLabel (true);          // name drawn below the knob by FxmeLookAndFeel
     k.slider->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*k.slider);
-
-    k.label.setText (text, juce::dontSendNotification);
-    k.label.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (k.label);
 }
 
 void SourceCommonComponent::resized()
@@ -47,12 +44,11 @@ void SourceCommonComponent::resized()
     auto area = getLocalBounds();
     const int n = (int) knobs.size();
     const int w = juce::jmax (1, area.getWidth() / n);
-    const int labelH = 14;
 
     for (int i = 0; i < n; ++i)
     {
         auto col = area.removeFromLeft (w);
-        knobs[(size_t) i]->label.setBounds (col.removeFromBottom (labelH));
+        // Name drawn below the knob by FxmeLookAndFeel (showLabel): slider takes the column.
         knobs[(size_t) i]->slider->setBounds (col.reduced (2));
     }
 }

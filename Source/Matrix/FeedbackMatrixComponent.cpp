@@ -28,10 +28,10 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
     {
         for (int c = 0; c < cols; ++c)
             if (! FeedbackMatrix::isSelfCell (r, c))
-                gainKnobs[(size_t) r][(size_t) c] = makeKnob (FeedbackMatrix::gainId (r, c));
+                gainKnobs[(size_t) r][(size_t) c] = makeKnob (FeedbackMatrix::gainId (r, c), true);
 
         levelKnobs[(size_t) r] = makeKnob (FeedbackMatrix::levelId (r));
-        panKnobs[(size_t) r]   = makeKnob (FeedbackMatrix::panId (r));
+        panKnobs[(size_t) r]   = makeKnob (FeedbackMatrix::panId (r), true);
         sendKnobs[(size_t) r]  = makeKnob (FeedbackMatrix::sendId (r));
 
         // Each row feeds resonator r, so tint the whole row in its colour.
@@ -92,10 +92,13 @@ FeedbackMatrixComponent::~FeedbackMatrixComponent()
     }
 }
 
-std::unique_ptr<fxme::FxmeSlider> FeedbackMatrixComponent::makeKnob (const juce::String& paramId)
+std::unique_ptr<fxme::FxmeSlider> FeedbackMatrixComponent::makeKnob (const juce::String& paramId, bool bipolar)
 {
     auto s = std::make_unique<fxme::FxmeSlider> (apvts, paramId, paramId, juce::Colours::orange);
     s->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    // Bipolar cells (gain / pan) are centre-detented at 0; fill the ring from the centre.
+    if (bipolar)
+        s->setCentralValue (0.0);
     s->setLookAndFeel (&fxmeLookAndFeel);
     addAndMakeVisible (*s);
     return s;
@@ -227,7 +230,9 @@ void FeedbackMatrixComponent::timerCallback()
         show (levelMeters[(size_t) r].get(), lvDb <= -59.9f,
               resLevel * juce::Decibels::decibelsToGain (lvDb, -60.0f));
 
-        const float sendAmt = (float) sendKnobs[(size_t) r]->getValue();
-        show (sendMeters[(size_t) r].get(), sendAmt <= 1.0e-4f, resLevel * sendAmt);
+        const float sendDb   = (float) sendKnobs[(size_t) r]->getValue();
+        const bool  sendMute = sendDb <= -59.9f;
+        const float sendGain = sendMute ? 0.0f : juce::Decibels::decibelsToGain (sendDb);
+        show (sendMeters[(size_t) r].get(), sendMute, resLevel * sendGain);
     }
 }
