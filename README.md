@@ -45,6 +45,36 @@ The synth is fully polyphonic (up to 8 voices). Each voice runs its own set of s
 
 ## Signal Flow
 
+The full routing — both feedback paths (the resonator columns and the re-entrant send-bus column) and the per-resonator safety stage — is shown below. See [doc/AUDIO_ROUTING.md](doc/AUDIO_ROUTING.md) for the annotated version.
+
+```mermaid
+flowchart TD
+    MIDI([MIDI Note On/Off]) --> MOD[ModEngine<br/>global LFOs + ADSRs]
+    MOD -. modulates parameter atomics .-> MTX
+
+    SRC[Sources ×4<br/>Noise · Wavetable · Cracks] --> MTX
+
+    subgraph LOOP[Feedback engine — per-voice and global tiers]
+        MTX[Feedback Matrix<br/>4 rows × 9 columns<br/>4 source · 4 resonator · 1 send-bus] --> RES[Resonators ×4<br/>string · plate · membrane · beam]
+        RES --> GUARD[Per-resonator loop guard<br/>NaN/Inf guard → DC block 8 Hz → soft-limit tanh]
+        GUARD -- "resonator columns<br/>1-block delay" --> MTX
+    end
+
+    GUARD --> MIX[Main Mix<br/>row level · pan]
+    GUARD --> SEND[Send Bus<br/>row send · pan]
+
+    SEND --> BUSFX[Bus Effect Chain<br/>4 slots]
+    BUSFX -- "mono mix, pre-fader<br/>previous block" --> MTX
+    BUSFX -- "send output level" --> MIX
+
+    MIX --> MASTERFX[Master Effect Chain<br/>4 slots]
+    MASTERFX --> OUTG[Output Gain + VU Meter]
+    OUTG --> AOUT([Audio Out])
+```
+
+<details>
+<summary>Detailed per-voice / global ASCII view</summary>
+
 ```
 MIDI Note On/Off
       │
@@ -91,7 +121,11 @@ MIDI Note On/Off
                                     Audio Out                             │    │
 ```
 
-The **one-sample feedback delay** between the matrix output and the resonator input is inherent to the per-block processing model. It keeps the feedback loop stable and avoids circular dependencies within a single block.
+</details>
+
+The **one-block feedback delay** between the matrix output and the resonator (and send-bus) inputs is inherent to the per-block processing model: it keeps the feedback loops stable and avoids circular dependencies within a single block.
+
+Every resonator output also passes through a **loop-safety stage** before it re-enters the matrix or the mix — a NaN/Inf guard, a one-pole DC blocker, and a soft `tanh` limiter — so the matrix cross-feedback and the re-entrant send-bus chain cannot run away or accumulate DC. See [Feedback Matrix: Routing and Gain Encoding](#feedback-matrix-routing-and-gain-encoding).
 
 ---
 
@@ -119,13 +153,14 @@ See [Resonators: DSP and Mathematics](#resonators-dsp-and-mathematics) for the m
 
 ### Feedback Matrix
 
-A 4×8 routing grid. Each cell is a **bipolar gain knob** (centre = mute, edges = ±maximum gain):
+A 4×9 routing grid. Each cell is a **bipolar gain knob** (centre = mute, edges = ±maximum gain):
 
 - **Columns 1–4** carry the four source signals.
 - **Columns 5–8** carry the four resonator outputs (fed back with a one-block delay).
+- **Column 9** carries the processed send-bus output, fed back with a one-block delay (the re-entrant send chain).
 - **Rows 1–4** feed the four resonators.
 
-Each row also has a **level**, **pan**, and **send** control. The send bus routes signal into the Bus Effect Chain before the Master chain.
+Each row also has a **level**, **pan**, and **send** control. The send bus routes signal into the Bus Effect Chain, whose output is both folded into the master mix and fed back into column 9 of the matrix.
 
 ### Effects
 
@@ -133,10 +168,10 @@ Two serial effect chains of four slots each:
 
 | Chain | Purpose |
 |-------|---------|
-| **Bus** | Applied to the send signal accumulated from all voices and resonators |
+| **Bus** | Applied to the send signal accumulated from all voices and resonators. Its output also re-enters the feedback matrix (column 9), forming a re-entrant effect loop |
 | **Master** | Applied to the final stereo mix, after the bus chain |
 
-Available effects per slot: Delay, Tube saturation, EQ, Octaver, Compressor, Transient shaper, Cabinet IR, Convolution Reverb.
+Available effects per slot: Delay, Tube saturation, EQ, Octaver, Compressor, Limiter/maximizer, Transient shaper, Cabinet IR, Convolution Reverb.
 
 ### Modulation
 
@@ -448,7 +483,19 @@ This means turning a cell from dead-centre toward an edge sweeps from silence th
 
 ### Feedback stability
 
-Because resonator outputs are delayed by one block before re-entering the matrix, the loop gain seen by the feedback path is the product of all cell gains along the path. Keeping individual cells below unity (|v| < 0.5 approximately) tends to keep the system stable; setting them near the edges creates self-sustaining oscillation or deliberate instability.
+Because resonator outputs are delayed by one block before re-entering the matrix, the loop gain seen by the feedback path is the product of all cell gains along the path. Keeping individual cells below unity (|v| < 0.5 approximately) tends to keep the system stable; setting them near the edges creates self-sustaining oscillation or deliberate instability — bounded by the loop-safety stage below.
+
+### Loop safety
+
+Every resonator output passes through a fixed safety stage at the single node where it splits into the mix, the feedback column and the one-block delay:
+
+- **NaN/Inf guard** — the resonator input is sanitised and any non-finite output is mapped to 0, so a transient glitch cannot get latched permanently into the feedback state.
+- **DC blocker** — a one-pole high-pass (~8 Hz) stops DC from accumulating in the loop and eating headroom.
+- **Soft limiter** — a `tanh` curve with ~+12 dBFS of headroom (`ceiling · tanh(x / ceiling)`) bounds the signal. It is essentially linear at normal levels and pulls the effective loop gain below unity once the signal grows large, so the matrix cross-feedback and the re-entrant send chain self-limit (the way a real string or membrane saturates) instead of clipping the DAC. This is the in-loop counterpart to the optional **Limiter** mastering effect available in the effect chains.
+
+### Send-bus feedback column
+
+Column 9 carries the previous block's **processed** send-bus output (a mono mix of the Bus Effect Chain), so time-based effects like delay and reverb can be folded back into the resonators. The mono mix is captured **before** the send output-level fader, so that fader controls only how much send reaches the master — not how much re-enters the feedback loop.
 
 ### Column metering
 
@@ -506,11 +553,12 @@ Effects are processed in two serial chains. Each chain has four slots; each slot
 | **EQ** | Parametric equaliser (multiple bands, freq/gain/Q) |
 | **Octaver** | Pitch-shifted copies (up/down octave) mixed with the dry signal |
 | **Compressor** | Dynamic range compressor (threshold, ratio, attack, release, makeup) |
+| **Limiter** | Look-ahead brickwall limiter / maximizer (drive, ceiling, release) with a final hard ceiling clamp |
 | **Transient** | Transient shaper for independent attack and sustain control |
 | **Cabinet** | Impulse-response convolution of a guitar speaker cabinet (19 presets) |
 | **Reverb** | Convolution reverb (6 room/hall impulse responses) |
 
-The **Bus** chain processes signal from the resonator/voice send bus. The **Master** chain processes the final stereo output after mixing bus and dry signal.
+The **Bus** chain processes the resonator/voice send bus; its output is folded into the mix **and** fed back into the matrix (column 9), so the send chain is re-entrant. The **Master** chain processes the final stereo output after the bus is mixed in. Placing a **Limiter** at the end of the Master chain gives a final output ceiling.
 
 ---
 
