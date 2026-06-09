@@ -133,6 +133,8 @@ Every resonator output also passes through a **loop-safety stage** before it re-
 
 ### Sources
 
+![Sources tab](doc/sources.png)
+
 Four source slots (coloured orange, gold, rose, magenta) generate the excitation signals. Each slot can be independently tuned and shaped. Typical source types:
 
 - **Wavetable** — band-limited oscillator reading a stored waveform cycle.
@@ -143,6 +145,8 @@ Sources feed into the columns of the feedback matrix.
 
 ### Resonators
 
+![Resonators tab](doc/resonators.png)
+
 Four resonator slots (coloured teal, azure, lime, violet) model the physical structure being "played." Each slot independently selects a resonator type and its associated parameters.
 
 Resonators can run in two modes:
@@ -152,6 +156,8 @@ Resonators can run in two modes:
 See [Resonators: DSP and Mathematics](#resonators-dsp-and-mathematics) for the models.
 
 ### Feedback Matrix
+
+![Feedback matrix tab](doc/matrix.png)
 
 A 4×9 routing grid. Each cell is a **bipolar gain knob** (centre = mute, edges = ±maximum gain):
 
@@ -164,6 +170,8 @@ Each row also has a **level**, **pan**, and **send** control. The send bus route
 
 ### Effects
 
+![Effects tab](doc/effects.png)
+
 Two serial effect chains of four slots each:
 
 | Chain | Purpose |
@@ -174,6 +182,8 @@ Two serial effect chains of four slots each:
 Available effects per slot: Delay, Tube saturation, EQ, Octaver, Compressor, Limiter/maximizer, Transient shaper, Cabinet IR, Convolution Reverb.
 
 ### Modulation
+
+![Modulation tab](doc/modulators.png)
 
 Twelve global modulators, each targeting any float parameter in the plugin. Two types:
 
