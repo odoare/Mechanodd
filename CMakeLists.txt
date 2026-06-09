@@ -60,7 +60,7 @@ target_include_directories(MechanOdd PRIVATE ${MECHANODD_INCLUDE_DIRS})
 # ── Reused FxmeFX effects ─────────────────────────────────────────────────────
 # Compile each effect's DSP class and its component (not the standalone plugin
 # wrappers PluginProcessor/PluginEditor/PdMain) into MechanOdd.
-set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter Compressor Transient Cab ConvolReverb)
+set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter Compressor Limiter Transient Cab ConvolReverb)
 set(FXMEFX_ASSETS "")
 foreach(_fx IN LISTS FXMEFX_EFFECTS)
     set(_fxdir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/${_fx})

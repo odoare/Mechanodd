@@ -18,6 +18,8 @@
 #include "OctComponent.h"
 #include "Compressor.h"
 #include "CompressorComponent.h"
+#include "Limiter.h"
+#include "LimiterComponent.h"
 #include "Transient.h"
 #include "TransientComponent.h"
 #include "Cab.h"
@@ -199,6 +201,7 @@ const std::vector<EffectTypeInfo>& EffectFactory::types()
         makeEntry<Equalizer,    EqualizerComponent>     ("EQ",       600, 700),
         makeEntry<Oct,          OctComponent>           ("Oct",      520, 320),
         makeEntry<Compressor,   CompressorComponent>    ("Comp",     600, 300),
+        makeEntry<Limiter,      LimiterComponent>       ("Limit",    520, 280),
         makeEntry<Transient,    TransientComponent>     ("Transient",480, 300),
         makeIREntry<CabAdapter,          CabComponent>          ("Cab",    600, 400),
         makeIREntry<ConvolReverbAdapter, ConvolReverbComponent>  ("Reverb", 600, 400),
