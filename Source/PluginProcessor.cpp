@@ -465,7 +465,12 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         const auto* busL = sendBus.getReadPointer (0);
         const auto* busR = sendBus.getNumChannels() > 1 ? sendBus.getReadPointer (1) : busL;
         for (int i = 0; i < numSamples; ++i)
-            dst[i] = 0.5f * (busL[i] + busR[i]);
+        {
+            // This mono mix re-enters the matrix as a feedback column next block, so a
+            // non-finite sample from the bus FX would poison the loop permanently — drop it.
+            const float m = 0.5f * (busL[i] + busR[i]);
+            dst[i] = std::isfinite (m) ? m : 0.0f;
+        }
     };
 
     if (busPostMaster)

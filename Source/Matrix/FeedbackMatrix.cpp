@@ -18,6 +18,10 @@ void FeedbackMatrix::prepare (const juce::dsp::ProcessSpec& spec)
     sampleRate   = spec.sampleRate;
     smoothPrimed = false;
 
+    // DC-blocker pole from the corner frequency: R = 1 - 2*pi*fc/fs (one-pole HP).
+    dcR = juce::jlimit (0.9f, 0.99999f,
+                        1.0f - juce::MathConstants<float>::twoPi * dcBlockHz / (float) sampleRate);
+
     constexpr double smoothSeconds = 0.01;   // 20 ms linear ramp
     for (auto& row : gains)
         for (auto& g : row)
@@ -33,6 +37,8 @@ void FeedbackMatrix::prepare (const juce::dsp::ProcessSpec& spec)
 void FeedbackMatrix::reset()
 {
     prevResonatorOut.fill (0.0f);
+    for (auto& b : dcBlockers)
+        b.reset();
 
     // Snap the gain smoothers to their current targets so a (re)started voice routes
     // correctly from sample 0; in-flight ramps from a previous note must not leak into
@@ -171,7 +177,11 @@ void FeedbackMatrix::processVoice (const float* const* sourceSamples,
                 }
                 in += gains[(size_t) r][(size_t) c].getNextValue() * colSample;
             }
-            curOut[(size_t) r] = resonators[(size_t) r].processSample (in);
+            // Bracket the resonator with finite-guards: sanitize the input so a stray
+            // NaN can't latch into its state; block DC so it can't accumulate in the
+            // loop; soft-limit so the matrix feedback can't run away (see softLimit).
+            const float raw = resonators[(size_t) r].processSample (sanitize (in));
+            curOut[(size_t) r] = softLimit (dcBlockers[(size_t) r].process (raw, dcR));
         }
 
         // Mix PV rows, accumulate PV-resonator columns, then advance feedback state.
@@ -222,7 +232,10 @@ void FeedbackMatrix::processGlobal (const float* const* columnSum,
                 }
                 in += gains[(size_t) r][(size_t) c].getNextValue() * colSample;
             }
-            curOut[(size_t) r] = resonators[(size_t) r].processSample (in);
+            // See processVoice: sanitize the input, block DC, soft-limit the output to
+            // keep the global feedback bounded and finite.
+            const float raw = resonators[(size_t) r].processSample (sanitize (in));
+            curOut[(size_t) r] = softLimit (dcBlockers[(size_t) r].process (raw, dcR));
         }
 
         for (int r = 0; r < numResonators; ++r)

@@ -105,6 +105,28 @@ public:
         return sign * mag;
     }
 
+    // Safety limiter on each resonator's output before it re-enters the matrix
+    // (feedback column + one-sample delay) or the mix. The matrix's cross-feedback
+    // (cells up to gainMaxDb, several paths into one row) is otherwise an unbounded
+    // loop: energy grows until it clips the DAC or goes non-finite. A soft tanh limit
+    // pulls the effective loop gain below 1 once the signal is large, while staying
+    // ~linear (inaudible) at normal levels — the way a real string or membrane
+    // saturates. A non-finite input (a NaN/Inf that slipped through) maps to 0 so it
+    // can never get latched into the feedback state. outputCeiling sets the headroom
+    // (linear amplitude) before limiting begins; tune it if resonators run hotter.
+    static constexpr float outputCeiling = 4.0f;   // ~+12 dBFS before the knee
+
+    static float softLimit (float x) noexcept
+    {
+        if (! std::isfinite (x))
+            return 0.0f;
+        return outputCeiling * std::tanh (x * (1.0f / outputCeiling));
+    }
+
+    // Drop a non-finite sample to silence. Used to keep NaN/Inf from entering a
+    // resonator's internal state (where it would persist until the note restarts).
+    static float sanitize (float x) noexcept { return std::isfinite (x) ? x : 0.0f; }
+
     static bool isSelfCell (int row, int col) { return col == numSources + row; }
     static juce::String gainId  (int row, int col) { return "mtx_g_" + juce::String (row) + "_" + juce::String (col); }
     static juce::String levelId (int row) { return "mtx_level_" + juce::String (row); }
@@ -113,6 +135,27 @@ public:
 
 private:
     void mixRow (int r, float out, int n, float* outL, float* outR, float* sendL, float* sendR);
+
+    // One-pole DC blocker on each resonator's output, applied inside the feedback loop.
+    // A feedback network slowly accumulates any DC offset (asymmetric resonator output,
+    // saturation, etc.); left unchecked it eats headroom and can thump. Removing it at
+    // the loop node every sample stops it compounding. Self-guards against a non-finite
+    // input so a NaN can't latch into y1.
+    struct DCBlocker
+    {
+        float x1 { 0.0f }, y1 { 0.0f };
+        void reset() noexcept { x1 = y1 = 0.0f; }
+        float process (float x, float R) noexcept
+        {
+            if (! std::isfinite (x)) { reset(); return 0.0f; }
+            const float y = x - x1 + R * y1;
+            x1 = x;
+            y1 = y;
+            return y;
+        }
+    };
+
+    static constexpr float dcBlockHz = 8.0f;   // high-pass corner for the loop DC blocker
 
     // Per-sample linear smoothers: the routing gains, per-row output level, pan and
     // send are all applied as per-sample multipliers in the process loops, so ramping
@@ -130,6 +173,8 @@ private:
     bool   smoothPrimed { false };   // first checkParameters snaps; later ones ramp
 
     std::array<float, numResonators> prevResonatorOut {};
+    std::array<DCBlocker, numResonators> dcBlockers {};
+    float dcR { 0.9986f };   // DC-blocker pole, derived from dcBlockHz in prepare()
 
     std::array<std::array<std::atomic<float>*, numColumns>, numRows> gainParam {};
     // The base (unmodulated) gain parameters: getValue() is unaffected by the engines'
