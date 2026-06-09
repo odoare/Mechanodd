@@ -439,7 +439,7 @@
   <PARAM id="master_fx1_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx1_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx1_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx1_type" value="8.0"/>
+  <PARAM id="master_fx1_type" value="6.0"/>
   <PARAM id="master_fx2_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx2_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx2_Cab_Cab_IRR" value="2.0"/>
@@ -775,9 +775,9 @@
   <PARAM id="mtx_g_3_6" value="0.0"/>
   <PARAM id="mtx_g_3_8" value="0.0"/>
   <PARAM id="mtx_level_0" value="-60.0"/>
-  <PARAM id="mtx_level_1" value="6.0"/>
+  <PARAM id="mtx_level_1" value="3.0"/>
   <PARAM id="mtx_level_2" value="0.0"/>
-  <PARAM id="mtx_level_3" value="0.0"/>
+  <PARAM id="mtx_level_3" value="-60.0"/>
   <PARAM id="mtx_pan_0" value="0.0"/>
   <PARAM id="mtx_pan_1" value="-0.6319999694824219"/>
   <PARAM id="mtx_pan_2" value="0.6480001211166382"/>
@@ -1194,4 +1194,36 @@
   <PARAM id="src3_Wavetable_wave" value="0.0"/>
   <PARAM id="src3_type" value="3.0"/>
   <PARAM id="bus_outVol" value="0.0"/>
+  <PARAM id="bus_fx0_Limit_Lim_Ceiling"/>
+  <PARAM id="bus_fx0_Limit_Lim_Drive"/>
+  <PARAM id="bus_fx0_Limit_Lim_On"/>
+  <PARAM id="bus_fx0_Limit_Lim_Release"/>
+  <PARAM id="bus_fx1_Limit_Lim_Ceiling"/>
+  <PARAM id="bus_fx1_Limit_Lim_Drive"/>
+  <PARAM id="bus_fx1_Limit_Lim_On"/>
+  <PARAM id="bus_fx1_Limit_Lim_Release"/>
+  <PARAM id="bus_fx2_Limit_Lim_Ceiling"/>
+  <PARAM id="bus_fx2_Limit_Lim_Drive"/>
+  <PARAM id="bus_fx2_Limit_Lim_On"/>
+  <PARAM id="bus_fx2_Limit_Lim_Release"/>
+  <PARAM id="bus_fx3_Limit_Lim_Ceiling"/>
+  <PARAM id="bus_fx3_Limit_Lim_Drive"/>
+  <PARAM id="bus_fx3_Limit_Lim_On"/>
+  <PARAM id="bus_fx3_Limit_Lim_Release"/>
+  <PARAM id="master_fx0_Limit_Lim_Ceiling"/>
+  <PARAM id="master_fx0_Limit_Lim_Drive"/>
+  <PARAM id="master_fx0_Limit_Lim_On" value="0.0"/>
+  <PARAM id="master_fx0_Limit_Lim_Release"/>
+  <PARAM id="master_fx1_Limit_Lim_Ceiling"/>
+  <PARAM id="master_fx1_Limit_Lim_Drive"/>
+  <PARAM id="master_fx1_Limit_Lim_On"/>
+  <PARAM id="master_fx1_Limit_Lim_Release"/>
+  <PARAM id="master_fx2_Limit_Lim_Ceiling"/>
+  <PARAM id="master_fx2_Limit_Lim_Drive"/>
+  <PARAM id="master_fx2_Limit_Lim_On"/>
+  <PARAM id="master_fx2_Limit_Lim_Release"/>
+  <PARAM id="master_fx3_Limit_Lim_Ceiling"/>
+  <PARAM id="master_fx3_Limit_Lim_Drive"/>
+  <PARAM id="master_fx3_Limit_Lim_On"/>
+  <PARAM id="master_fx3_Limit_Lim_Release"/>
 </Parameters>
