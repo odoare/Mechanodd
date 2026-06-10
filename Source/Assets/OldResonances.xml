@@ -1210,8 +1210,8 @@
   <PARAM id="bus_fx3_Limit_Lim_Drive"/>
   <PARAM id="bus_fx3_Limit_Lim_On"/>
   <PARAM id="bus_fx3_Limit_Lim_Release"/>
-  <PARAM id="master_fx0_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
-  <PARAM id="master_fx0_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="master_fx0_Limit_Lim_Ceiling"/>
+  <PARAM id="master_fx0_Limit_Lim_Drive"/>
   <PARAM id="master_fx0_Limit_Lim_On" value="1.0"/>
   <PARAM id="master_fx0_Limit_Lim_Release"/>
   <PARAM id="master_fx1_Limit_Lim_Ceiling"/>

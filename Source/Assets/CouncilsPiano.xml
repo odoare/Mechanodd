@@ -364,7 +364,7 @@
   <PARAM id="master_fx0_Tube_Tube_Drive" value="13.11999988555908"/>
   <PARAM id="master_fx0_Tube_Tube_Model" value="2.0"/>
   <PARAM id="master_fx0_Tube_Tube_On" value="1.0"/>
-  <PARAM id="master_fx0_Tube_Tube_Out" value="-7.909999847412109"/>
+  <PARAM id="master_fx0_Tube_Tube_Out" value="-10.14000034332275"/>
   <PARAM id="master_fx0_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx0_Tube_Tube_Tone" value="0.0"/>
   <PARAM id="master_fx0_type" value="2.0"/>
@@ -513,7 +513,7 @@
   <PARAM id="master_fx2_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx2_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx2_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx2_type" value="0.0"/>
+  <PARAM id="master_fx2_type" value="8.0"/>
   <PARAM id="master_fx3_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRR" value="2.0"/>
@@ -775,10 +775,10 @@
   <PARAM id="mtx_g_3_5" value="0.0"/>
   <PARAM id="mtx_g_3_6" value="0.0"/>
   <PARAM id="mtx_g_3_8" value="0.0"/>
-  <PARAM id="mtx_level_0" value="-3.5"/>
-  <PARAM id="mtx_level_1" value="-3.960002899169922"/>
-  <PARAM id="mtx_level_2" value="-2.909999847412109"/>
-  <PARAM id="mtx_level_3" value="0.0"/>
+  <PARAM id="mtx_level_0" value="-6.0"/>
+  <PARAM id="mtx_level_1" value="-7.0"/>
+  <PARAM id="mtx_level_2" value="-6.0"/>
+  <PARAM id="mtx_level_3" value="-3.0"/>
   <PARAM id="mtx_pan_0" value="0.0"/>
   <PARAM id="mtx_pan_1" value="-1.0"/>
   <PARAM id="mtx_pan_2" value="1.0"/>

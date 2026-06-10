@@ -4,7 +4,7 @@
   <PARAM id="bus_fx0_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="bus_fx0_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="bus_fx0_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="bus_fx0_Cab_Cab_On" value="1.0"/>
+  <PARAM id="bus_fx0_Cab_Cab_On" value="0.0"/>
   <PARAM id="bus_fx0_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="bus_fx0_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="bus_fx0_Comp_Comp_Knee" value="0.0"/>
@@ -23,7 +23,7 @@
   <PARAM id="bus_fx0_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="bus_fx0_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="bus_fx0_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="bus_fx0_Delay_Del_On" value="1.0"/>
+  <PARAM id="bus_fx0_Delay_Del_On" value="0.0"/>
   <PARAM id="bus_fx0_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="bus_fx0_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="bus_fx0_EQ_EQ_B1_Gain" value="0.0"/>
@@ -47,17 +47,21 @@
   <PARAM id="bus_fx0_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="bus_fx0_EQ_EQ_On" value="0.0"/>
   <PARAM id="bus_fx0_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="bus_fx0_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="bus_fx0_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="bus_fx0_Limit_Lim_On" value="0.0"/>
+  <PARAM id="bus_fx0_Limit_Lim_Release" value="50.0"/>
   <PARAM id="bus_fx0_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="bus_fx0_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="bus_fx0_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="bus_fx0_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="bus_fx0_Oct_Oct_On" value="1.0"/>
+  <PARAM id="bus_fx0_Oct_Oct_On" value="0.0"/>
   <PARAM id="bus_fx0_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="bus_fx0_Reverb_Rev_DryGain" value="-60.0"/>
-  <PARAM id="bus_fx0_Reverb_Rev_IR" value="1.0"/>
+  <PARAM id="bus_fx0_Reverb_Rev_IR" value="5.0"/>
   <PARAM id="bus_fx0_Reverb_Rev_Length" value="1.0"/>
   <PARAM id="bus_fx0_Reverb_Rev_On" value="1.0"/>
-  <PARAM id="bus_fx0_Reverb_Rev_Shape" value="0.0"/>
+  <PARAM id="bus_fx0_Reverb_Rev_Shape" value="2.0"/>
   <PARAM id="bus_fx0_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="bus_fx0_Reverb_Rev_WetGain" value="0.0"/>
   <PARAM id="bus_fx0_Transient_Trans_Attack" value="0.0"/>
@@ -73,11 +77,11 @@
   <PARAM id="bus_fx0_Tube_Tube_Out" value="0.0"/>
   <PARAM id="bus_fx0_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="bus_fx0_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="bus_fx0_type" value="1.0"/>
+  <PARAM id="bus_fx0_type" value="9.0"/>
   <PARAM id="bus_fx1_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="bus_fx1_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="bus_fx1_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="bus_fx1_Cab_Cab_On" value="1.0"/>
+  <PARAM id="bus_fx1_Cab_Cab_On" value="0.0"/>
   <PARAM id="bus_fx1_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="bus_fx1_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="bus_fx1_Comp_Comp_Knee" value="0.0"/>
@@ -96,7 +100,7 @@
   <PARAM id="bus_fx1_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="bus_fx1_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="bus_fx1_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="bus_fx1_Delay_Del_On" value="1.0"/>
+  <PARAM id="bus_fx1_Delay_Del_On" value="0.0"/>
   <PARAM id="bus_fx1_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="bus_fx1_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="bus_fx1_EQ_EQ_B1_Gain" value="0.0"/>
@@ -120,16 +124,20 @@
   <PARAM id="bus_fx1_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="bus_fx1_EQ_EQ_On" value="0.0"/>
   <PARAM id="bus_fx1_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="bus_fx1_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="bus_fx1_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="bus_fx1_Limit_Lim_On" value="0.0"/>
+  <PARAM id="bus_fx1_Limit_Lim_Release" value="50.0"/>
   <PARAM id="bus_fx1_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="bus_fx1_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="bus_fx1_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="bus_fx1_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="bus_fx1_Oct_Oct_On" value="1.0"/>
+  <PARAM id="bus_fx1_Oct_Oct_On" value="0.0"/>
   <PARAM id="bus_fx1_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="bus_fx1_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="bus_fx1_Reverb_Rev_On" value="0.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="bus_fx1_Reverb_Rev_WetGain" value="0.0"/>
@@ -150,7 +158,7 @@
   <PARAM id="bus_fx2_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="bus_fx2_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="bus_fx2_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="bus_fx2_Cab_Cab_On" value="1.0"/>
+  <PARAM id="bus_fx2_Cab_Cab_On" value="0.0"/>
   <PARAM id="bus_fx2_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="bus_fx2_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="bus_fx2_Comp_Comp_Knee" value="0.0"/>
@@ -169,7 +177,7 @@
   <PARAM id="bus_fx2_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="bus_fx2_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="bus_fx2_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="bus_fx2_Delay_Del_On" value="1.0"/>
+  <PARAM id="bus_fx2_Delay_Del_On" value="0.0"/>
   <PARAM id="bus_fx2_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="bus_fx2_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="bus_fx2_EQ_EQ_B1_Gain" value="0.0"/>
@@ -193,16 +201,20 @@
   <PARAM id="bus_fx2_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="bus_fx2_EQ_EQ_On" value="0.0"/>
   <PARAM id="bus_fx2_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="bus_fx2_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="bus_fx2_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="bus_fx2_Limit_Lim_On" value="0.0"/>
+  <PARAM id="bus_fx2_Limit_Lim_Release" value="50.0"/>
   <PARAM id="bus_fx2_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="bus_fx2_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="bus_fx2_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="bus_fx2_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="bus_fx2_Oct_Oct_On" value="1.0"/>
+  <PARAM id="bus_fx2_Oct_Oct_On" value="0.0"/>
   <PARAM id="bus_fx2_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="bus_fx2_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="bus_fx2_Reverb_Rev_On" value="0.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="bus_fx2_Reverb_Rev_WetGain" value="0.0"/>
@@ -223,7 +235,7 @@
   <PARAM id="bus_fx3_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="bus_fx3_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="bus_fx3_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="bus_fx3_Cab_Cab_On" value="1.0"/>
+  <PARAM id="bus_fx3_Cab_Cab_On" value="0.0"/>
   <PARAM id="bus_fx3_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="bus_fx3_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="bus_fx3_Comp_Comp_Knee" value="0.0"/>
@@ -242,7 +254,7 @@
   <PARAM id="bus_fx3_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="bus_fx3_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="bus_fx3_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="bus_fx3_Delay_Del_On" value="1.0"/>
+  <PARAM id="bus_fx3_Delay_Del_On" value="0.0"/>
   <PARAM id="bus_fx3_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="bus_fx3_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="bus_fx3_EQ_EQ_B1_Gain" value="0.0"/>
@@ -266,16 +278,20 @@
   <PARAM id="bus_fx3_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="bus_fx3_EQ_EQ_On" value="0.0"/>
   <PARAM id="bus_fx3_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="bus_fx3_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="bus_fx3_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="bus_fx3_Limit_Lim_On" value="0.0"/>
+  <PARAM id="bus_fx3_Limit_Lim_Release" value="50.0"/>
   <PARAM id="bus_fx3_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="bus_fx3_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="bus_fx3_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="bus_fx3_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="bus_fx3_Oct_Oct_On" value="1.0"/>
+  <PARAM id="bus_fx3_Oct_Oct_On" value="0.0"/>
   <PARAM id="bus_fx3_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="bus_fx3_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="bus_fx3_Reverb_Rev_On" value="0.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="bus_fx3_Reverb_Rev_WetGain" value="0.0"/>
@@ -293,11 +309,12 @@
   <PARAM id="bus_fx3_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="bus_fx3_Tube_Tube_Tone" value="0.0"/>
   <PARAM id="bus_fx3_type" value="0.0"/>
+  <PARAM id="bus_outVol" value="0.0"/>
   <PARAM id="bus_postMaster" value="0.0"/>
   <PARAM id="master_fx0_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx0_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx0_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="master_fx0_Cab_Cab_On" value="1.0"/>
+  <PARAM id="master_fx0_Cab_Cab_On" value="0.0"/>
   <PARAM id="master_fx0_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="master_fx0_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="master_fx0_Comp_Comp_Knee" value="0.0"/>
@@ -316,10 +333,10 @@
   <PARAM id="master_fx0_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="master_fx0_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="master_fx0_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="master_fx0_Delay_Del_On" value="1.0"/>
+  <PARAM id="master_fx0_Delay_Del_On" value="0.0"/>
   <PARAM id="master_fx0_Delay_Del_WetGain" value="-6.0"/>
-  <PARAM id="master_fx0_EQ_EQ_B1_Freq" value="500.0"/>
-  <PARAM id="master_fx0_EQ_EQ_B1_Gain" value="0.0"/>
+  <PARAM id="master_fx0_EQ_EQ_B1_Freq" value="136.4400024414062"/>
+  <PARAM id="master_fx0_EQ_EQ_B1_Gain" value="-5.920000076293945"/>
   <PARAM id="master_fx0_EQ_EQ_B1_Q" value="1.0"/>
   <PARAM id="master_fx0_EQ_EQ_B1_Type" value="2.0"/>
   <PARAM id="master_fx0_EQ_EQ_B2_Freq" value="2000.0"/>
@@ -334,22 +351,26 @@
   <PARAM id="master_fx0_EQ_EQ_HS_Gain" value="0.0"/>
   <PARAM id="master_fx0_EQ_EQ_HS_Q" value="1.0"/>
   <PARAM id="master_fx0_EQ_EQ_HS_Type" value="4.0"/>
-  <PARAM id="master_fx0_EQ_EQ_LS_Freq" value="100.0"/>
-  <PARAM id="master_fx0_EQ_EQ_LS_Gain" value="0.0"/>
+  <PARAM id="master_fx0_EQ_EQ_LS_Freq" value="83.44000244140625"/>
+  <PARAM id="master_fx0_EQ_EQ_LS_Gain" value="6.349998474121094"/>
   <PARAM id="master_fx0_EQ_EQ_LS_Q" value="1.0"/>
   <PARAM id="master_fx0_EQ_EQ_LS_Type" value="3.0"/>
-  <PARAM id="master_fx0_EQ_EQ_On" value="0.0"/>
+  <PARAM id="master_fx0_EQ_EQ_On" value="1.0"/>
   <PARAM id="master_fx0_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="master_fx0_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="master_fx0_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="master_fx0_Limit_Lim_On" value="0.0"/>
+  <PARAM id="master_fx0_Limit_Lim_Release" value="50.0"/>
   <PARAM id="master_fx0_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="master_fx0_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="master_fx0_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="master_fx0_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="master_fx0_Oct_Oct_On" value="1.0"/>
+  <PARAM id="master_fx0_Oct_Oct_On" value="0.0"/>
   <PARAM id="master_fx0_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="master_fx0_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="master_fx0_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="master_fx0_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="master_fx0_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="master_fx0_Reverb_Rev_On" value="0.0"/>
   <PARAM id="master_fx0_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="master_fx0_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="master_fx0_Reverb_Rev_WetGain" value="0.0"/>
@@ -366,21 +387,21 @@
   <PARAM id="master_fx0_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx0_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx0_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx0_type" value="1.0"/>
+  <PARAM id="master_fx0_type" value="3.0"/>
   <PARAM id="master_fx1_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx1_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx1_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="master_fx1_Cab_Cab_On" value="1.0"/>
+  <PARAM id="master_fx1_Cab_Cab_On" value="0.0"/>
   <PARAM id="master_fx1_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="master_fx1_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="master_fx1_Comp_Comp_Knee" value="0.0"/>
   <PARAM id="master_fx1_Comp_Comp_On" value="0.0"/>
   <PARAM id="master_fx1_Comp_Comp_PeakRms" value="0.0"/>
-  <PARAM id="master_fx1_Comp_Comp_PreGain" value="0.0"/>
-  <PARAM id="master_fx1_Comp_Comp_Ratio" value="1.0"/>
+  <PARAM id="master_fx1_Comp_Comp_PreGain" value="10.84000015258789"/>
+  <PARAM id="master_fx1_Comp_Comp_Ratio" value="6.089999675750732"/>
   <PARAM id="master_fx1_Comp_Comp_RelMode" value="0.0"/>
   <PARAM id="master_fx1_Comp_Comp_Release" value="100.0"/>
-  <PARAM id="master_fx1_Comp_Comp_Thresh" value="0.0"/>
+  <PARAM id="master_fx1_Comp_Comp_Thresh" value="-24.0"/>
   <PARAM id="master_fx1_Delay_Del_CrossFdbk" value="-60.0"/>
   <PARAM id="master_fx1_Delay_Del_DelayL" value="0.5"/>
   <PARAM id="master_fx1_Delay_Del_DelayR" value="0.75"/>
@@ -389,7 +410,7 @@
   <PARAM id="master_fx1_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="master_fx1_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="master_fx1_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="master_fx1_Delay_Del_On" value="1.0"/>
+  <PARAM id="master_fx1_Delay_Del_On" value="0.0"/>
   <PARAM id="master_fx1_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="master_fx1_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="master_fx1_EQ_EQ_B1_Gain" value="0.0"/>
@@ -413,19 +434,23 @@
   <PARAM id="master_fx1_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="master_fx1_EQ_EQ_On" value="0.0"/>
   <PARAM id="master_fx1_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="master_fx1_Limit_Lim_Ceiling" value="-0.5"/>
+  <PARAM id="master_fx1_Limit_Lim_Drive" value="5.670000076293945"/>
+  <PARAM id="master_fx1_Limit_Lim_On" value="1.0"/>
+  <PARAM id="master_fx1_Limit_Lim_Release" value="60.0"/>
   <PARAM id="master_fx1_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="master_fx1_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="master_fx1_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="master_fx1_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="master_fx1_Oct_Oct_On" value="1.0"/>
+  <PARAM id="master_fx1_Oct_Oct_On" value="0.0"/>
   <PARAM id="master_fx1_Oct_Oct_Tone" value="2000.0"/>
-  <PARAM id="master_fx1_Reverb_Rev_DryGain" value="-2.020000457763672"/>
-  <PARAM id="master_fx1_Reverb_Rev_IR" value="6.0"/>
+  <PARAM id="master_fx1_Reverb_Rev_DryGain" value="-60.0"/>
+  <PARAM id="master_fx1_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="master_fx1_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="master_fx1_Reverb_Rev_On" value="1.0"/>
-  <PARAM id="master_fx1_Reverb_Rev_Shape" value="2.0"/>
+  <PARAM id="master_fx1_Reverb_Rev_On" value="0.0"/>
+  <PARAM id="master_fx1_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="master_fx1_Reverb_Rev_StartOffset" value="0.0"/>
-  <PARAM id="master_fx1_Reverb_Rev_WetGain" value="-13.7400016784668"/>
+  <PARAM id="master_fx1_Reverb_Rev_WetGain" value="0.0"/>
   <PARAM id="master_fx1_Transient_Trans_Attack" value="0.0"/>
   <PARAM id="master_fx1_Transient_Trans_Character" value="1.0"/>
   <PARAM id="master_fx1_Transient_Trans_Gain" value="0.0"/>
@@ -439,11 +464,11 @@
   <PARAM id="master_fx1_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx1_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx1_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx1_type" value="8.0"/>
+  <PARAM id="master_fx1_type" value="6.0"/>
   <PARAM id="master_fx2_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx2_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx2_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="master_fx2_Cab_Cab_On" value="1.0"/>
+  <PARAM id="master_fx2_Cab_Cab_On" value="0.0"/>
   <PARAM id="master_fx2_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="master_fx2_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="master_fx2_Comp_Comp_Knee" value="0.0"/>
@@ -462,7 +487,7 @@
   <PARAM id="master_fx2_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="master_fx2_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="master_fx2_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="master_fx2_Delay_Del_On" value="1.0"/>
+  <PARAM id="master_fx2_Delay_Del_On" value="0.0"/>
   <PARAM id="master_fx2_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="master_fx2_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="master_fx2_EQ_EQ_B1_Gain" value="0.0"/>
@@ -486,16 +511,20 @@
   <PARAM id="master_fx2_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="master_fx2_EQ_EQ_On" value="0.0"/>
   <PARAM id="master_fx2_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="master_fx2_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="master_fx2_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="master_fx2_Limit_Lim_On" value="0.0"/>
+  <PARAM id="master_fx2_Limit_Lim_Release" value="50.0"/>
   <PARAM id="master_fx2_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="master_fx2_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="master_fx2_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="master_fx2_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="master_fx2_Oct_Oct_On" value="1.0"/>
+  <PARAM id="master_fx2_Oct_Oct_On" value="0.0"/>
   <PARAM id="master_fx2_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="master_fx2_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="master_fx2_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="master_fx2_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="master_fx2_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="master_fx2_Reverb_Rev_On" value="0.0"/>
   <PARAM id="master_fx2_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="master_fx2_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="master_fx2_Reverb_Rev_WetGain" value="0.0"/>
@@ -505,18 +534,18 @@
   <PARAM id="master_fx2_Transient_Trans_On" value="0.0"/>
   <PARAM id="master_fx2_Transient_Trans_PreGain" value="0.0"/>
   <PARAM id="master_fx2_Transient_Trans_Sustain" value="0.0"/>
-  <PARAM id="master_fx2_Tube_Tube_Bias" value="0.0"/>
-  <PARAM id="master_fx2_Tube_Tube_Drive" value="0.0"/>
-  <PARAM id="master_fx2_Tube_Tube_Model" value="0.0"/>
+  <PARAM id="master_fx2_Tube_Tube_Bias" value="0.1299999952316284"/>
+  <PARAM id="master_fx2_Tube_Tube_Drive" value="24.47999954223633"/>
+  <PARAM id="master_fx2_Tube_Tube_Model" value="2.0"/>
   <PARAM id="master_fx2_Tube_Tube_On" value="0.0"/>
-  <PARAM id="master_fx2_Tube_Tube_Out" value="0.0"/>
-  <PARAM id="master_fx2_Tube_Tube_Sag" value="0.5"/>
-  <PARAM id="master_fx2_Tube_Tube_Tone" value="0.0"/>
+  <PARAM id="master_fx2_Tube_Tube_Out" value="-5.670000076293945"/>
+  <PARAM id="master_fx2_Tube_Tube_Sag" value="0.1700000017881393"/>
+  <PARAM id="master_fx2_Tube_Tube_Tone" value="-1.0"/>
   <PARAM id="master_fx2_type" value="0.0"/>
   <PARAM id="master_fx3_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRR" value="2.0"/>
-  <PARAM id="master_fx3_Cab_Cab_On" value="1.0"/>
+  <PARAM id="master_fx3_Cab_Cab_On" value="0.0"/>
   <PARAM id="master_fx3_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="master_fx3_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="master_fx3_Comp_Comp_Knee" value="0.0"/>
@@ -535,7 +564,7 @@
   <PARAM id="master_fx3_Delay_Del_FdbkR" value="-6.0"/>
   <PARAM id="master_fx3_Delay_Del_FilterCutoff" value="20000.0"/>
   <PARAM id="master_fx3_Delay_Del_FilterQ" value="0.7100000381469727"/>
-  <PARAM id="master_fx3_Delay_Del_On" value="1.0"/>
+  <PARAM id="master_fx3_Delay_Del_On" value="0.0"/>
   <PARAM id="master_fx3_Delay_Del_WetGain" value="-6.0"/>
   <PARAM id="master_fx3_EQ_EQ_B1_Freq" value="500.0"/>
   <PARAM id="master_fx3_EQ_EQ_B1_Gain" value="0.0"/>
@@ -559,16 +588,20 @@
   <PARAM id="master_fx3_EQ_EQ_LS_Type" value="3.0"/>
   <PARAM id="master_fx3_EQ_EQ_On" value="0.0"/>
   <PARAM id="master_fx3_EQ_EQ_PostGain" value="0.0"/>
+  <PARAM id="master_fx3_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
+  <PARAM id="master_fx3_Limit_Lim_Drive" value="0.0"/>
+  <PARAM id="master_fx3_Limit_Lim_On" value="0.0"/>
+  <PARAM id="master_fx3_Limit_Lim_Release" value="50.0"/>
   <PARAM id="master_fx3_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="master_fx3_Oct_Oct_Dry" value="0.0"/>
   <PARAM id="master_fx3_Oct_Oct_Oct1" value="-6.0"/>
   <PARAM id="master_fx3_Oct_Oct_Oct2" value="-60.0"/>
-  <PARAM id="master_fx3_Oct_Oct_On" value="1.0"/>
+  <PARAM id="master_fx3_Oct_Oct_On" value="0.0"/>
   <PARAM id="master_fx3_Oct_Oct_Tone" value="2000.0"/>
   <PARAM id="master_fx3_Reverb_Rev_DryGain" value="-60.0"/>
   <PARAM id="master_fx3_Reverb_Rev_IR" value="1.0"/>
   <PARAM id="master_fx3_Reverb_Rev_Length" value="1.0"/>
-  <PARAM id="master_fx3_Reverb_Rev_On" value="1.0"/>
+  <PARAM id="master_fx3_Reverb_Rev_On" value="0.0"/>
   <PARAM id="master_fx3_Reverb_Rev_Shape" value="0.0"/>
   <PARAM id="master_fx3_Reverb_Rev_StartOffset" value="0.0"/>
   <PARAM id="master_fx3_Reverb_Rev_WetGain" value="0.0"/>
@@ -589,15 +622,15 @@
   <PARAM id="mod0_amount" value="1.0"/>
   <PARAM id="mod0_attack" value="0.009999999776482582"/>
   <PARAM id="mod0_decay" value="0.1000000014901161"/>
-  <PARAM id="mod0_depth" value="0.2070000171661377"/>
+  <PARAM id="mod0_depth" value="0.0"/>
   <PARAM id="mod0_polarity" value="0.0"/>
-  <PARAM id="mod0_rate" value="9.778000831604004"/>
+  <PARAM id="mod0_rate" value="1.00000011920929"/>
   <PARAM id="mod0_release" value="0.2000000029802322"/>
   <PARAM id="mod0_shape" value="0.0"/>
   <PARAM id="mod0_sustain" value="0.800000011920929"/>
   <PARAM id="mod0_sync" value="0.0"/>
   <PARAM id="mod0_syncrate" value="2.0"/>
-  <PARAM id="mod0_target" value="192.0"/>
+  <PARAM id="mod0_target" value="0.0"/>
   <PARAM id="mod0_type" value="0.0"/>
   <PARAM id="mod10_amount" value="1.0"/>
   <PARAM id="mod10_attack" value="0.009999999776482582"/>
@@ -626,7 +659,7 @@
   <PARAM id="mod11_target" value="0.0"/>
   <PARAM id="mod11_type" value="0.0"/>
   <PARAM id="mod1_amount" value="1.0"/>
-  <PARAM id="mod1_attack" value="5.02400016784668"/>
+  <PARAM id="mod1_attack" value="0.009999999776482582"/>
   <PARAM id="mod1_decay" value="0.1000000014901161"/>
   <PARAM id="mod1_depth" value="0.0"/>
   <PARAM id="mod1_polarity" value="0.0"/>
@@ -636,8 +669,8 @@
   <PARAM id="mod1_sustain" value="0.800000011920929"/>
   <PARAM id="mod1_sync" value="0.0"/>
   <PARAM id="mod1_syncrate" value="2.0"/>
-  <PARAM id="mod1_target" value="833.0"/>
-  <PARAM id="mod1_type" value="1.0"/>
+  <PARAM id="mod1_target" value="0.0"/>
+  <PARAM id="mod1_type" value="0.0"/>
   <PARAM id="mod2_amount" value="1.0"/>
   <PARAM id="mod2_attack" value="0.009999999776482582"/>
   <PARAM id="mod2_decay" value="0.1000000014901161"/>
@@ -742,30 +775,30 @@
   <PARAM id="mod9_syncrate" value="2.0"/>
   <PARAM id="mod9_target" value="0.0"/>
   <PARAM id="mod9_type" value="0.0"/>
-  <PARAM id="mtx_g_0_0" value="0.5840001106262207"/>
-  <PARAM id="mtx_g_0_1" value="0.1120001077651978"/>
-  <PARAM id="mtx_g_0_2" value="0.440000057220459"/>
-  <PARAM id="mtx_g_0_3" value="0.4560000896453857"/>
-  <PARAM id="mtx_g_0_5" value="0.0"/>
+  <PARAM id="mtx_g_0_0" value="0.9380000829696655"/>
+  <PARAM id="mtx_g_0_1" value="0.5920001268386841"/>
+  <PARAM id="mtx_g_0_2" value="0.0"/>
+  <PARAM id="mtx_g_0_3" value="0.0"/>
+  <PARAM id="mtx_g_0_5" value="0.3000000715255737"/>
   <PARAM id="mtx_g_0_6" value="0.0"/>
   <PARAM id="mtx_g_0_7" value="0.0"/>
   <PARAM id="mtx_g_0_8" value="0.0"/>
-  <PARAM id="mtx_g_1_0" value="0.0"/>
-  <PARAM id="mtx_g_1_1" value="0.0"/>
-  <PARAM id="mtx_g_1_2" value="1.0"/>
+  <PARAM id="mtx_g_1_0" value="0.7000000476837158"/>
+  <PARAM id="mtx_g_1_1" value="0.7120001316070557"/>
+  <PARAM id="mtx_g_1_2" value="0.0"/>
   <PARAM id="mtx_g_1_3" value="0.0"/>
-  <PARAM id="mtx_g_1_4" value="0.0"/>
+  <PARAM id="mtx_g_1_4" value="0.3000000715255737"/>
   <PARAM id="mtx_g_1_6" value="0.0"/>
   <PARAM id="mtx_g_1_7" value="0.0"/>
-  <PARAM id="mtx_g_1_8" value="1.0"/>
+  <PARAM id="mtx_g_1_8" value="0.0"/>
   <PARAM id="mtx_g_2_0" value="0.0"/>
   <PARAM id="mtx_g_2_1" value="0.0"/>
   <PARAM id="mtx_g_2_2" value="0.0"/>
-  <PARAM id="mtx_g_2_3" value="1.0"/>
-  <PARAM id="mtx_g_2_4" value="0.0"/>
-  <PARAM id="mtx_g_2_5" value="0.0"/>
+  <PARAM id="mtx_g_2_3" value="0.0"/>
+  <PARAM id="mtx_g_2_4" value="0.7280000448226929"/>
+  <PARAM id="mtx_g_2_5" value="0.7040001153945923"/>
   <PARAM id="mtx_g_2_7" value="0.0"/>
-  <PARAM id="mtx_g_2_8" value="0.9040000438690186"/>
+  <PARAM id="mtx_g_2_8" value="0.0"/>
   <PARAM id="mtx_g_3_0" value="0.0"/>
   <PARAM id="mtx_g_3_1" value="0.0"/>
   <PARAM id="mtx_g_3_2" value="0.0"/>
@@ -774,19 +807,19 @@
   <PARAM id="mtx_g_3_5" value="0.0"/>
   <PARAM id="mtx_g_3_6" value="0.0"/>
   <PARAM id="mtx_g_3_8" value="0.0"/>
-  <PARAM id="mtx_level_0" value="-60.0"/>
-  <PARAM id="mtx_level_1" value="-12.0"/>
-  <PARAM id="mtx_level_2" value="-8.0"/>
-  <PARAM id="mtx_level_3" value="-6.0"/>
-  <PARAM id="mtx_pan_0" value="0.0"/>
-  <PARAM id="mtx_pan_1" value="-0.6319999694824219"/>
-  <PARAM id="mtx_pan_2" value="0.6480001211166382"/>
+  <PARAM id="mtx_level_0" value="0.0"/>
+  <PARAM id="mtx_level_1" value="-3.0"/>
+  <PARAM id="mtx_level_2" value="0.0"/>
+  <PARAM id="mtx_level_3" value="0.0"/>
+  <PARAM id="mtx_pan_0" value="-0.2"/>
+  <PARAM id="mtx_pan_1" value="0.2000000476837158"/>
+  <PARAM id="mtx_pan_2" value="0.0"/>
   <PARAM id="mtx_pan_3" value="0.0"/>
-  <PARAM id="mtx_send_0" value="-6.0"/>
-  <PARAM id="mtx_send_1" value="-60.0"/>
-  <PARAM id="mtx_send_2" value="-60.0"/>
+  <PARAM id="mtx_send_0" value="-10.0"/>
+  <PARAM id="mtx_send_1" value="-10.0"/>
+  <PARAM id="mtx_send_2" value="-6.099998474121094"/>
   <PARAM id="mtx_send_3" value="-60.0"/>
-  <PARAM id="numVoices" value="3.0"/>
+  <PARAM id="numVoices" value="8.0"/>
   <PARAM id="outputVolume" value="0.0"/>
   <PARAM id="portamento" value="0.0"/>
   <PARAM id="res0_BeamString_coarse" value="0.0"/>
@@ -813,25 +846,25 @@
   <PARAM id="res0_Membrane_resOn" value="60.00000381469727"/>
   <PARAM id="res0_Membrane_resSlopeOff" value="40.0"/>
   <PARAM id="res0_Membrane_resSlopeOn" value="60.00000381469727"/>
-  <PARAM id="res0_Plate_aspect" value="1.0"/>
+  <PARAM id="res0_Plate_aspect" value="1.3"/>
   <PARAM id="res0_Plate_coarse" value="0.0"/>
   <PARAM id="res0_Plate_fine" value="0.0"/>
   <PARAM id="res0_Plate_inX" value="0.300000011920929"/>
   <PARAM id="res0_Plate_inY" value="0.300000011920929"/>
-  <PARAM id="res0_Plate_modes" value="32.0"/>
-  <PARAM id="res0_Plate_noteRel" value="300.0000305175781"/>
+  <PARAM id="res0_Plate_modes" value="75.0"/>
+  <PARAM id="res0_Plate_noteRel" value="1200.0"/>
   <PARAM id="res0_Plate_outX" value="0.7000000476837158"/>
   <PARAM id="res0_Plate_outY" value="0.6000000238418579"/>
-  <PARAM id="res0_Plate_resOff" value="20.0"/>
-  <PARAM id="res0_Plate_resOn" value="60.00000381469727"/>
+  <PARAM id="res0_Plate_resOff" value="30.0"/>
+  <PARAM id="res0_Plate_resOn" value="60.0"/>
   <PARAM id="res0_Plate_resSlopeOff" value="40.0"/>
   <PARAM id="res0_Plate_resSlopeOn" value="60.00000381469727"/>
   <PARAM id="res0_Waveguide_coarse" value="0.0"/>
   <PARAM id="res0_Waveguide_dispersion" value="0.0"/>
-  <PARAM id="res0_Waveguide_fbCutoffOff" value="2000.0"/>
-  <PARAM id="res0_Waveguide_fbCutoffOn" value="8000.0"/>
-  <PARAM id="res0_Waveguide_fbGainOff" value="0.8999999761581421"/>
-  <PARAM id="res0_Waveguide_fbGainOn" value="0.9949999451637268"/>
+  <PARAM id="res0_Waveguide_fbCutoffOff" value="617.7000122070312"/>
+  <PARAM id="res0_Waveguide_fbCutoffOn" value="8483.400390625"/>
+  <PARAM id="res0_Waveguide_fbGainOff" value="0.6082000136375427"/>
+  <PARAM id="res0_Waveguide_fbGainOn" value="0.9989999532699585"/>
   <PARAM id="res0_Waveguide_fine" value="0.0"/>
   <PARAM id="res0_Waveguide_inPos" value="0.1200000047683716"/>
   <PARAM id="res0_Waveguide_noteRel" value="300.0000305175781"/>
@@ -839,7 +872,7 @@
   <PARAM id="res0_global" value="0.0"/>
   <PARAM id="res0_globalFreq" value="110.0"/>
   <PARAM id="res0_level" value="0.0"/>
-  <PARAM id="res0_type" value="2.0"/>
+  <PARAM id="res0_type" value="3.0"/>
   <PARAM id="res1_BeamString_coarse" value="0.0"/>
   <PARAM id="res1_BeamString_fine" value="0.0"/>
   <PARAM id="res1_BeamString_inPos" value="0.1200000047683716"/>
@@ -851,32 +884,32 @@
   <PARAM id="res1_BeamString_resOn" value="60.00000381469727"/>
   <PARAM id="res1_BeamString_resSlopeOff" value="40.0"/>
   <PARAM id="res1_BeamString_resSlopeOn" value="60.00000381469727"/>
-  <PARAM id="res1_Membrane_aspect" value="1.0"/>
+  <PARAM id="res1_Membrane_aspect" value="1.1"/>
   <PARAM id="res1_Membrane_coarse" value="0.0"/>
-  <PARAM id="res1_Membrane_fine" value="0.0"/>
+  <PARAM id="res1_Membrane_fine" value="0.1500000953674316"/>
   <PARAM id="res1_Membrane_inX" value="0.300000011920929"/>
   <PARAM id="res1_Membrane_inY" value="0.300000011920929"/>
-  <PARAM id="res1_Membrane_modes" value="32.0"/>
-  <PARAM id="res1_Membrane_noteRel" value="300.0000305175781"/>
+  <PARAM id="res1_Membrane_modes" value="93.0"/>
+  <PARAM id="res1_Membrane_noteRel" value="800.0"/>
   <PARAM id="res1_Membrane_outX" value="0.7000000476837158"/>
   <PARAM id="res1_Membrane_outY" value="0.6000000238418579"/>
-  <PARAM id="res1_Membrane_resOff" value="20.0"/>
-  <PARAM id="res1_Membrane_resOn" value="60.00000381469727"/>
+  <PARAM id="res1_Membrane_resOff" value="30.0"/>
+  <PARAM id="res1_Membrane_resOn" value="55.0"/>
   <PARAM id="res1_Membrane_resSlopeOff" value="40.0"/>
   <PARAM id="res1_Membrane_resSlopeOn" value="60.00000381469727"/>
-  <PARAM id="res1_Plate_aspect" value="3.389999866485596"/>
+  <PARAM id="res1_Plate_aspect" value="1.460000038146973"/>
   <PARAM id="res1_Plate_coarse" value="0.0"/>
   <PARAM id="res1_Plate_fine" value="0.0"/>
   <PARAM id="res1_Plate_inX" value="0.300000011920929"/>
   <PARAM id="res1_Plate_inY" value="0.300000011920929"/>
-  <PARAM id="res1_Plate_modes" value="128.0"/>
+  <PARAM id="res1_Plate_modes" value="44.0"/>
   <PARAM id="res1_Plate_noteRel" value="300.0000305175781"/>
-  <PARAM id="res1_Plate_outX" value="0.7000000476837158"/>
-  <PARAM id="res1_Plate_outY" value="0.6000000238418579"/>
-  <PARAM id="res1_Plate_resOff" value="47.20000076293945"/>
-  <PARAM id="res1_Plate_resOn" value="72.40000152587891"/>
-  <PARAM id="res1_Plate_resSlopeOff" value="42.40000152587891"/>
-  <PARAM id="res1_Plate_resSlopeOn" value="87.20000457763672"/>
+  <PARAM id="res1_Plate_outX" value="0.4600000083446503"/>
+  <PARAM id="res1_Plate_outY" value="0.5440000295639038"/>
+  <PARAM id="res1_Plate_resOff" value="14.0"/>
+  <PARAM id="res1_Plate_resOn" value="18.39999961853027"/>
+  <PARAM id="res1_Plate_resSlopeOff" value="48.0"/>
+  <PARAM id="res1_Plate_resSlopeOn" value="27.60000038146973"/>
   <PARAM id="res1_Waveguide_coarse" value="0.0"/>
   <PARAM id="res1_Waveguide_dispersion" value="0.0"/>
   <PARAM id="res1_Waveguide_fbCutoffOff" value="2000.0"/>
@@ -888,9 +921,9 @@
   <PARAM id="res1_Waveguide_noteRel" value="300.0000305175781"/>
   <PARAM id="res1_Waveguide_outPos" value="0.8500000238418579"/>
   <PARAM id="res1_global" value="0.0"/>
-  <PARAM id="res1_globalFreq" value="110.0"/>
-  <PARAM id="res1_level" value="-8.350002288818359"/>
-  <PARAM id="res1_type" value="3.0"/>
+  <PARAM id="res1_globalFreq" value="97.59999847412109"/>
+  <PARAM id="res1_level" value="0.0"/>
+  <PARAM id="res1_type" value="4.0"/>
   <PARAM id="res2_BeamString_coarse" value="0.0"/>
   <PARAM id="res2_BeamString_fine" value="0.0"/>
   <PARAM id="res2_BeamString_inPos" value="0.1200000047683716"/>
@@ -902,32 +935,32 @@
   <PARAM id="res2_BeamString_resOn" value="60.00000381469727"/>
   <PARAM id="res2_BeamString_resSlopeOff" value="40.0"/>
   <PARAM id="res2_BeamString_resSlopeOn" value="60.00000381469727"/>
-  <PARAM id="res2_Membrane_aspect" value="1.669999957084656"/>
+  <PARAM id="res2_Membrane_aspect" value="1.0"/>
   <PARAM id="res2_Membrane_coarse" value="0.0"/>
   <PARAM id="res2_Membrane_fine" value="0.0"/>
   <PARAM id="res2_Membrane_inX" value="0.300000011920929"/>
   <PARAM id="res2_Membrane_inY" value="0.300000011920929"/>
-  <PARAM id="res2_Membrane_modes" value="128.0"/>
+  <PARAM id="res2_Membrane_modes" value="32.0"/>
   <PARAM id="res2_Membrane_noteRel" value="300.0000305175781"/>
   <PARAM id="res2_Membrane_outX" value="0.7000000476837158"/>
   <PARAM id="res2_Membrane_outY" value="0.6000000238418579"/>
-  <PARAM id="res2_Membrane_resOff" value="42.79999923706055"/>
-  <PARAM id="res2_Membrane_resOn" value="66.80000305175781"/>
-  <PARAM id="res2_Membrane_resSlopeOff" value="37.20000076293945"/>
-  <PARAM id="res2_Membrane_resSlopeOn" value="93.59999847412109"/>
-  <PARAM id="res2_Plate_aspect" value="1.0"/>
+  <PARAM id="res2_Membrane_resOff" value="20.0"/>
+  <PARAM id="res2_Membrane_resOn" value="60.00000381469727"/>
+  <PARAM id="res2_Membrane_resSlopeOff" value="40.0"/>
+  <PARAM id="res2_Membrane_resSlopeOn" value="60.00000381469727"/>
+  <PARAM id="res2_Plate_aspect" value="2.380000114440918"/>
   <PARAM id="res2_Plate_coarse" value="0.0"/>
   <PARAM id="res2_Plate_fine" value="0.0"/>
   <PARAM id="res2_Plate_inX" value="0.300000011920929"/>
   <PARAM id="res2_Plate_inY" value="0.300000011920929"/>
-  <PARAM id="res2_Plate_modes" value="32.0"/>
+  <PARAM id="res2_Plate_modes" value="128.0"/>
   <PARAM id="res2_Plate_noteRel" value="300.0000305175781"/>
   <PARAM id="res2_Plate_outX" value="0.7000000476837158"/>
   <PARAM id="res2_Plate_outY" value="0.6000000238418579"/>
-  <PARAM id="res2_Plate_resOff" value="20.0"/>
-  <PARAM id="res2_Plate_resOn" value="60.00000381469727"/>
-  <PARAM id="res2_Plate_resSlopeOff" value="40.0"/>
-  <PARAM id="res2_Plate_resSlopeOn" value="60.00000381469727"/>
+  <PARAM id="res2_Plate_resOff" value="14.80000019073486"/>
+  <PARAM id="res2_Plate_resOn" value="52.0"/>
+  <PARAM id="res2_Plate_resSlopeOff" value="15.60000038146973"/>
+  <PARAM id="res2_Plate_resSlopeOn" value="98.0"/>
   <PARAM id="res2_Waveguide_coarse" value="0.0"/>
   <PARAM id="res2_Waveguide_dispersion" value="0.0"/>
   <PARAM id="res2_Waveguide_fbCutoffOff" value="2000.0"/>
@@ -938,10 +971,10 @@
   <PARAM id="res2_Waveguide_inPos" value="0.1200000047683716"/>
   <PARAM id="res2_Waveguide_noteRel" value="300.0000305175781"/>
   <PARAM id="res2_Waveguide_outPos" value="0.8500000238418579"/>
-  <PARAM id="res2_global" value="0.0"/>
-  <PARAM id="res2_globalFreq" value="110.0"/>
-  <PARAM id="res2_level" value="-6.620002746582031"/>
-  <PARAM id="res2_type" value="4.0"/>
+  <PARAM id="res2_global" value="1.0"/>
+  <PARAM id="res2_globalFreq" value="37.80000305175781"/>
+  <PARAM id="res2_level" value="0.0"/>
+  <PARAM id="res2_type" value="3.0"/>
   <PARAM id="res3_BeamString_coarse" value="0.0"/>
   <PARAM id="res3_BeamString_fine" value="0.0"/>
   <PARAM id="res3_BeamString_inPos" value="0.1200000047683716"/>
@@ -1030,27 +1063,27 @@
   <PARAM id="src0_Noise_sustain" value="1.0"/>
   <PARAM id="src0_Noise_velCutoff" value="0.0"/>
   <PARAM id="src0_Noise_velLevel" value="0.0"/>
-  <PARAM id="src0_Wavetable_attack" value="0.001000000047497451"/>
-  <PARAM id="src0_Wavetable_cutoff" value="20000.0"/>
-  <PARAM id="src0_Wavetable_decay" value="0.09999999403953552"/>
-  <PARAM id="src0_Wavetable_level" value="-39.66999816894531"/>
-  <PARAM id="src0_Wavetable_mode" value="1.0"/>
-  <PARAM id="src0_Wavetable_release" value="0.199999988079071"/>
+  <PARAM id="src0_Wavetable_attack" value="0.002"/>
+  <PARAM id="src0_Wavetable_cutoff" value="6000.0"/>
+  <PARAM id="src0_Wavetable_decay" value="0.3"/>
+  <PARAM id="src0_Wavetable_level" value="0.0"/>
+  <PARAM id="src0_Wavetable_mode" value="0.0"/>
+  <PARAM id="src0_Wavetable_release" value="0.4"/>
   <PARAM id="src0_Wavetable_resonance" value="0.7070000767707825"/>
-  <PARAM id="src0_Wavetable_sustain" value="1.0"/>
+  <PARAM id="src0_Wavetable_sustain" value="0.2"/>
   <PARAM id="src0_Wavetable_tune" value="0.0"/>
-  <PARAM id="src0_Wavetable_velCutoff" value="0.0"/>
-  <PARAM id="src0_Wavetable_velLevel" value="0.7520000338554382"/>
-  <PARAM id="src0_Wavetable_wave" value="2.0"/>
+  <PARAM id="src0_Wavetable_velCutoff" value="1.0"/>
+  <PARAM id="src0_Wavetable_velLevel" value="1.0"/>
+  <PARAM id="src0_Wavetable_wave" value="8.0"/>
   <PARAM id="src0_type" value="1.0"/>
-  <PARAM id="src1_Cracks_attack" value="1.622000098228455"/>
-  <PARAM id="src1_Cracks_cutoff" value="20000.0"/>
-  <PARAM id="src1_Cracks_decay" value="0.09999999403953552"/>
-  <PARAM id="src1_Cracks_density" value="718.0"/>
-  <PARAM id="src1_Cracks_level" value="0.0"/>
-  <PARAM id="src1_Cracks_release" value="0.199999988079071"/>
+  <PARAM id="src1_Cracks_attack" value="0.001"/>
+  <PARAM id="src1_Cracks_cutoff" value="7000.0"/>
+  <PARAM id="src1_Cracks_decay" value="0.15"/>
+  <PARAM id="src1_Cracks_density" value="40.0"/>
+  <PARAM id="src1_Cracks_level" value="-6.0"/>
+  <PARAM id="src1_Cracks_release" value="0.1"/>
   <PARAM id="src1_Cracks_resonance" value="0.7070000767707825"/>
-  <PARAM id="src1_Cracks_sustain" value="1.0"/>
+  <PARAM id="src1_Cracks_sustain" value="0.0"/>
   <PARAM id="src1_Cracks_velCutoff" value="0.0"/>
   <PARAM id="src1_Cracks_velLevel" value="0.0"/>
   <PARAM id="src1_Input L_attack" value="0.01000000070780516"/>
@@ -1093,11 +1126,11 @@
   <PARAM id="src1_Wavetable_velLevel" value="0.0"/>
   <PARAM id="src1_Wavetable_wave" value="0.0"/>
   <PARAM id="src1_type" value="2.0"/>
-  <PARAM id="src2_Cracks_attack" value="1.589000105857849"/>
+  <PARAM id="src2_Cracks_attack" value="0.01000000070780516"/>
   <PARAM id="src2_Cracks_cutoff" value="20000.0"/>
   <PARAM id="src2_Cracks_decay" value="0.09999999403953552"/>
-  <PARAM id="src2_Cracks_density" value="85.0"/>
-  <PARAM id="src2_Cracks_level" value="6.0"/>
+  <PARAM id="src2_Cracks_density" value="200.0"/>
+  <PARAM id="src2_Cracks_level" value="0.0"/>
   <PARAM id="src2_Cracks_release" value="0.199999988079071"/>
   <PARAM id="src2_Cracks_resonance" value="0.7070000767707825"/>
   <PARAM id="src2_Cracks_sustain" value="1.0"/>
@@ -1142,12 +1175,12 @@
   <PARAM id="src2_Wavetable_velCutoff" value="0.0"/>
   <PARAM id="src2_Wavetable_velLevel" value="0.0"/>
   <PARAM id="src2_Wavetable_wave" value="0.0"/>
-  <PARAM id="src2_type" value="3.0"/>
-  <PARAM id="src3_Cracks_attack" value="1.556000113487244"/>
+  <PARAM id="src2_type" value="0.0"/>
+  <PARAM id="src3_Cracks_attack" value="0.01000000070780516"/>
   <PARAM id="src3_Cracks_cutoff" value="20000.0"/>
   <PARAM id="src3_Cracks_decay" value="0.09999999403953552"/>
-  <PARAM id="src3_Cracks_density" value="119.0"/>
-  <PARAM id="src3_Cracks_level" value="6.0"/>
+  <PARAM id="src3_Cracks_density" value="200.0"/>
+  <PARAM id="src3_Cracks_level" value="0.0"/>
   <PARAM id="src3_Cracks_release" value="0.199999988079071"/>
   <PARAM id="src3_Cracks_resonance" value="0.7070000767707825"/>
   <PARAM id="src3_Cracks_sustain" value="1.0"/>
@@ -1192,38 +1225,5 @@
   <PARAM id="src3_Wavetable_velCutoff" value="0.0"/>
   <PARAM id="src3_Wavetable_velLevel" value="0.0"/>
   <PARAM id="src3_Wavetable_wave" value="0.0"/>
-  <PARAM id="src3_type" value="3.0"/>
-  <PARAM id="bus_outVol" value="0.0"/>
-  <PARAM id="bus_fx0_Limit_Lim_Ceiling"/>
-  <PARAM id="bus_fx0_Limit_Lim_Drive"/>
-  <PARAM id="bus_fx0_Limit_Lim_On"/>
-  <PARAM id="bus_fx0_Limit_Lim_Release"/>
-  <PARAM id="bus_fx1_Limit_Lim_Ceiling"/>
-  <PARAM id="bus_fx1_Limit_Lim_Drive"/>
-  <PARAM id="bus_fx1_Limit_Lim_On"/>
-  <PARAM id="bus_fx1_Limit_Lim_Release"/>
-  <PARAM id="bus_fx2_Limit_Lim_Ceiling"/>
-  <PARAM id="bus_fx2_Limit_Lim_Drive"/>
-  <PARAM id="bus_fx2_Limit_Lim_On"/>
-  <PARAM id="bus_fx2_Limit_Lim_Release"/>
-  <PARAM id="bus_fx3_Limit_Lim_Ceiling"/>
-  <PARAM id="bus_fx3_Limit_Lim_Drive"/>
-  <PARAM id="bus_fx3_Limit_Lim_On"/>
-  <PARAM id="bus_fx3_Limit_Lim_Release"/>
-  <PARAM id="master_fx0_Limit_Lim_Ceiling"/>
-  <PARAM id="master_fx0_Limit_Lim_Drive"/>
-  <PARAM id="master_fx0_Limit_Lim_On"/>
-  <PARAM id="master_fx0_Limit_Lim_Release"/>
-  <PARAM id="master_fx1_Limit_Lim_Ceiling"/>
-  <PARAM id="master_fx1_Limit_Lim_Drive"/>
-  <PARAM id="master_fx1_Limit_Lim_On"/>
-  <PARAM id="master_fx1_Limit_Lim_Release"/>
-  <PARAM id="master_fx2_Limit_Lim_Ceiling"/>
-  <PARAM id="master_fx2_Limit_Lim_Drive"/>
-  <PARAM id="master_fx2_Limit_Lim_On"/>
-  <PARAM id="master_fx2_Limit_Lim_Release"/>
-  <PARAM id="master_fx3_Limit_Lim_Ceiling"/>
-  <PARAM id="master_fx3_Limit_Lim_Drive"/>
-  <PARAM id="master_fx3_Limit_Lim_On"/>
-  <PARAM id="master_fx3_Limit_Lim_Release"/>
+  <PARAM id="src3_type" value="0.0"/>
 </Parameters>
