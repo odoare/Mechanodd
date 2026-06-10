@@ -1,0 +1,207 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+  JUCE_VERSION: 8.0.12
+
+jobs:
+  # ── Linux x86_64 ──────────────────────────────────────────────────────────
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev \
+            libcurl4-openssl-dev libwebkit2gtk-4.1-dev
+
+      - uses: actions/checkout@v4
+        with:
+          path: Mechanodd
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - name: Checkout FxmeJuceTools
+        uses: actions/checkout@v4
+        with:
+          repository: odoare/FxmeJuceTools
+          path: _fxme_tmp
+
+      - name: Install FxmeJuceTools module
+        shell: bash
+        run: |
+          mkdir -p JUCE/usermodules
+          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
+
+      - name: Configure & Build
+        run: |
+          cmake -B Mechanodd/build -S Mechanodd -DCMAKE_BUILD_TYPE=Release
+          # The embedded WAV/IR binary-data target is RAM-hungry — build it alone first.
+          cmake --build Mechanodd/build --config Release --target MechanOddBinaryData --parallel 1
+          # Build the rest (capped at 2 to stay within the runner's RAM).
+          cmake --build Mechanodd/build --config Release --parallel 2
+
+      - name: Package
+        run: |
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/MechanOdd.vst3" staging/
+          cp -r "$ART/Standalone/MechanOdd" staging/
+          zip -r ${{ github.workspace }}/MechanOdd-Linux-x86_64.zip staging/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64
+          path: MechanOdd-Linux-x86_64.zip
+
+  # ── Windows x86_64 ────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Mechanodd
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - name: Checkout FxmeJuceTools
+        uses: actions/checkout@v4
+        with:
+          repository: odoare/FxmeJuceTools
+          path: _fxme_tmp
+
+      - name: Install FxmeJuceTools module
+        shell: bash
+        run: |
+          mkdir -p JUCE/usermodules
+          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
+
+      - name: Configure & Build
+        run: |
+          cmake -B Mechanodd/build -S Mechanodd -G "Visual Studio 17 2022"
+          cmake --build Mechanodd/build --config Release --target MechanOddBinaryData --parallel 1
+          cmake --build Mechanodd/build --config Release --parallel
+
+      - name: Package
+        shell: bash
+        run: |
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/MechanOdd.vst3" staging/
+          cp -r "$ART/Standalone/MechanOdd.exe" staging/
+          7z a ${{ github.workspace }}/MechanOdd-Windows-x86_64.zip ./staging/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: MechanOdd-Windows-x86_64.zip
+
+  # ── macOS universal (arm64 + x86_64) ──────────────────────────────────────
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Mechanodd
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - name: Checkout FxmeJuceTools
+        uses: actions/checkout@v4
+        with:
+          repository: odoare/FxmeJuceTools
+          path: _fxme_tmp
+
+      - name: Install FxmeJuceTools module
+        shell: bash
+        run: |
+          mkdir -p JUCE/usermodules
+          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
+
+      - name: Configure & Build
+        run: |
+          cmake -B Mechanodd/build -S Mechanodd -DCMAKE_BUILD_TYPE=Release
+          cmake --build Mechanodd/build --config Release --target MechanOddBinaryData --parallel 1
+          # Capped at 2 (universal-binary builds double the compile/link load).
+          cmake --build Mechanodd/build --config Release --parallel 2
+
+      - name: Verify universal binary
+        run: |
+          lipo -info "Mechanodd/build/MechanOdd_artefacts/Release/VST3/MechanOdd.vst3/Contents/MacOS/MechanOdd"
+
+      - name: Build pkg installer
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          mkdir -p pkg_root/Library/Audio/Plug-Ins/VST3
+          mkdir -p pkg_root/Library/Audio/Plug-Ins/Components
+          cp -r "$ART/VST3/MechanOdd.vst3" pkg_root/Library/Audio/Plug-Ins/VST3/
+          cp -r "$ART/AU/MechanOdd.component" pkg_root/Library/Audio/Plug-Ins/Components/
+          pkgbuild \
+            --root pkg_root \
+            --identifier com.FXMechanics.MechanOdd \
+            --version "$VERSION" \
+            --install-location / \
+            MechanOdd-macOS.pkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-pkg
+          path: MechanOdd-macOS.pkg
+
+      - name: Package VST3, AU and Standalone zips
+        run: |
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/MechanOdd.vst3" staging/
+          cp -r "$ART/AU/MechanOdd.component" staging/
+          cp -r "$ART/Standalone/MechanOdd.app" staging/
+          zip -r ${{ github.workspace }}/MechanOdd-macOS-universal.zip staging/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-zip
+          path: MechanOdd-macOS-universal.zip
+
+  # ── Publish GitHub Release ────────────────────────────────────────────────
+  release:
+    needs: [build-linux-x86_64, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artefacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*.zip
+            artifacts/*.pkg
+          generate_release_notes: true

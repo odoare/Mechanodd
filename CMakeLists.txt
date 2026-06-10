@@ -26,7 +26,7 @@ juce_add_plugin(MechanOdd
     COMPANY_WEBSITE             "www.fx-mechanics.com"
     PLUGIN_MANUFACTURER_CODE    FXME
     PLUGIN_CODE                 MECO
-    FORMATS                     VST3 Standalone
+    FORMATS                     AU VST3 Standalone
     COPY_PLUGIN_AFTER_BUILD     TRUE
     PRODUCT_NAME                "MechanOdd"
     DESCRIPTION                 "FX-Mechanics modular physical-modelling synth"
