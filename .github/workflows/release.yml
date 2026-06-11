@@ -110,7 +110,7 @@ jobs:
           mkdir -p staging
           cp -r "$ART/VST3/MechanOdd.vst3" staging/
           cp -r "$ART/Standalone/MechanOdd.exe" staging/
-          7z a ${{ github.workspace }}/MechanOdd-Windows-x86_64.zip ./staging/*
+          7z a MechanOdd-Windows-x86_64.zip ./staging/*
 
       - uses: actions/upload-artifact@v4
         with:
