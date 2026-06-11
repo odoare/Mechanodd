@@ -136,6 +136,7 @@ void EffectsTabComponent::refreshRightPanel()
     if (activeSlot < 0)
     {
         placeholderLabel.setVisible (true);
+        repaint();
         return;
     }
 
@@ -154,6 +155,8 @@ void EffectsTabComponent::refreshRightPanel()
         // Slot is set to "Off" — show placeholder
         placeholderLabel.setVisible (true);
     }
+
+    repaint();
 }
 
 // ── geometry ──────────────────────────────────────────────────────────────────
@@ -186,6 +189,36 @@ void EffectsTabComponent::paint (juce::Graphics& g)
     const float divX = (float) (kLeftW + kPad / 2);
     g.setColour (juce::Colours::white.withAlpha (0.07f));
     g.drawLine (divX, (float) kPad, divX, (float) (getHeight() - kPad), 1.0f);
+
+    // Panel container around the active effect
+    if (activeSlot >= 0)
+    {
+        auto& e      = *slots[(size_t) activeSlot];
+        const int ti = e.typeBox.getSelectedItemIndex() - 1;
+        if (ti >= 0 && ti < (int) EffectFactory::types().size())
+        {
+            constexpr float kContPad = 14.0f;
+            constexpr float kRadius  =  8.0f;
+            const auto inner = centredBounds (EffectFactory::types()[(size_t) ti]).toFloat();
+            const auto outer = inner.expanded (kContPad);
+
+            // Soft drop shadow
+            g.setColour (juce::Colours::black.withAlpha (0.45f));
+            g.fillRoundedRectangle (outer.translated (0.0f, 4.0f).reduced (2.0f), kRadius + 2.0f);
+
+            // Panel fill
+            g.setColour (juce::Colour::fromFloatRGBA (0.10f, 0.10f, 0.17f, 0.92f));
+            g.fillRoundedRectangle (outer, kRadius);
+
+            // Outer border
+            g.setColour (juce::Colours::white.withAlpha (0.13f));
+            g.drawRoundedRectangle (outer.reduced (0.5f), kRadius, 1.0f);
+
+            // Inner highlight ring (bevel depth)
+            g.setColour (juce::Colours::white.withAlpha (0.05f));
+            g.drawRoundedRectangle (outer.reduced (1.5f), kRadius - 1.0f, 1.0f);
+        }
+    }
 }
 
 // ── layout ────────────────────────────────────────────────────────────────────
