@@ -92,11 +92,16 @@ jobs:
           mkdir -p JUCE/usermodules
           mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
 
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Configure & Build
         run: |
-          cmake -B Mechanodd/build -S Mechanodd -G "Visual Studio 17 2022"
-          cmake --build Mechanodd/build --config Release --target MechanOddBinaryData --parallel 1
-          cmake --build Mechanodd/build --config Release --parallel
+          cmake -B Mechanodd/build -S Mechanodd -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build Mechanodd/build --target MechanOddBinaryData --parallel 1
+          cmake --build Mechanodd/build --parallel
 
       - name: Package
         shell: bash
