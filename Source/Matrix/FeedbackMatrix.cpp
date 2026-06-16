@@ -123,6 +123,23 @@ void FeedbackMatrix::checkParameters()
 
     smoothPrimed = true;
 
+    // Rebuild the per-row active-column lists. A cell counts as active while its
+    // current OR target gain is non-zero: a cell ramping down to mute stays active
+    // (target 0, current still ringing out) until its ramp reaches exactly 0, after
+    // which both are 0 and it drops out. Self-cells and untouched (centre/mute) cells
+    // are always 0, so they never enter the loop.
+    for (int r = 0; r < numRows; ++r)
+    {
+        int n = 0;
+        for (int c = 0; c < numColumns; ++c)
+        {
+            const auto& g = gains[(size_t) r][(size_t) c];
+            if (g.getCurrentValue() != 0.0f || g.getTargetValue() != 0.0f)
+                activeCol[(size_t) r][(size_t) n++] = c;
+        }
+        numActiveCols[(size_t) r] = n;
+    }
+
     for (int k = 0; k < numResonators; ++k)
         globalMask[(size_t) k] = globalParam[(size_t) k] != nullptr && globalParam[(size_t) k]->load() > 0.5f;
 }
@@ -162,8 +179,10 @@ void FeedbackMatrix::processVoice (const float* const* sourceSamples,
                 continue;   // handled by processGlobal
 
             float in = 0.0f;
-            for (int c = 0; c < numColumns; ++c)
+            const int na = numActiveCols[(size_t) r];
+            for (int idx = 0; idx < na; ++idx)
             {
+                const int c = activeCol[(size_t) r][(size_t) idx];
                 float colSample;
                 if (c < numSources)
                     colSample = sourceSamples[c][i];
@@ -217,8 +236,10 @@ void FeedbackMatrix::processGlobal (const float* const* columnSum,
                 continue;
 
             float in = 0.0f;
-            for (int c = 0; c < numColumns; ++c)
+            const int na = numActiveCols[(size_t) r];
+            for (int idx = 0; idx < na; ++idx)
             {
+                const int c = activeCol[(size_t) r][(size_t) idx];
                 float colSample;
                 if (c < numSources)
                     colSample = columnSum[c][i];

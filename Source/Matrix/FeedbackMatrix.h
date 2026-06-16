@@ -163,6 +163,14 @@ private:
     // the most audible). Coefficient-driven resonator params are smoothed elsewhere.
     using SmoothedGain = juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear>;
     std::array<std::array<SmoothedGain, numColumns>, numRows> gains {};
+
+    // Per-row list of columns whose gain is currently non-zero (or still ramping
+    // toward/away from zero), rebuilt each checkParameters(). The per-sample process
+    // loops iterate only these, so a sparse matrix (most cells muted - the common
+    // case) skips the bulk of the inner gain reads and multiply-adds.
+    std::array<int, numRows> numActiveCols {};
+    std::array<std::array<int, numColumns>, numRows> activeCol {};
+
     std::array<SmoothedGain, numRows> level {};
     std::array<SmoothedGain, numRows> panL  {};
     std::array<SmoothedGain, numRows> panR  {};

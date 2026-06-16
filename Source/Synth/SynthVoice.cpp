@@ -60,6 +60,23 @@ void SynthVoice::assignParameters (juce::AudioProcessorValueTreeState& apvts)
     pPortamento = apvts.getRawParameterValue ("portamento");
 }
 
+void SynthVoice::prepareBlock (int numSamples)
+{
+    blockNumSamples     = numSamples;
+    configuredThisBlock = isVoiceActive();
+
+    // Idle voices render nothing this block (see renderNextBlock), so skip the
+    // per-voice modulation/parameter work entirely - this is what makes CPU scale
+    // with the number of sounding voices. A note that starts mid-block on an idle
+    // voice primes itself in beginNote().
+    if (! configuredThisBlock)
+        return;
+
+    updateModulation (numSamples);   // fill per-voice shadows before modules cache them
+    updatePortamento (numSamples);   // glide pitch, retuning slots, before they re-read freq
+    checkParameters();
+}
+
 void SynthVoice::updateModulation (int numSamples)
 {
     voiceMod.process (numSamples);
@@ -111,6 +128,22 @@ void SynthVoice::beginNote (int midiNoteNumber, float velocity)
     if (! hasPlayed || portaMs < 1.0f)
         glideFreq = targetFreq;
     hasPlayed = true;
+
+    // If this voice was idle when the processor's per-block pre-loop ran, that loop
+    // skipped it, so its modulation shadows and source/matrix parameter targets are
+    // stale. Prime them now exactly as the pre-loop would have for a voice starting
+    // mid-block: refresh the shadows from the globals (the ADSRs are still idle here,
+    // so they add no offset yet - voiceMod.noteOn() arms them just below), then read
+    // the parameters into the source slots and matrix. A stolen (already-active) voice
+    // was configured by the pre-loop, so this is skipped to avoid double-advancing it.
+    if (! configuredThisBlock)
+    {
+        voiceMod.process (blockNumSamples);
+        for (auto& slot : sourceSlots)
+            slot.checkParameters();
+        matrix.checkParameters();
+        configuredThisBlock = true;
+    }
 
     pushFrequency (glideFreq);
 
@@ -286,7 +319,11 @@ float SynthVoice::renderSegment (juce::AudioBuffer<float>& outputBuffer, int sta
 
 void SynthVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
-    if (! isPrepared)
+    // JUCE renders every allocated voice unconditionally; skip the (expensive)
+    // source/matrix/resonator DSP for voices that aren't sounding. isVoiceActive()
+    // stays true for the whole ring-out tail (until clearCurrentNote() below), so
+    // tails still render - only genuinely idle voices are skipped.
+    if (! isPrepared || ! isVoiceActive())
         return;
 
     int pos       = startSample;

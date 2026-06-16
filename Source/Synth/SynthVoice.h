@@ -47,6 +47,12 @@ public:
     void assignParameters (juce::AudioProcessorValueTreeState& apvts);
     void checkParameters();
 
+    // Per-block setup for EVERY voice (active or idle). Records the block size and
+    // whether the per-block modulation/parameter update ran this block; for active
+    // voices it runs that update. Idle voices are skipped here (they render nothing)
+    // and prime themselves in beginNote() if a note starts on them mid-block.
+    void prepareBlock (int numSamples);
+
     // Advance this voice's per-voice modulators and refresh its parameter shadows.
     // Must run before checkParameters() so the modules cache the modulated values.
     void updateModulation (int numSamples);
@@ -98,6 +104,12 @@ private:
     bool   sourcesPlaying { false };
     int    silentSamples  { 0 };
     bool   isPrepared { false };
+
+    // Set each block by prepareBlock(): the host block size, and whether this voice's
+    // modulation/parameters were updated this block (true only for voices that were
+    // already active). beginNote() uses these to prime a voice that starts from idle.
+    int  blockNumSamples     { 0 };
+    bool configuredThisBlock { false };
 
     // Note-start declick: starting a note resets/retunes this voice's resonators,
     // which (when the voice was still ringing - i.e. stolen) cuts the output to ~0

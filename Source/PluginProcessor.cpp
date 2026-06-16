@@ -365,11 +365,12 @@ void MechanOddAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (int i = 0; i < synth.getNumVoices(); ++i)
         if (auto* voice = dynamic_cast<SynthVoice*> (synth.getVoice (i)))
         {
-            voice->updateModulation (numSamples);   // fill per-voice shadows before modules cache them
-            voice->updatePortamento (numSamples);    // glide pitch, retuning slots, before they re-read freq
-            voice->checkParameters();
+            // Shared buffers/input must be set for every voice (a note may start on an
+            // idle one mid-block). prepareBlock() then does the per-voice modulation +
+            // parameter work for active voices only, so idle voices cost almost nothing.
             voice->setSharedBuffers (&columnSum, &prevBuf, &sendBus, &prevSendBusOut);
             voice->setInputBuffer (&inputCapture);
+            voice->prepareBlock (numSamples);
         }
 
     for (auto& slot : globalResonators)
