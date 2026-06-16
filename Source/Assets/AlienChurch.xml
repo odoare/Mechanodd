@@ -819,7 +819,7 @@
   <PARAM id="mtx_send_1" value="0.0"/>
   <PARAM id="mtx_send_2" value="-60.0"/>
   <PARAM id="mtx_send_3" value="-60.0"/>
-  <PARAM id="numVoices" value="8.0"/>
+  <PARAM id="numVoices" value="4.0"/>
   <PARAM id="outputVolume" value="0.0"/>
   <PARAM id="portamento" value="0.0"/>
   <PARAM id="res0_BeamString_coarse" value="0.0"/>

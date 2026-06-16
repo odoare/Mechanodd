@@ -513,7 +513,7 @@
   <PARAM id="master_fx2_EQ_EQ_PostGain" value="0.0"/>
   <PARAM id="master_fx2_Limit_Lim_Ceiling" value="-0.2999992370605469"/>
   <PARAM id="master_fx2_Limit_Lim_Drive" value="0.0"/>
-  <PARAM id="master_fx2_Limit_Lim_On" value="0.0"/>
+  <PARAM id="master_fx2_Limit_Lim_On" value="1.0"/>
   <PARAM id="master_fx2_Limit_Lim_Release" value="50.0"/>
   <PARAM id="master_fx2_Oct_Oct_Detect" value="399.9999694824219"/>
   <PARAM id="master_fx2_Oct_Oct_Dry" value="0.0"/>
@@ -541,7 +541,7 @@
   <PARAM id="master_fx2_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx2_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx2_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx2_type" value="0.0"/>
+  <PARAM id="master_fx2_type" value="6.0"/>
   <PARAM id="master_fx3_Cab_Cab_Gain" value="0.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRL" value="1.0"/>
   <PARAM id="master_fx3_Cab_Cab_IRR" value="2.0"/>
@@ -549,13 +549,13 @@
   <PARAM id="master_fx3_Comp_Comp_Attack" value="10.0"/>
   <PARAM id="master_fx3_Comp_Comp_Gain" value="0.0"/>
   <PARAM id="master_fx3_Comp_Comp_Knee" value="0.0"/>
-  <PARAM id="master_fx3_Comp_Comp_On" value="0.0"/>
-  <PARAM id="master_fx3_Comp_Comp_PeakRms" value="0.0"/>
+  <PARAM id="master_fx3_Comp_Comp_On" value="1.0"/>
+  <PARAM id="master_fx3_Comp_Comp_PeakRms" value="0.4599999785423279"/>
   <PARAM id="master_fx3_Comp_Comp_PreGain" value="0.0"/>
-  <PARAM id="master_fx3_Comp_Comp_Ratio" value="1.0"/>
+  <PARAM id="master_fx3_Comp_Comp_Ratio" value="5.179999828338623"/>
   <PARAM id="master_fx3_Comp_Comp_RelMode" value="0.0"/>
   <PARAM id="master_fx3_Comp_Comp_Release" value="100.0"/>
-  <PARAM id="master_fx3_Comp_Comp_Thresh" value="0.0"/>
+  <PARAM id="master_fx3_Comp_Comp_Thresh" value="-4.080001831054688"/>
   <PARAM id="master_fx3_Delay_Del_CrossFdbk" value="-60.0"/>
   <PARAM id="master_fx3_Delay_Del_DelayL" value="0.5"/>
   <PARAM id="master_fx3_Delay_Del_DelayR" value="0.75"/>
@@ -618,7 +618,7 @@
   <PARAM id="master_fx3_Tube_Tube_Out" value="0.0"/>
   <PARAM id="master_fx3_Tube_Tube_Sag" value="0.5"/>
   <PARAM id="master_fx3_Tube_Tube_Tone" value="0.0"/>
-  <PARAM id="master_fx3_type" value="0.0"/>
+  <PARAM id="master_fx3_type" value="5.0"/>
   <PARAM id="mod0_amount" value="1.0"/>
   <PARAM id="mod0_attack" value="0.009999999776482582"/>
   <PARAM id="mod0_decay" value="0.1000000014901161"/>
@@ -775,7 +775,7 @@
   <PARAM id="mod9_syncrate" value="2.0"/>
   <PARAM id="mod9_target" value="0.0"/>
   <PARAM id="mod9_type" value="0.0"/>
-  <PARAM id="mtx_g_0_0" value="0.8640000820159912"/>
+  <PARAM id="mtx_g_0_0" value="0.8030000925064087"/>
   <PARAM id="mtx_g_0_1" value="0.0"/>
   <PARAM id="mtx_g_0_2" value="0.0"/>
   <PARAM id="mtx_g_0_3" value="0.0"/>
@@ -787,7 +787,7 @@
   <PARAM id="mtx_g_1_1" value="0.0"/>
   <PARAM id="mtx_g_1_2" value="0.0"/>
   <PARAM id="mtx_g_1_3" value="0.0"/>
-  <PARAM id="mtx_g_1_4" value="0.8640000820159912"/>
+  <PARAM id="mtx_g_1_4" value="0.8330000638961792"/>
   <PARAM id="mtx_g_1_6" value="0.0"/>
   <PARAM id="mtx_g_1_7" value="0.0"/>
   <PARAM id="mtx_g_1_8" value="0.0"/>
@@ -808,7 +808,7 @@
   <PARAM id="mtx_g_3_6" value="0.0"/>
   <PARAM id="mtx_g_3_8" value="0.0"/>
   <PARAM id="mtx_level_0" value="-60.0"/>
-  <PARAM id="mtx_level_1" value="-3.0"/>
+  <PARAM id="mtx_level_1" value="-5.0"/>
   <PARAM id="mtx_level_2" value="0.0"/>
   <PARAM id="mtx_level_3" value="0.0"/>
   <PARAM id="mtx_pan_0" value="0.0"/>
@@ -819,7 +819,7 @@
   <PARAM id="mtx_send_1" value="-60.0"/>
   <PARAM id="mtx_send_2" value="-60.0"/>
   <PARAM id="mtx_send_3" value="-60.0"/>
-  <PARAM id="numVoices" value="8.0"/>
+  <PARAM id="numVoices" value="4.0"/>
   <PARAM id="outputVolume" value="0.0"/>
   <PARAM id="portamento" value="0.0"/>
   <PARAM id="res0_BeamString_coarse" value="0.0"/>
