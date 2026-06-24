@@ -52,6 +52,7 @@ flowchart TD
     MIDI([MIDI Note On/Off]) --> MOD[ModEngine<br/>global LFOs + ADSRs]
     MOD -. modulates parameter atomics .-> MTX
 
+    MIDI -- "per-voice gate · pitch · velocity" --> SRC
     SRC[Sources ×4<br/>Noise · Wavetable · Cracks] --> MTX
 
     subgraph LOOP[Feedback engine — per-voice and global tiers]
