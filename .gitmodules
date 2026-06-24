@@ -1,3 +1,6 @@
 [submodule "lib/FxmeFX"]
 	path = lib/FxmeFX
 	url = http://github.com/odoare/FxmeFX
+[submodule "lib/FxmeTools"]
+	path = lib/FxmeTools
+	url = https://github.com/odoare/FxmeTools
