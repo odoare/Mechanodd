@@ -14,12 +14,14 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
 endif()
 
-# JUCE and the FxmeJuceTools user-module are expected as siblings of this repo,
-# mirroring the FxmeFX layout:
-#   ../JUCE/                              (juce-framework/JUCE checkout)
-#   ../JUCE/usermodules/FxmeJuceTools/    (symlink to FxmeJuceTools/module/FxmeJuceTools)
+# JUCE is expected as a sibling of this repo, mirroring the FxmeFX layout:
+#   ../JUCE/   (juce-framework/JUCE checkout)
 add_subdirectory(../JUCE JUCE)
-juce_add_module(../JUCE/usermodules/FxmeJuceTools)
+
+# FxmeTools (shared GUI controls, look-and-feel, DSP, and the WDL convolution
+# engine) ships inside the FxmeFX submodule. Including its .cmake registers the
+# `FxmeTools` JUCE module and the fxmetools_attach() helper.
+include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/lib/FxmeTools/cmake/FxmeTools.cmake)
 
 juce_add_plugin(MechanOdd
     COMPANY_NAME                "FX-Mechanics"
@@ -47,6 +49,10 @@ file(GLOB_RECURSE MECHANODD_SOURCES CONFIGURE_DEPENDS
 )
 
 target_sources(MechanOdd PRIVATE ${MECHANODD_SOURCES})
+
+# Link the FxmeTools module and compile + expose the WDL convolution engine
+# (used by the reused Cab / ConvolReverb effects and FxmeTools' FirFilter).
+fxmetools_attach(MechanOdd)
 
 # Make every subdirectory under Source/ an include root so headers can be
 # included by name regardless of where a module lives.
@@ -94,19 +100,6 @@ if(FXMEFX_ASSETS)
     target_link_libraries(MechanOdd PRIVATE MechanOddBinaryData)
 endif()
 
-# ── WDL convolution engine (required by Cab and ConvolReverb) ─────────────────
-set(_wdldir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/WDL/WDL)
-target_sources(MechanOdd PRIVATE
-    ${_wdldir}/convoengine.cpp
-    ${_wdldir}/fft.c
-    ${_wdldir}/resample.cpp
-)
-
-# FxmeJuceTools DSP helpers not exposed by the module umbrella header.
-set(FXME_DSP ${CMAKE_CURRENT_SOURCE_DIR}/../JUCE/usermodules/FxmeJuceTools/Dsp)
-target_sources(MechanOdd PRIVATE ${FXME_DSP}/CracksGenerator.cpp)
-target_include_directories(MechanOdd PRIVATE ${FXME_DSP})
-
 juce_generate_juce_header(MechanOdd)
 
 target_compile_definitions(MechanOdd
@@ -120,7 +113,6 @@ target_compile_definitions(MechanOdd
 
 target_link_libraries(MechanOdd
     PRIVATE
-        FxmeJuceTools
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats

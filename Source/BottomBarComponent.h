@@ -4,7 +4,7 @@
     BottomBarComponent.h
 
     Global output strip shown under the tabs: an output volume knob, a stereo
-    output VU meter (FxmeJuceTools' three-colour HorizontalVuMeter, one per
+    output VU meter (FxmeTools' three-colour HorizontalVuMeter, one per
     channel), a voice-count knob, a portamento knob, and preset load/save
     buttons that read/write the full APVTS state as XML files.
 

@@ -40,26 +40,6 @@ void ModEngine::reset()
     prevGate = false;
 }
 
-float ModEngine::evalLfo (int shape, float phase)
-{
-    switch (shape)
-    {
-        case triangle: return phase < 0.5f ? (4.0f * phase - 1.0f) : (3.0f - 4.0f * phase);
-        case square:   return phase < 0.5f ? 1.0f : -1.0f;
-        case sawUp:    return 2.0f * phase - 1.0f;
-        case sawDown:  return 1.0f - 2.0f * phase;
-        case sine:
-        default:       return std::sin (juce::MathConstants<float>::twoPi * phase);
-    }
-}
-
-float ModEngine::syncRateBeats (int index)
-{
-    static const float beats[] = { 4.0f, 2.0f, 1.0f, 0.5f, 0.25f, 1.0f / 3.0f, 1.0f / 6.0f };
-    const int n = (int) (sizeof (beats) / sizeof (beats[0]));
-    return beats[juce::jlimit (0, n - 1, index)];
-}
-
 void ModEngine::assignParameters (juce::AudioProcessorValueTreeState& apvts)
 {
     // Target names come from any modulator's target choice (built in addParameters).
@@ -191,19 +171,19 @@ void ModEngine::process (int numSamples, double bpm, double ppqPosition, bool is
 
             float freq;
             if (synced)
-                freq = (float) (bpm / 60.0) / juce::jmax (1.0e-4f, syncRateBeats ((int) m.syncRate->load()));
+                freq = (float) (bpm / 60.0) / juce::jmax (1.0e-4f, fxme::Lfo::syncRateBeats ((int) m.syncRate->load()));
             else
                 freq = juce::jmax (0.0f, m.rate->load());
 
             if (synced && isPlaying)
-                m.phase = (float) std::fmod (ppqPosition / syncRateBeats ((int) m.syncRate->load()), 1.0);
+                m.phase = (float) std::fmod (ppqPosition / fxme::Lfo::syncRateBeats ((int) m.syncRate->load()), 1.0);
             else
             {
                 m.phase += freq * blockSeconds;
                 m.phase -= std::floor (m.phase);
             }
 
-            val = depth * evalLfo (shape, m.phase);
+            val = depth * fxme::Lfo::eval (shape, m.phase);
         }
 
         auto found = std::find (touchedNow.begin(), touchedNow.end(), idx);

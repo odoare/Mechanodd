@@ -32,18 +32,6 @@ jobs:
           ref: ${{ env.JUCE_VERSION }}
           path: JUCE
 
-      - name: Checkout FxmeJuceTools
-        uses: actions/checkout@v4
-        with:
-          repository: odoare/FxmeJuceTools
-          path: _fxme_tmp
-
-      - name: Install FxmeJuceTools module
-        shell: bash
-        run: |
-          mkdir -p JUCE/usermodules
-          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
-
       - name: Configure & Build
         run: |
           cmake -B Mechanodd/build -S Mechanodd -DCMAKE_BUILD_TYPE=Release
@@ -79,18 +67,6 @@ jobs:
           repository: juce-framework/JUCE
           ref: ${{ env.JUCE_VERSION }}
           path: JUCE
-
-      - name: Checkout FxmeJuceTools
-        uses: actions/checkout@v4
-        with:
-          repository: odoare/FxmeJuceTools
-          path: _fxme_tmp
-
-      - name: Install FxmeJuceTools module
-        shell: bash
-        run: |
-          mkdir -p JUCE/usermodules
-          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
 
       - name: Set up MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -131,18 +107,6 @@ jobs:
           repository: juce-framework/JUCE
           ref: ${{ env.JUCE_VERSION }}
           path: JUCE
-
-      - name: Checkout FxmeJuceTools
-        uses: actions/checkout@v4
-        with:
-          repository: odoare/FxmeJuceTools
-          path: _fxme_tmp
-
-      - name: Install FxmeJuceTools module
-        shell: bash
-        run: |
-          mkdir -p JUCE/usermodules
-          mv _fxme_tmp/module/FxmeJuceTools JUCE/usermodules/FxmeJuceTools
 
       - name: Configure & Build
         run: |

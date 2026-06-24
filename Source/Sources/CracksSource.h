@@ -3,7 +3,7 @@
 
     CracksSource.h
 
-    Random click / crackle generator (reuses FxmeJuceTools' CracksGenerator).
+    Random click / crackle generator (reuses FxmeTools' CracksGenerator).
     Tone shaping comes from the base-class resonant LPF + ADSR.
 
   ==============================================================================
@@ -12,7 +12,7 @@
 #pragma once
 
 #include "Source.h"
-#include "CracksGenerator.h"
+#include <FxmeTools/dsp/CracksGenerator.h>
 
 class CracksSource : public Source
 {
@@ -29,6 +29,6 @@ protected:
     void renderSource (juce::AudioBuffer<float>& outBuffer, int startSample, int numSamples) override;
 
 private:
-    CracksGenerator generator;
+    fxme::CracksGenerator generator;
     std::atomic<float>* pDensity { nullptr };
 };

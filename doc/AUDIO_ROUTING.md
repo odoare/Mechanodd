@@ -12,6 +12,7 @@ flowchart TD
     MIDI([MIDI Note On/Off]) --> MOD[ModEngine<br/>global LFOs + ADSRs]
     MOD -. modulates parameter atomics .-> MTX
 
+    MIDI -- "per-voice gate · pitch · velocity" --> SRC
     SRC[Sources ×4<br/>Noise · Wavetable · Cracks] --> MTX
 
     subgraph LOOP[Feedback engine — per-voice and global tiers]
@@ -39,7 +40,10 @@ flowchart TD
    values. Unmodulated parameters are restored to their base value at block end.
 
 2. **Sources** generate the excitation signals and enter the matrix as its first
-   four columns.
+   four columns. Each MIDI note gates and tunes them per voice: `startNote`
+   triggers every source slot's envelope (with velocity) and sets its pitch,
+   `stopNote` releases them. (The same note pitch also retunes the resonator
+   slots.)
 
 3. **Feedback Matrix** is a 4×9 routing grid. Its columns are the four sources,
    the four resonator outputs (fed back with a one-block delay), and one

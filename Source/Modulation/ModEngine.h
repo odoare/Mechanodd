@@ -27,7 +27,6 @@ class ModEngine
 public:
     static constexpr int numModulators = 12;
 
-    enum Shape { sine = 0, triangle, square, sawUp, sawDown };
     enum ModType { typeLfo = 0, typeAdsr };
 
     void prepare (double sampleRate);
@@ -99,14 +98,11 @@ public:
     static juce::String resGlobalFlagId (const juce::String& id);
 
     static juce::StringArray typeChoices()     { return { "LFO", "ADSR" }; }
-    static juce::StringArray shapeChoices()    { return { "Sine", "Tri", "Square", "Saw Up", "Saw Dn" }; }
-    static juce::StringArray syncRateChoices() { return { "1/1", "1/2", "1/4", "1/8", "1/16", "1/8T", "1/16T" }; }
+    static juce::StringArray shapeChoices()    { return fxme::Lfo::shapeChoices(); }
+    static juce::StringArray syncRateChoices() { return fxme::Lfo::syncRateChoices(); }
     static juce::StringArray polarityChoices() { return { "-", "+" }; }
 
 private:
-    static float evalLfo (int shape, float phase);
-    static float syncRateBeats (int index);   // beats per LFO cycle
-
     double sampleRate { 44100.0 };
 
     struct Modulator
