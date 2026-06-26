@@ -118,6 +118,9 @@ A 4×9 routing grid. Each cell is a **bipolar gain knob** (centre = mute, edges 
 
 Each row also has a **level**, **pan**, and **send** control. The send bus routes signal into the Bus Effect Chain, whose output is both folded into the master mix and fed back into column 9 of the matrix.
 
+> [!WARNING]
+> **Watch your output level when tweaking the matrix.** Because multiple gain paths sum at the mix stage, the combined signal can peak well above 0 dBFS before it reaches the Master chain — even if individual cells appear modest. This is especially true when resonator-feedback columns (5–8) or the send-bus column (9) carry appreciable signal, as they form re-entrant loops that multiply on every block. Start with all cells near centre (muted) and raise gains gradually while watching the VU meter. Placing a **Limiter** as the last slot in the Master chain is strongly recommended as a safety ceiling whenever exploring high-gain or self-oscillating settings.
+
 ### Effects
 
 ![Effects tab](doc/effects.png)
