@@ -55,6 +55,10 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    // Factory (BinaryData) + user (XML files) preset banks; the editor's
+    // Presets tab and the host program list both drive this.
+    fxme::PresetManager& getPresetManager() noexcept { return presetManager; }
+
     // Per-column "entering signal" level (linear peak), refreshed every block for
     // the matrix meters. Columns are the matrix feedback sources: source slots
     // first, then resonator slots. The level is summed over all voices (taken from
@@ -82,14 +86,7 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    struct FactoryPreset
-    {
-        juce::String name;         // display name derived from filename
-        juce::String resourceName; // BinaryData symbol name (e.g. "Cool_Preset_xml")
-    };
-    std::vector<FactoryPreset> factoryPresets;
-    int currentProgram { 0 };
-    void buildFactoryPresets();
+    fxme::PresetManager presetManager;   // must be declared after apvts
 
     PolySynth synth;
 

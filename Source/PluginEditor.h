@@ -53,6 +53,9 @@ private:
 
     std::unique_ptr<ModulationComponent> modulationComponent;
 
+    std::unique_ptr<fxme::PresetComponent> presetComponent;
+    std::unique_ptr<fxme::PresetBarComponent> presetBar;   // overlaid on the tab bar row
+
     std::unique_ptr<BottomBarComponent> bottomBar;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanOddAudioProcessorEditor)

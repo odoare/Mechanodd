@@ -24,16 +24,19 @@ MechanOddAudioProcessor::MechanOddAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-       apvts (*this, nullptr, "Parameters", createParameterLayout())
+       apvts (*this, nullptr, "Parameters", createParameterLayout()),
 #else
-       apvts (*this, nullptr, "Parameters", createParameterLayout())
+       apvts (*this, nullptr, "Parameters", createParameterLayout()),
 #endif
+       presetManager (apvts,
+                      fxme::PresetManager::getDefaultUserPresetDirectory ("MechanOdd"),
+                      BinaryData::namedResourceList,
+                      BinaryData::namedResourceListSize,
+                      BinaryData::getNamedResource)
 {
     synth.addSound (new SynthSound());
     for (int i = 0; i < numVoices; ++i)
         synth.addVoice (new SynthVoice());
-
-    buildFactoryPresets();
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::createParameterLayout()
@@ -139,68 +142,39 @@ double MechanOddAudioProcessor::getTailLengthSeconds() const
     return 0.0;
 }
 
-void MechanOddAudioProcessor::buildFactoryPresets()
-{
-    factoryPresets.clear();
-    for (int i = 0; i < BinaryData::namedResourceListSize; ++i)
-    {
-        const juce::String res = BinaryData::namedResourceList[i];
-        if (! res.endsWith ("_xml"))
-            continue;
-
-        // "Cool_Preset_xml" → "Cool Preset"
-        const juce::String name = res.dropLastCharacters (4).replace ("_", " ");
-        factoryPresets.push_back ({ name, res });
-    }
-}
-
 // Program layout: index 0 is always "Default" (current state, no load).
 // Factory presets occupy indices 1..N.  This guarantees getNumPrograms() >= 2
 // whenever at least one preset XML exists, which is required by the JUCE VST3
 // wrapper to register the program-selection parameter with the host.
+// Preset handling itself (factory + user banks) lives in fxme::PresetManager.
 
 int MechanOddAudioProcessor::getNumPrograms()
 {
-    return 1 + (int) factoryPresets.size();   // 0 = Default, 1..N = factory presets
+    return 1 + (int) presetManager.getFactoryPresets().size();   // 0 = Default, 1..N = factory presets
 }
 
 int MechanOddAudioProcessor::getCurrentProgram()
 {
-    return currentProgram;
+    // -1 (not a factory preset) maps to program 0, "Default".
+    return presetManager.getCurrentFactoryIndex() + 1;
 }
 
 void MechanOddAudioProcessor::setCurrentProgram (int index)
 {
     if (index == 0)
-    {
-        currentProgram = 0;   // "Default" — no state change
-        return;
-    }
+        return;   // "Default" — no state change
 
-    const int fi = index - 1;
-    if (fi < 0 || fi >= (int) factoryPresets.size())
-        return;
-
-    int dataSize = 0;
-    const char* data = BinaryData::getNamedResource (
-        factoryPresets[(size_t) fi].resourceName.toRawUTF8(), dataSize);
-    if (data == nullptr)
-        return;
-
-    if (auto xml = juce::XmlDocument::parse (juce::String (data, (size_t) dataSize)))
-    {
-        currentProgram = index;
-        apvts.replaceState (juce::ValueTree::fromXml (*xml));
-    }
+    presetManager.loadFactoryPreset (index - 1);
 }
 
 const juce::String MechanOddAudioProcessor::getProgramName (int index)
 {
     if (index == 0)
         return "Default";
-    const int fi = index - 1;
-    if (fi >= 0 && fi < (int) factoryPresets.size())
-        return factoryPresets[(size_t) fi].name;
+
+    const auto& factory = presetManager.getFactoryPresets();
+    if (index >= 1 && index <= (int) factory.size())
+        return factory[(size_t) (index - 1)].name;
     return {};
 }
 
