@@ -72,6 +72,15 @@ target_include_directories(MechanOdd PRIVATE ${MECHANODD_INCLUDE_DIRS})
 # ── Reused FxmeFX effects ─────────────────────────────────────────────────────
 # Compile each effect's DSP class and its component (not the standalone plugin
 # wrappers PluginProcessor/PluginEditor/PdMain) into MechanOdd.
+
+# The effect *Component.cpp files include Common/TopBar.h for the shared header
+# sizing constants and paintComponentBackground(). That header also pulls in
+# <FxmeCommonBinaryData.h> (the FX-Mechanics logo), whose generated header only
+# lands on the include path via the FxmeCommonBinaryData target. Registering and
+# linking it is what every FxmeFX plugin CMakeLists does; without it the build
+# fails on all platforms with "'FxmeCommonBinaryData.h' file not found".
+include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/Common/CommonAssets.cmake)
+target_link_libraries(MechanOdd PRIVATE FxmeCommonBinaryData)
 set(FXMEFX_EFFECTS StereoDelay Tube Equalizer Oct VuMeter Compressor Limiter Transient Cab ConvolReverb)
 set(FXMEFX_ASSETS "")
 foreach(_fx IN LISTS FXMEFX_EFFECTS)
