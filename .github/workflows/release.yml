@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  # Lets the three builds (and the macOS verification) be exercised by hand
+  # without publishing a release.
+  workflow_dispatch:
 
 env:
   JUCE_VERSION: 8.0.12
@@ -110,19 +113,64 @@ jobs:
 
       - name: Configure & Build
         run: |
-          cmake -B Mechanodd/build -S Mechanodd -DCMAKE_BUILD_TYPE=Release
+          # The architectures and deployment target are also set before
+          # project() in CMakeLists.txt. Passing them here as well is belt and
+          # braces: a command-line -D is in the cache before any CMakeLists
+          # line runs, so it cannot be lost to file ordering.
+          cmake -B Mechanodd/build -S Mechanodd \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
           cmake --build Mechanodd/build --config Release --target MechanOddBinaryData --parallel 1
           # Capped at 2 (universal-binary builds double the compile/link load).
           cmake --build Mechanodd/build --config Release --parallel 2
 
-      - name: Verify universal binary
+      # A verification step that cannot fail is not one: lipo -info printing
+      # "arm64" while the job goes green is exactly how a broken release ships.
+      # All three bundles are checked — they are separate link steps.
+      - name: Verify universal binaries
         run: |
-          lipo -info "Mechanodd/build/MechanOdd_artefacts/Release/VST3/MechanOdd.vst3/Contents/MacOS/MechanOdd"
+          set -euo pipefail
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          status=0
+          for bundle in \
+            "$ART/VST3/MechanOdd.vst3/Contents/MacOS/MechanOdd" \
+            "$ART/AU/MechanOdd.component/Contents/MacOS/MechanOdd" \
+            "$ART/Standalone/MechanOdd.app/Contents/MacOS/MechanOdd"
+          do
+            if [[ ! -f "$bundle" ]]; then
+              echo "::error::missing binary: $bundle"; status=1; continue
+            fi
+            info=$(lipo -info "$bundle")
+            echo "$info"
+            for arch in x86_64 arm64; do
+              grep -qw "$arch" <<< "$info" || { echo "::error::$bundle has no $arch slice"; status=1; }
+            done
+            vtool -show-build "$bundle" | grep -E 'minos|platform' || true
+          done
+          exit $status
+
+      # Ad-hoc signature: free, no Apple account. It only makes each bundle
+      # internally consistent (arm64 code needs *some* signature to run, and
+      # packaging can invalidate the linker's). It is not notarisation and does
+      # nothing for Gatekeeper — see the README's macOS install note.
+      - name: Ad-hoc codesign
+        run: |
+          set -euo pipefail
+          ART=Mechanodd/build/MechanOdd_artefacts/Release
+          for b in "$ART/VST3/MechanOdd.vst3" "$ART/AU/MechanOdd.component" "$ART/Standalone/MechanOdd.app"; do
+            codesign --force --deep --sign - --timestamp=none "$b"
+            codesign --verify --verbose "$b"
+          done
 
       - name: Build pkg installer
         run: |
+          set -euo pipefail
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
+          # Manual (workflow_dispatch) runs have no tag; keep this in step with
+          # project(MechanOdd VERSION ...) in CMakeLists.txt.
+          [[ "$VERSION" =~ ^[0-9] ]] || VERSION="0.1.0"
           ART=Mechanodd/build/MechanOdd_artefacts/Release
           mkdir -p pkg_root/Library/Audio/Plug-Ins/VST3
           mkdir -p pkg_root/Library/Audio/Plug-Ins/Components
@@ -157,6 +205,8 @@ jobs:
   # ── Publish GitHub Release ────────────────────────────────────────────────
   release:
     needs: [build-linux-x86_64, build-windows, build-macos]
+    # Manual runs build and verify but must not publish.
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write

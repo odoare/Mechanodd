@@ -23,7 +23,8 @@
 5. [Feedback Matrix: Routing and Gain Encoding](#feedback-matrix-routing-and-gain-encoding)
 6. [Modulation Engine](#modulation-engine)
 7. [Effects](#effects-1)
-8. [Building](#building)
+8. [Installing](#installing)
+9. [Building](#building)
 
 ---
 
@@ -527,13 +528,65 @@ The **Bus** chain processes the resonator/voice send bus; its output is folded i
 
 ---
 
+## Installing
+
+Release builds are published on the Releases page as a zip per platform, plus a `.pkg` installer for macOS. The macOS build is a universal binary (arm64 and x86_64) targeting macOS 10.13 and later.
+
+### macOS
+
+MechanOdd is a free plugin and is not signed with an Apple Developer ID, so it is not notarised. macOS puts a quarantine attribute on anything downloaded through a browser, and a quarantined plugin bundle is silently skipped during the plugin scan: the DAW simply shows nothing, usually with no error message at all.
+
+If you use the `.pkg` installer, right-click it and choose Open (double-clicking an unsigned installer is refused).
+
+If you install from the zip, copy the bundles to the standard locations and then clear the quarantine attribute:
+
+```sh
+# VST3
+cp -r MechanOdd.vst3 /Library/Audio/Plug-Ins/VST3/
+xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/VST3/MechanOdd.vst3
+
+# Audio Unit
+cp -r MechanOdd.component /Library/Audio/Plug-Ins/Components/
+xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/Components/MechanOdd.component
+
+# Standalone
+cp -r MechanOdd.app /Applications/
+xattr -dr com.apple.quarantine /Applications/MechanOdd.app
+```
+
+Then rescan the plugin folder in your DAW (most hosts cache the scan result and need to be told to look again, or restarted).
+
+### Linux and Windows
+
+Unzip and copy `MechanOdd.vst3` into your VST3 folder (`~/.vst3` on Linux, `C:\Program Files\Common Files\VST3` on Windows), then rescan in the DAW.
+
+---
+
 ## Building
 
-Prerequisites: JUCE 7, CMake ≥ 3.22, a C++17 compiler.
+Prerequisites: JUCE 8 (8.0.12 is what CI builds against), CMake ≥ 3.22, a C++17 compiler. JUCE is expected as a sibling directory of this repository (`../JUCE`), and the submodules must be checked out recursively:
+
+```bash
+git submodule update --init --recursive
+```
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-The plugin builds as VST3 and AU (macOS). Plugin binaries are placed in the standard system locations by the JUCE CMake API.
+The embedded binary-data target holds the impulse-response WAVs and is memory-hungry to compile, so it is worth building it on its own first and keeping the parallelism low for the rest:
+
+```bash
+cmake --build build --config Release --target MechanOddBinaryData --parallel 1
+cmake --build build --config Release --parallel 2
+```
+
+On macOS the architectures and deployment target are set in `CMakeLists.txt` before `project()`, so a plain configure already produces a universal binary. Verify it rather than assuming:
+
+```sh
+lipo -info build/MechanOdd_artefacts/Release/VST3/MechanOdd.vst3/Contents/MacOS/MechanOdd
+# expected: Architectures in the fat file: ... x86_64 arm64
+```
+
+The plugin builds as VST3, AU (macOS) and Standalone. Plugin binaries are placed in the standard system locations by the JUCE CMake API.

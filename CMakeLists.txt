@@ -4,15 +4,21 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
+# These MUST stay before project(): that is where CMake configures the Apple
+# toolchain and reads them. Set after project(), the deployment target is
+# ignored outright and the architectures are unreliable, which on GitHub's
+# Apple-Silicon runners yields a silently arm64-only "universal" build.
+# 10.13 (not 11.0) because 11.0 excludes Catalina even with a good x86_64
+# slice; the arm64 slice is clamped up to 11.0 by the toolchain anyway.
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS deployment version")
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
+endif()
+
 project(MechanOdd VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment version")
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
-endif()
 
 # JUCE is expected as a sibling of this repo, mirroring the FxmeFX layout:
 #   ../JUCE/   (juce-framework/JUCE checkout)
