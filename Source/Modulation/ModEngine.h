@@ -98,8 +98,8 @@ public:
     static juce::String resGlobalFlagId (const juce::String& id);
 
     static juce::StringArray typeChoices()     { return { "LFO", "ADSR" }; }
-    static juce::StringArray shapeChoices()    { return fxme::Lfo::shapeChoices(); }
-    static juce::StringArray syncRateChoices() { return fxme::Lfo::syncRateChoices(); }
+    static juce::StringArray shapeChoices()    { return juce::StringArray (fxme::Lfo::shapeNames,    fxme::Lfo::numShapes); }
+    static juce::StringArray syncRateChoices() { return juce::StringArray (fxme::Lfo::syncRateNames, fxme::Lfo::numSyncRates); }
     static juce::StringArray polarityChoices() { return { "-", "+" }; }
 
 private:
