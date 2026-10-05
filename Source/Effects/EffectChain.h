@@ -24,6 +24,7 @@ public:
     void checkParameters();
     void process (juce::AudioBuffer<float>& buffer);
     void loadActiveEffects();   // see EffectSlot::loadActiveEffect; never on the audio thread
+    EffectSlot& getSlot (int slot) { return slots[(size_t) slot]; }
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& chainPrefix);
 

@@ -30,6 +30,12 @@ public:
     // slot is set to it. Never on the audio thread.
     void loadActiveEffect();
 
+    // The slot's instance of effect type `type` (index in EffectFactory::types()),
+    // for its panel to bind to, as an FxmeFX plugin's editor binds to its
+    // processor's effect: the effects are written for that (their GUI calls
+    // lock what they touch).
+    Effect& getEffect (int type) { return *effects[(size_t) type]; }
+
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& slotPrefix);
 
     static juce::String typeParamId (const juce::String& slotPrefix) { return slotPrefix + "_type"; }

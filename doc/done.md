@@ -3,6 +3,36 @@
 Implemented items, newest first. Items that came from [todo.md](todo.md) keep
 their number there.
 
+## Effect panels show what plays: bound to the processor's effects (2026-10-05)
+
+Picking another IR in a Cab or Reverb panel did not update its drawing (nor
+Length, Shape or Offset the reverb's curve). Each panel was bound to a
+GUI-side copy of its effect, never prepared, so the copy's loader thread
+(started by `prepare`) never ran: the copy never loaded the IR the combo
+box selected, and the panel draws from it. The sound was right, since the
+processor's own instance does load it. In FxmeFX's plugins the editor binds
+to the processor's instance, which is why they work. This dates from FxmeFX
+moving IR loading to a background thread, not from today's changes.
+
+Now the effects tab binds each panel to the processor's instance of that
+effect in that slot (`EffectChain::getSlot`, `EffectSlot::getEffect`,
+`getBusChain` / `getMasterChain` on the processor), as FxmeFX's editors do;
+the effects are written for it. Also fixes anything else a panel shows from
+its effect (meters, gain reduction: a copy never processed audio), and
+showing a Cab or Reverb panel no longer loads an IR of its own.
+
+The effects' parameter connections (`EffectChain::assignParameters`) moved
+from `prepareToPlay` to the processor's constructor, so a panel opened
+before the host prepares the plugin is bound to a connected effect (a
+reverb embedding an external IR needs its link to the state). Every
+effect's `assignParameters` only looks up parameters (and, for the reverb,
+registers a state listener), so it does not depend on `prepare`.
+
+Checked: no build run yet.
+
+FxmeFX also bumped to 0.4.2 (`Source/Common/Version.h`). It said 0.4.0: the
+v0.4.1 tag was made without bumping it, so 0.4.1 builds show 0.4.0.
+
 ## 14. FxmeFX: Cab and ConvolReverb IRs at the session rate (2026-10-05)
 
 A bug in FxmeFX, found while making the IR loading lazy. Cab and
@@ -81,9 +111,9 @@ used.
 - **Effect panels made when shown.** The Effects tab made a GUI-side effect
   and its panel for every effect in every slot (72, 8 of them reverbs) each
   time the editor opened. Now only the shown one exists; it is made when
-  shown and dropped when another is. The reverb's external IR lives in the
-  plugin state (`EmbeddedAudio`), not in the instance, so nothing is lost
-  when a panel is remade.
+  shown and dropped when another is. (Later the same day the panels were
+  bound to the processor's instances instead of GUI-side copies: see
+  above.)
 
 Left as is: the 8 processor-side reverbs, one per slot whether used or not
 (see todo 13 for the options).

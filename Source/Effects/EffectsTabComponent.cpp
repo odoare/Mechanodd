@@ -131,7 +131,6 @@ void EffectsTabComponent::showPanel (int slot, int type)
         return;
 
     shownPanel.reset();
-    shownEffect.reset();
     shownSlot = slot;
     shownType = type;
 
@@ -140,11 +139,12 @@ void EffectsTabComponent::showPanel (int slot, int type)
 
     const auto& info = EffectFactory::types()[(size_t) type];
     const auto perTypePfx = EffectSlot::perTypePrefix (slots[(size_t) slot]->slotPrefix, info.name);
-    shownEffect = info.create();
-    // Assign parameters so the GUI-side instance can poll for IR changes.
-    shownEffect->assignParameters (apvts, perTypePfx);
-    shownEffect->ensureLoaded();   // the panel reads the IR list (and the IR, to draw it)
-    shownPanel = info.createComponent (*shownEffect, apvts, perTypePfx);
+    auto& chain = slot < kSlotsPerChain ? processor.getBusChain() : processor.getMasterChain();
+    auto& effect = chain.getSlot (slot % kSlotsPerChain).getEffect (type);
+    // The slot is set to this effect, so the loader thread loads it anyway;
+    // now, because the panel reads the IR list as it is made.
+    effect.ensureLoaded();
+    shownPanel = info.createComponent (effect, apvts, perTypePfx);
     addChildComponent (*shownPanel);
 }
 

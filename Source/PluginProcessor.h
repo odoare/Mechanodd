@@ -64,6 +64,11 @@ public:
     // with FxmeFX's own effect plugins: FX-Mechanics/Modules/<Effect>/Presets),
     // by the slot's per-type prefix (EffectSlot::perTypePrefix, e.g.
     // "master_fx0_Comp"). Null for an unknown prefix.
+    // The effect chains: the send bus and the master. The effects tab binds each
+    // effect's panel to the instance here (message thread).
+    EffectChain& getBusChain() noexcept    { return busChain; }
+    EffectChain& getMasterChain() noexcept { return masterChain; }
+
     fxme::ModulePresetTarget* getEffectPresets (const juce::String& perTypePrefix) const
     {
         const auto it = effectPresetTargets.find (perTypePrefix);

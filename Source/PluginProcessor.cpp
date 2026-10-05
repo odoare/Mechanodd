@@ -46,6 +46,13 @@ MechanOddAudioProcessor::MechanOddAudioProcessor()
 
     createEffectPresets();
 
+    // The effects' parameter connections, made once here rather than in
+    // prepareToPlay: an editor can open before the host prepares the plugin,
+    // and the effects tab binds each panel to these instances (a reverb
+    // embedding an external IR needs its connection to the state).
+    busChain.assignParameters (apvts, "bus");
+    masterChain.assignParameters (apvts, "master");
+
     synth.addSound (new SynthSound());
     for (int i = 0; i < numVoices; ++i)
         synth.addVoice (new SynthVoice());
@@ -230,8 +237,8 @@ void MechanOddAudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // The loader reads the slots this re-prepares and re-assigns; pause it
-    // (it waits for an IR load in progress) and restart it at the end.
+    // The loader works on the slots this re-prepares; pause it (it waits for
+    // an IR load in progress) and restart it at the end.
     effectLoader.stopThread (-1);
 
     synth.setCurrentPlaybackSampleRate (sampleRate);
@@ -287,9 +294,6 @@ void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     busChain.prepare (sampleRate, 2, samplesPerBlock);
     masterChain.prepare (sampleRate, 2, samplesPerBlock);
-    busChain.assignParameters (apvts, "bus");
-    masterChain.assignParameters (apvts, "master");
-
     // A slot already set to Cab or Reverb (a restored session) loads its IR
     // now, while the host is not processing yet, so it plays from the first
     // block; later changes are the loader thread's.
