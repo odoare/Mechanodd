@@ -143,6 +143,7 @@ void EffectsTabComponent::showPanel (int slot, int type)
     shownEffect = info.create();
     // Assign parameters so the GUI-side instance can poll for IR changes.
     shownEffect->assignParameters (apvts, perTypePfx);
+    shownEffect->ensureLoaded();   // the panel reads the IR list (and the IR, to draw it)
     shownPanel = info.createComponent (*shownEffect, apvts, perTypePfx);
     addChildComponent (*shownPanel);
 }

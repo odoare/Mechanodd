@@ -25,6 +25,11 @@ public:
     void checkParameters();
     void process (juce::AudioBuffer<float>& buffer);
 
+    // Completes the deferred setup of the effect the slot is set to (see
+    // Effect::ensureLoaded): an IR effect loads its IR the first time its
+    // slot is set to it. Never on the audio thread.
+    void loadActiveEffect();
+
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& slotPrefix);
 
     static juce::String typeParamId (const juce::String& slotPrefix) { return slotPrefix + "_type"; }

@@ -33,7 +33,9 @@ its number. The compliance audit has its own checklist
    now each have a copy. Touches FxmeTools (shared library; through the
    FxmeFX submodule here).
 9. **Remove the unused `EffectChainComponent` / `EffectSlotComponent`**: no
-   longer referenced by the editor (the Effects tab replaced them).
+   longer referenced by the editor (the Effects tab replaced them). They
+   also no longer call `ensureLoaded()`, so their Cab and Reverb panels
+   would show an empty IR list if they were ever used again.
 10. **Tooltips for the meters.** The resonator slots' and the matrix's meters
     are FxmeFX's `VuMeterComponent` (`lib/FxmeFX/Source/VuMeter`), which is
     not a tooltip client, so they have no tip (the top bar's meter has one).
@@ -126,10 +128,10 @@ its number. The compliance audit has its own checklist
       anything needs it, since a state saved without it can only ever be
       guessed at. The factory presets in `Source/Assets` that use the
       reverb would be regenerated.
-    - **The cheaper alternative** keeps everything compatible: load a slot's
-      IR only once the slot is actually set to Reverb (or Cab), in the
-      background, with a short silence while it loads. Unused slots then
-      cost nothing, and the IR reverb stays for whoever wants it.
+    - **The cheaper alternative**, loading a slot's IR only once the slot is
+      set to Reverb or Cab, is done (see done.md), so unused slots no
+      longer cost anything. What remains is the cost of a reverb actually
+      in use.
 
     Order: H1 now (small), then the FxmeFX effect, then decide whether the
-    convolution reverb is kept as is, loaded lazily, or retired.
+    convolution reverb is kept or retired.

@@ -3,6 +3,67 @@
 Implemented items, newest first. Items that came from [todo.md](todo.md) keep
 their number there.
 
+## 14. FxmeFX: Cab and ConvolReverb IRs at the session rate (2026-10-05)
+
+A bug in FxmeFX, found while making the IR loading lazy. Cab and
+ConvolReverb resample an IR to their current rate when they load it, and
+start at 44.1 kHz; every host gives them their IR list (which loads the
+selected IR) before the first `prepare`, and `prepare` rebuilt the engine
+from that buffer without reloading it. So in any session not at 44.1 kHz,
+the IR selected at startup played at the wrong speed: at 48 kHz about 9 %
+fast, 1.5 semitones high and 8 % shorter. An IR picked later was right
+(the loader thread loads at the current rate), until the next rate change.
+
+Fixed in the FxmeFX submodule (`Source/Cab/Cab.cpp`,
+`Source/ConvolReverb/ConvolReverb.{h,cpp}`): `prepare` reloads the current
+IRs from their source when the rate changed (`ConvolReverb::reloadCurrentIR`,
+now also used by the normalisation switch; Cab reloads its two slots),
+then rebuilds as before. The rate is now written under the loader lock, as
+the loader thread reads it. External reverb IRs reload too (from the
+embedded audio).
+
+Affects every FxmeFX plugin built on these two effects (FxmeCab,
+FxmeConvolReverb, MechanOdd, FxmeSampler): existing sessions at 48 kHz and
+above will sound different, now as intended. `fxme::FirFilter` (FxmeTools)
+was checked and does not have the problem: it keeps the IR at its source
+rate and resamples on every rebuild.
+
+Checked: no build run yet.
+
+## Faster loading: IRs loaded only by slots that use them (2026-10-05)
+
+The second half of the load-time work: every slot still held a Cab and a
+ConvolReverb that loaded an IR (and, once prepared, ran a polling thread)
+whether the slot used them or not.
+
+- `DeferredIRAdapter` (in `EffectFactory.cpp`), the base of the Cab and
+  ConvolReverb adapters: nothing is loaded at construction; `prepare` only
+  records the rate and block size; `ensureLoaded()` (a new `Effect` hook,
+  never on the audio thread) gives the effect its IR list, which loads the
+  IR, and then prepares it. Until then `process` outputs silence. Once
+  loaded, an effect stays loaded.
+- The processor's `EffectLoader` thread polls the slot types every 20 ms
+  and calls `ensureLoaded()` on the effect each slot is set to
+  (`EffectChain::loadActiveEffects`), so a slot switched to Reverb by the
+  GUI, automation, a preset or a session loads within a moment, with a
+  short silence on that slot. `prepareToPlay` pauses the thread, does the
+  same synchronously (a restored session plays its reverb from the first
+  block), and restarts it. The destructor stops it first.
+- The effects tab's GUI-side instance calls `ensureLoaded()` before its
+  panel is made (the panel reads the IR list).
+- The order inside `ensureLoaded()` (list, then prepare) is the one used
+  before; the other way round the effects' polling thread would mark the
+  IR parameter handled while the list is still empty. In a session not at
+  44.1 kHz the IR is therefore loaded twice when a slot first uses it (at
+  the effects' 44.1 kHz default, then again at the session rate by
+  `prepare`, since the fix of todo 14).
+
+Remaining load cost: whatever Cab or Reverb slots are in use. A host that
+renders offline right after setting the state, without a `prepareToPlay`
+in between, could get a short silence at the start of such a slot.
+
+Checked: no build run yet.
+
 ## Faster loading: no throwaway effects, effect panels made on demand (2026-10-05)
 
 Load time was dominated by the convolution reverb: every instance decodes a

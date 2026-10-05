@@ -144,6 +144,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::cre
 
 MechanOddAudioProcessor::~MechanOddAudioProcessor()
 {
+    // Before the chains it reads go away.
+    effectLoader.stopThread (-1);   // waits for an IR load in progress (a timeout would kill it mid-load)
 }
 
 //==============================================================================
@@ -228,6 +230,10 @@ void MechanOddAudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    // The loader reads the slots this re-prepares and re-assigns; pause it
+    // (it waits for an IR load in progress) and restart it at the end.
+    effectLoader.stopThread (-1);
+
     synth.setCurrentPlaybackSampleRate (sampleRate);
 
     juce::dsp::ProcessSpec spec;
@@ -283,6 +289,14 @@ void MechanOddAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     masterChain.prepare (sampleRate, 2, samplesPerBlock);
     busChain.assignParameters (apvts, "bus");
     masterChain.assignParameters (apvts, "master");
+
+    // A slot already set to Cab or Reverb (a restored session) loads its IR
+    // now, while the host is not processing yet, so it plays from the first
+    // block; later changes are the loader thread's.
+    busChain.loadActiveEffects();
+    masterChain.loadActiveEffects();
+    if (! effectLoader.isThreadRunning())
+        effectLoader.startThread (juce::Thread::Priority::background);
 
     modEngine.prepare (sampleRate);
     modEngine.assignParameters (apvts);

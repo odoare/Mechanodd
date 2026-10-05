@@ -26,6 +26,11 @@ public:
     virtual void process (juce::AudioBuffer<float>& buffer) = 0;
     virtual void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) = 0;
     virtual void checkParameters() = 0;
+
+    // For an effect that defers costly setup until it is actually used (Cab
+    // and ConvolReverb: loading an IR): does it now, if not done yet. Never
+    // on the audio thread. Effects with nothing to defer ignore it.
+    virtual void ensureLoaded() {}
 };
 
 namespace effectdetail

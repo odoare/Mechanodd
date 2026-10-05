@@ -26,6 +26,12 @@ void EffectChain::checkParameters()
         slot.checkParameters();
 }
 
+void EffectChain::loadActiveEffects()
+{
+    for (auto& slot : slots)
+        slot.loadActiveEffect();
+}
+
 void EffectChain::process (juce::AudioBuffer<float>& buffer)
 {
     for (auto& slot : slots)

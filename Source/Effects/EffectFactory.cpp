@@ -50,11 +50,95 @@ namespace
         };
     }
 
+    // ── IR-backed effects: loading deferred until used ────────────────────────
+    // Cab and ConvolReverb load an IR as soon as they get their IR list
+    // (decode, resample, FFT partitioning) and start a polling thread in
+    // prepare(). Every slot holds one of each, so that is put off until the
+    // slot is actually set to them: ensureLoaded(), called by the processor's
+    // loader thread (or from prepareToPlay, for a slot already set to them).
+    // Until then the effect outputs silence; prepare() only records the
+    // settings. Once loaded it stays loaded.
+    //
+    // The order inside ensureLoaded() matters: the IR list first, then
+    // prepare(). The other way round, the effect's polling thread would find
+    // an empty list, mark the IR parameter as handled, and never load the IR
+    // it names.
+    template <class Impl>
+    class DeferredIRAdapter : public Effect
+    {
+    public:
+        Impl& get() { return impl; }
+
+        void prepare (double newSampleRate, int /*numChannels*/, int newBlockSize) override
+        {
+            const juce::ScopedLock sl (loadLock);
+            sampleRate = newSampleRate;
+            blockSize  = newBlockSize;
+            prepared   = true;
+            if (loaded)
+            {
+                ready = false;
+                impl.prepare (sampleRate, blockSize);
+                ready = true;
+            }
+        }
+
+        void ensureLoaded() override
+        {
+            const juce::ScopedLock sl (loadLock);
+            if (loaded)
+                return;
+
+            setImpulseList();
+            loaded = true;
+
+            // A GUI-side instance is never prepared: it only needs the list
+            // (and the IR, for its display).
+            if (prepared)
+            {
+                impl.prepare (sampleRate, blockSize);
+                ready = true;
+            }
+        }
+
+        void process (juce::AudioBuffer<float>& buffer) override
+        {
+            if (ready.load (std::memory_order_acquire))
+                impl.process (buffer);
+            else
+                buffer.clear();   // still loading: silence rather than an unprocessed signal
+        }
+
+        void assignParameters (juce::AudioProcessorValueTreeState& apvts,
+                               const juce::String& prefix) override
+        {
+            impl.assignParameters (apvts, prefix);
+        }
+
+        void checkParameters() override
+        {
+            if (ready.load (std::memory_order_acquire))
+                checkImplParameters();
+        }
+
+    protected:
+        virtual void setImpulseList() = 0;      // hands the IR list to impl (loads the selected IR)
+        virtual void checkImplParameters() {}
+
+        Impl impl;
+
+    private:
+        juce::CriticalSection loadLock;          // ensureLoaded vs prepare; never taken by audio
+        bool loaded = false, prepared = false;
+        double sampleRate = 44100.0;
+        int blockSize = 512;
+        std::atomic<bool> ready { false };       // loaded and prepared: process() may run
+    };
+
     // ── Cab adapter ───────────────────────────────────────────────────────────
-    // Cab::prepare takes (sampleRate, samplesPerBlock) — different from the
-    // standard (sampleRate, numChannels) — and addParameters needs the IR count
-    // explicitly, so we use a hand-written adapter instead of EffectAdapter<Cab>.
-    class CabAdapter : public Effect
+    // Cab::prepare takes (sampleRate, samplesPerBlock), and addParameters
+    // needs the IR count explicitly.
+    class CabAdapter : public DeferredIRAdapter<Cab>
     {
     public:
         // Map display names to the BinaryData symbol names generated from the
@@ -87,7 +171,8 @@ namespace
             Cab::addParameters (params, prefix, numIRs);
         }
 
-        CabAdapter()
+    protected:
+        void setImpulseList() override
         {
             juce::StringArray names, resources;
             for (const auto& [name, resource] : kIRs)
@@ -98,33 +183,14 @@ namespace
             impl.setImpulseList (names, resources);
         }
 
-        Cab& get() { return impl; }
-
-        void prepare (double sampleRate, int /*numChannels*/, int blockSize) override
-        {
-            impl.prepare (sampleRate, blockSize);
-        }
-
-        void process (juce::AudioBuffer<float>& buffer) override { impl.process (buffer); }
-
-        void assignParameters (juce::AudioProcessorValueTreeState& apvts,
-                               const juce::String& prefix) override
-        {
-            impl.assignParameters (apvts, prefix);
-        }
-
-        void checkParameters() override { impl.checkParameters(); }
-
-    private:
-        Cab impl;
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CabAdapter)
+        void checkImplParameters() override { impl.checkParameters(); }
     };
 
     // ── ConvolReverb adapter ──────────────────────────────────────────────────
     // ConvolReverb::prepare takes (sampleRate, samplesPerBlock) and its
-    // checkParameters() is private (called internally from process()). The
-    // adapter provides a no-op checkParameters and routes prepare correctly.
-    class ConvolReverbAdapter : public Effect
+    // checkParameters() is private (called internally from process()), so
+    // there is nothing to check from here.
+    class ConvolReverbAdapter : public DeferredIRAdapter<ConvolReverb>
     {
     public:
         // Map display names to BinaryData symbols from
@@ -150,7 +216,8 @@ namespace
             ConvolReverb::addParameters (params, prefix, numIRs);
         }
 
-        ConvolReverbAdapter()
+    protected:
+        void setImpulseList() override
         {
             juce::StringArray names, resources, midSide;
             for (const auto& ir : kIRs)
@@ -162,29 +229,6 @@ namespace
             }
             impl.setImpulseList (names, resources, midSide);
         }
-
-        ConvolReverb& get() { return impl; }
-
-        void prepare (double sampleRate, int /*numChannels*/, int blockSize) override
-        {
-            impl.prepare (sampleRate, blockSize);
-        }
-
-        void process (juce::AudioBuffer<float>& buffer) override { impl.process (buffer); }
-
-        void assignParameters (juce::AudioProcessorValueTreeState& apvts,
-                               const juce::String& prefix) override
-        {
-            impl.assignParameters (apvts, prefix);
-        }
-
-        // ConvolReverb calls its own checkParameters() from process(); no
-        // external call is needed.
-        void checkParameters() override {}
-
-    private:
-        ConvolReverb impl;
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConvolReverbAdapter)
     };
 
     // Factory entry for the two IR-backed effects whose adapters are hand-written.

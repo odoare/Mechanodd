@@ -136,6 +136,32 @@ private:
 
     // Effect chains: send bus and master.
     EffectChain busChain, masterChain;
+
+    // Loads the IR of a Cab or Reverb slot once the slot is set to it (see
+    // EffectSlot::loadActiveEffect), off the audio thread: a plain thread
+    // polling the slot types, so it works with no editor open (automation,
+    // a preset or a session load can change a slot). Declared after the
+    // chains; stopped first thing in the destructor.
+    class EffectLoader : public juce::Thread
+    {
+    public:
+        explicit EffectLoader (MechanOddAudioProcessor& p)
+            : juce::Thread ("MechanOdd effect loader"), owner (p) {}
+
+        void run() override
+        {
+            while (! threadShouldExit())
+            {
+                owner.busChain.loadActiveEffects();
+                owner.masterChain.loadActiveEffects();
+                wait (20);
+            }
+        }
+
+    private:
+        MechanOddAudioProcessor& owner;
+    };
+    EffectLoader effectLoader { *this };
     juce::AudioBuffer<float> sendBus;           // stereo
     juce::AudioBuffer<float> prevSendBusOut;    // mono, previous block's bus-chain output for matrix column
 

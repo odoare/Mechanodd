@@ -23,6 +23,7 @@ public:
     void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& chainPrefix);
     void checkParameters();
     void process (juce::AudioBuffer<float>& buffer);
+    void loadActiveEffects();   // see EffectSlot::loadActiveEffect; never on the audio thread
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& chainPrefix);
 

@@ -40,6 +40,16 @@ void EffectSlot::checkParameters()
         effects[(size_t) (activeType - 1)]->checkParameters();
 }
 
+void EffectSlot::loadActiveEffect()
+{
+    if (typeParam == nullptr)
+        return;
+
+    const int type = (int) typeParam->load();
+    if (type > 0 && type <= (int) effects.size())
+        effects[(size_t) (type - 1)]->ensureLoaded();
+}
+
 void EffectSlot::process (juce::AudioBuffer<float>& buffer)
 {
     if (activeType > 0 && activeType <= (int) effects.size())
