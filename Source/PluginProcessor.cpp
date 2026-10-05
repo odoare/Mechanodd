@@ -10,7 +10,11 @@
 #include "PluginEditor.h"
 #include "ResonatorSlot.h"
 #include "Modulation/ParamSource.h"
+#include "EffectFactory.h"
 #include <BinaryData.h>
+#if FXMEFX_HAS_MODULE_PRESETS
+ #include <FxmeModulePresets.h>
+#endif
 
 //==============================================================================
 MechanOddAudioProcessor::MechanOddAudioProcessor()
@@ -29,14 +33,52 @@ MechanOddAudioProcessor::MechanOddAudioProcessor()
        apvts (*this, nullptr, "Parameters", createParameterLayout()),
 #endif
        presetManager (apvts,
-                      fxme::PresetManager::getDefaultUserPresetDirectory ("MechanOdd"),
+                      fxme::PresetManager::getVendorPresetDirectory ("MechanOdd"),
                       BinaryData::namedResourceList,
                       BinaryData::namedResourceListSize,
                       BinaryData::getNamedResource)
 {
+    // Presets lived in <user data>/MechanOdd/Presets before the FX-Mechanics
+    // folder layout: copied over once (never moved; a marker stops it
+    // happening again), so they are not lost.
+    presetManager.importLegacyUserPresets (
+        fxme::PresetManager::getDefaultUserPresetDirectory ("MechanOdd"));
+
+    createEffectPresets();
+
     synth.addSound (new SynthSound());
     for (int i = 0; i < numVoices; ++i)
         synth.addVoice (new SynthVoice());
+}
+
+void MechanOddAudioProcessor::createEffectPresets()
+{
+    // Each FxmeFX effect's presets are its module's (FxmeFX Common/
+    // EffectPresets.h): the same module name, format version and folder as
+    // the effect's own plugin, and its factory presets embedded by
+    // fxmefx_add_module_presets() in CMakeLists.txt.
+    constexpr int effectPresetFormatVersion = 1;   // FxmeFX's EffectPresets::formatVersion
+
+    const auto& types = EffectFactory::types();
+    for (const auto& info : types)
+        effectPresetLibraries.push_back (std::make_unique<fxme::ModulePresetLibrary> (
+            info.moduleName, effectPresetFormatVersion,
+            fxme::PresetManager::getModulePresetDirectory (info.moduleName)
+           #if FXMEFX_HAS_MODULE_PRESETS
+            , FxmeModulePresets::namedResourceList,
+            FxmeModulePresets::namedResourceListSize,
+            FxmeModulePresets::getNamedResource
+           #endif
+            ));
+
+    for (const auto* chain : { "bus", "master" })
+        for (int slot = 0; slot < EffectChain::numSlots; ++slot)
+            for (size_t t = 0; t < types.size(); ++t)
+            {
+                const auto perTypePfx = EffectSlot::perTypePrefix (EffectChain::slotPrefix (chain, slot), types[t].name);
+                effectPresetTargets[perTypePfx] = std::make_unique<fxme::ModulePresetTarget> (
+                    *effectPresetLibraries[t], apvts, EffectFactory::presetPrefix (perTypePfx, types[t]));
+            }
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout MechanOddAudioProcessor::createParameterLayout()

@@ -31,10 +31,13 @@ namespace
 {
     // Builds a registry entry for effect class FX with component class FXComponent.
     template <class FX, class FXComponent>
-    EffectTypeInfo makeEntry (const juce::String& name, int preferredWidth, int preferredHeight)
+    EffectTypeInfo makeEntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag,
+                              int preferredWidth, int preferredHeight)
     {
         return {
             name,
+            moduleName,
+            paramTag,
             []                                       { return std::unique_ptr<Effect> (new EffectAdapter<FX>()); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
@@ -126,23 +129,31 @@ namespace
         ConvolReverbAdapter()
         {
             // Map display names to BinaryData symbols from
-            // lib/FxmeFX/Source/ConvolReverb/ir/.
-            static const std::pair<const char*, const char*> kIRs[] = {
-                { "Council Chamber",         "Council_Chamber_wav"         },
-                { "Forest short",            "Forest_short_wav"            },
-                { "Forest long",             "Forest_long_wav"             },
-                { "Rectangular room small",  "Rectangular_room_small_wav"  },
-                { "Rectangular room medium", "Rectangular_room_medium_wav" },
-                { "Rectangular room large",  "Rectangular_room_large_wav"  },
+            // lib/FxmeFX/Source/ConvolReverb/ir/. Same order as FxmeFX's own
+            // ConvolReverb plugin: the IR parameter is an index, and the
+            // effect's module presets (shared with that plugin) store it.
+            // The first three are recorded as mid / side and are decoded to
+            // left / right on load; played as left / right they come out loud
+            // and lopsided to the left.
+            struct IR { const char* name; const char* resource; bool midSide; };
+            static const IR kIRs[] = {
+                { "Council Chamber",         "Council_Chamber_wav",         true  },
+                { "Forest short",            "Forest_short_wav",            true  },
+                { "Forest long",             "Forest_long_wav",             true  },
+                { "Rectangular room small",  "Rectangular_room_small_wav",  false },
+                { "Rectangular room medium", "Rectangular_room_medium_wav", false },
+                { "Rectangular room large",  "Rectangular_room_large_wav",  false },
             };
 
-            juce::StringArray names, resources;
-            for (const auto& [name, resource] : kIRs)
+            juce::StringArray names, resources, midSide;
+            for (const auto& ir : kIRs)
             {
-                names.add (name);
-                resources.add (resource);
+                names.add (ir.name);
+                resources.add (ir.resource);
+                if (ir.midSide)
+                    midSide.add (ir.resource);
             }
-            impl.setImpulseList (names, resources);
+            impl.setImpulseList (names, resources, midSide);
         }
 
         ConvolReverb& get() { return impl; }
@@ -177,10 +188,13 @@ namespace
 
     // Factory entry for the two IR-backed effects whose adapters are hand-written.
     template <class Adapter, class FXComponent>
-    EffectTypeInfo makeIREntry (const juce::String& name, int preferredWidth, int preferredHeight)
+    EffectTypeInfo makeIREntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag,
+                                int preferredWidth, int preferredHeight)
     {
         return {
             name,
+            moduleName,
+            paramTag,
             [] { return std::unique_ptr<Effect> (new Adapter()); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
@@ -196,15 +210,15 @@ namespace
 const std::vector<EffectTypeInfo>& EffectFactory::types()
 {
     static const std::vector<EffectTypeInfo> registry = {
-        makeEntry<StereoDelay,  StereoDelayComponent>  ("Delay",    600, 300),
-        makeEntry<Tube,         TubeComponent>          ("Tube",     640, 300),
-        makeEntry<Equalizer,    EqualizerComponent>     ("EQ",       600, 700),
-        makeEntry<Oct,          OctComponent>           ("Oct",      520, 320),
-        makeEntry<Compressor,   CompressorComponent>    ("Comp",     600, 300),
-        makeEntry<Limiter,      LimiterComponent>       ("Limit",    520, 280),
-        makeEntry<Transient,    TransientComponent>     ("Transient",480, 300),
-        makeIREntry<CabAdapter,          CabComponent>          ("Cab",    600, 400),
-        makeIREntry<ConvolReverbAdapter, ConvolReverbComponent>  ("Reverb", 600, 400),
+        makeEntry<StereoDelay,  StereoDelayComponent>  ("Delay",     "StereoDelay", "Del",   600, 300),
+        makeEntry<Tube,         TubeComponent>          ("Tube",      "Tube",        "Tube",  640, 300),
+        makeEntry<Equalizer,    EqualizerComponent>     ("EQ",        "Equalizer",   "EQ",    600, 700),
+        makeEntry<Oct,          OctComponent>           ("Oct",       "Oct",         "Oct",   520, 320),
+        makeEntry<Compressor,   CompressorComponent>    ("Comp",      "Compressor",  "Comp",  600, 300),
+        makeEntry<Limiter,      LimiterComponent>       ("Limit",     "Limiter",     "Lim",   520, 280),
+        makeEntry<Transient,    TransientComponent>     ("Transient", "Transient",   "Trans", 480, 300),
+        makeIREntry<CabAdapter,          CabComponent>          ("Cab",    "Cab",          "Cab", 600, 400),
+        makeIREntry<ConvolReverbAdapter, ConvolReverbComponent>  ("Reverb", "ConvolReverb", "Rev", 600, 400),
     };
     return registry;
 }

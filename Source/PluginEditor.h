@@ -15,7 +15,8 @@
 #include "FeedbackMatrixComponent.h"
 #include "EffectsTabComponent.h"
 #include "ModulationComponent.h"
-#include "BottomBarComponent.h"
+#include "GlobalPanel.h"
+#include "OutputMeter.h"
 #include "Theme.h"
 
 // TabbedComponent that paints the shared StrinGO gradient behind every tab
@@ -37,7 +38,27 @@ public:
     void resized() override;
 
 private:
+    /** Opens the voice count and portamento in a callout under the gear. */
+    void showGlobalPanel();
+
+    /** The FX-Mechanics logo, from the binary data. */
+    static juce::Image logoImage();
+
     MechanOddAudioProcessor& audioProcessor;
+
+    // For the top bar's own controls (the output fader); the tabs keep their
+    // look-and-feels.
+    fxme::FxmeLookAndFeel laf;
+
+    // The top bar: logo, name, then the output level (a fader and the
+    // stereo meter), the global presets ("..." opens the browser) and the
+    // gear for the global settings, then the version.
+    fxme::TopBar topBar { MechanOddTheme::displayName, MechanOddTheme::tagline,
+                          JucePlugin_VersionString, logoImage() };
+    fxme::FxmeSlider outputSlider;
+    OutputMeter outputMeter { audioProcessor };
+    fxme::PresetBarComponent presetBar { audioProcessor.getPresetManager() };
+    GearButton globalButton { MechanOddTheme::modulation };
 
     GradientTabbedComponent tabs;
 
@@ -54,9 +75,10 @@ private:
     std::unique_ptr<ModulationComponent> modulationComponent;
 
     std::unique_ptr<fxme::PresetComponent> presetComponent;
-    std::unique_ptr<fxme::PresetBarComponent> presetBar;   // overlaid on the tab bar row
 
-    std::unique_ptr<BottomBarComponent> bottomBar;
+    // Typing in the preset browsers' name fields (and in the knobs' value
+    // entry) in a hosted window. Exactly one, declared after the children.
+    fxme::TextEntryFocusFixer textEntryFixer { *this };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MechanOddAudioProcessorEditor)
 };

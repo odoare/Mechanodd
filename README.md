@@ -14,7 +14,7 @@
    - [Feedback Matrix](#feedback-matrix)
    - [Effects](#effects)
    - [Modulation](#modulation)
-   - [Bottom Bar](#bottom-bar)
+   - [Top Bar](#top-bar)
 4. [Resonators: DSP and Mathematics](#resonators-dsp-and-mathematics)
    - [Waveguide String](#waveguide-string)
    - [Plate](#plate)
@@ -135,6 +135,8 @@ Two serial effect chains of four slots each:
 
 Available effects per slot: Delay, Tube saturation, EQ, Octaver, Compressor, Limiter/maximizer, Transient shaper, Cabinet IR, Convolution Reverb.
 
+Each effect has presets of its own, shown in a preset bar above its panel ("..." opens the browser to save, rename and delete). They are the same presets as the effect's standalone FxmeFX plugin: a preset saved in MechanOdd shows up there and in every slot, and the other way round. They are stored in `FX-Mechanics/Modules/<Effect>/Presets` (under `~/.config` on Linux, `~/Library/Application Support` on macOS, `%APPDATA%` on Windows).
+
 ### Modulation
 
 ![Modulation tab](doc/modulators.png)
@@ -146,19 +148,25 @@ Twelve global modulators, each targeting any float parameter in the plugin. Two 
 
 Per-voice ADSRs mirror the global ADSR modulators but track individual note gates, so each voice can have independent envelope shapes even on the same target parameter.
 
-### Bottom Bar
+### Top Bar
 
-![Bottom bar](doc/master.png)
-
-Persistent controls visible on all tabs:
+Persistent controls visible on all tabs, from left to right:
 
 | Control | Range | Description |
 |---------|-------|-------------|
-| Volume | −60 to +6 dB | Output gain |
+| Output | −60 to +6 dB | Output gain (horizontal fader) |
+| Meter | | Stereo peak-hold VU meter of the output |
+| Presets | | Previous / next, and "..." to open the preset browser (save, rename, delete) |
+| Gear | | Opens the global settings below |
+
+Global settings (gear):
+
+| Control | Range | Description |
+|---------|-------|-------------|
 | Voices | 1–8 | Polyphony limit |
 | Portamento | 0–2000 ms | Pitch glide time between notes |
 
-A stereo peak-hold VU meter shows the output level.
+User presets are stored in `FX-Mechanics/MechanOdd/Presets` (under `~/.config` on Linux, `~/Library/Application Support` on macOS, `%APPDATA%` on Windows). Presets saved by earlier versions in `MechanOdd/Presets` are copied there once, the first time this version runs.
 
 ---
 

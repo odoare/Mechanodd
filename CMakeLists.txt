@@ -42,7 +42,7 @@ juce_add_plugin(MechanOdd
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           FALSE
     IS_MIDI_EFFECT              FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     VST3_CATEGORIES             Instrument Synth
     BUNDLE_ID                   "com.FXMechanics.MechanOdd"
 )
@@ -102,6 +102,15 @@ file(GLOB MECHANODD_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.png
                             ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg
                             ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.xml)
 list(APPEND FXMEFX_ASSETS ${MECHANODD_ASSETS})
+
+# Factory module presets of the embedded effects (FxmeFX's
+# Source/<Effect>/Presets/<Effect>_<Name>.xml), in their own binary-data
+# namespace (FxmeModulePresets); also defines FXMEFX_HAS_MODULE_PRESETS. The
+# effects' user presets live in FX-Mechanics/Modules/<Effect>/Presets, shared
+# with FxmeFX's own plugins. VuMeter is a helper, not a slot effect.
+include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/cmake/FxmeModulePresets.cmake)
+fxmefx_add_module_presets(MechanOdd
+    StereoDelay Tube Equalizer Oct Compressor Limiter Transient Cab ConvolReverb)
 
 if(FXMEFX_ASSETS)
     juce_add_binary_data(MechanOddBinaryData SOURCES ${FXMEFX_ASSETS})

@@ -10,10 +10,34 @@
 #include "PluginEditor.h"
 #include "ResonatorSlot.h"
 #include "Theme.h"
+#include <BinaryData.h>
 
 MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p),
+      audioProcessor (p),
+      outputSlider (p.apvts, MechanOddAudioProcessor::outputVolumeId, "Output", MechanOddTheme::modulation)
 {
+    // ---- Top bar ----------------------------------------------------------------
+    laf.setAccentColour (MechanOddTheme::modulation);
+    topBar.setAccentColour (MechanOddTheme::modulation);
+    addAndMakeVisible (topBar);
+
+    outputSlider.setSliderStyle (juce::Slider::LinearHorizontal);
+    outputSlider.setTextValueSuffix (" dB");
+    outputSlider.setLookAndFeel (&laf);
+    MechanOddTheme::accentSlider (outputSlider, MechanOddTheme::modulation);
+    outputSlider.setColour (juce::Slider::backgroundColourId, juce::Colours::black.withAlpha (0.4f));
+
+    presetBar.setAccentColour (MechanOddTheme::modulation);
+    presetBar.setBrowserButtonVisible (true);   // "...": the full browser in a callout
+    presetBar.setBrowserSize (320, 380);
+
+    globalButton.onClick = [this] { showGlobalPanel(); };
+
+    topBar.setRightControls ({ { &outputSlider, 120 }, { &outputMeter, 130 },
+                               { &presetBar, 236 }, { &globalButton, 24 } });
+
+    // ---- Tabs ---------------------------------------------------------------------
     sourcesTab = std::make_unique<juce::Component>();
     for (int i = 0; i < SynthVoice::numSourceSlots; ++i)
     {
@@ -39,7 +63,7 @@ MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProc
     matrixComponent = std::make_unique<FeedbackMatrixComponent> (audioProcessor.apvts);
     matrixComponent->setColumnLevelProvider ([&p = audioProcessor] (int c) { return p.getColumnLevelLinear (c); });
 
-    effectsTabComponent = std::make_unique<EffectsTabComponent> (audioProcessor.apvts);
+    effectsTabComponent = std::make_unique<EffectsTabComponent> (audioProcessor);
 
     modulationComponent = std::make_unique<ModulationComponent> (audioProcessor.apvts);
     // The modulation page stays homogeneous; the matrix colours itself per row.
@@ -56,20 +80,27 @@ MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProc
     tabs.addTab ("Presets",    MechanOddTheme::tabButton, presetComponent.get(),     false);
     addAndMakeVisible (tabs);
 
-    // Compact preset strip in the unused right end of the tab bar row; added
-    // after the tabs so it stacks on top of the (empty) bar background.
-    presetBar = std::make_unique<fxme::PresetBarComponent> (audioProcessor.getPresetManager());
-    presetBar->setAccentColour (MechanOddTheme::modulation);
-    addAndMakeVisible (*presetBar);
-
-    bottomBar = std::make_unique<BottomBarComponent> (audioProcessor);
-    addAndMakeVisible (*bottomBar);
-
     setResizable (true, true);
-    setSize (1280, 700);
+    // The bottom bar this replaces was 100 px; the top bar takes 54 of it.
+    setSize (1280, 654);
 }
 
-MechanOddAudioProcessorEditor::~MechanOddAudioProcessorEditor() = default;
+MechanOddAudioProcessorEditor::~MechanOddAudioProcessorEditor()
+{
+    outputSlider.setLookAndFeel (nullptr);
+}
+
+void MechanOddAudioProcessorEditor::showGlobalPanel()
+{
+    juce::CallOutBox::launchAsynchronously (std::make_unique<GlobalPanel> (audioProcessor),
+                                            getLocalArea (&topBar, globalButton.getBounds()),
+                                            this);
+}
+
+juce::Image MechanOddAudioProcessorEditor::logoImage()
+{
+    return juce::ImageCache::getFromMemory (BinaryData::logo686_png, BinaryData::logo686_pngSize);
+}
 
 void MechanOddAudioProcessorEditor::paint (juce::Graphics& g)
 {
@@ -80,14 +111,8 @@ void MechanOddAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 
-    if (bottomBar != nullptr)
-        bottomBar->setBounds (area.removeFromBottom (100));
-
+    topBar.setBounds (area.removeFromTop (MechanOddTheme::topBarHeight));
     tabs.setBounds (area);
-
-    if (presetBar != nullptr)
-        presetBar->setBounds (area.removeFromTop (tabs.getTabBarDepth())
-                                  .removeFromRight (320).reduced (4, 3));
 
     if (sourcesTab != nullptr)
     {

@@ -18,6 +18,11 @@
 
 namespace MechanOddTheme
 {
+    // ---- Top bar -----------------------------------------------------------------
+    inline const juce::String displayName { "MechanOdd" };
+    inline constexpr const char* tagline = "Modular physical-modelling synth";
+    inline constexpr int topBarHeight = 54;
+
     // ---- StrinGO-style background ------------------------------------------------
     inline void paintBackground (juce::Graphics& g, juce::Rectangle<float> b)
     {

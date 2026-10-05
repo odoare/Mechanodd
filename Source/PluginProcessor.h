@@ -16,6 +16,7 @@
 #include "FeedbackMatrix.h"
 #include "EffectChain.h"
 #include "ModEngine.h"
+#include <map>
 
 class MechanOddAudioProcessor  : public juce::AudioProcessor
 {
@@ -59,6 +60,16 @@ public:
     // Presets tab and the host program list both drive this.
     fxme::PresetManager& getPresetManager() noexcept { return presetManager; }
 
+    // The module presets of one effect in one slot (local presets, shared
+    // with FxmeFX's own effect plugins: FX-Mechanics/Modules/<Effect>/Presets),
+    // by the slot's per-type prefix (EffectSlot::perTypePrefix, e.g.
+    // "master_fx0_Comp"). Null for an unknown prefix.
+    fxme::ModulePresetTarget* getEffectPresets (const juce::String& perTypePrefix) const
+    {
+        const auto it = effectPresetTargets.find (perTypePrefix);
+        return it != effectPresetTargets.end() ? it->second.get() : nullptr;
+    }
+
     // Per-column "entering signal" level (linear peak), refreshed every block for
     // the matrix meters. Columns are the matrix feedback sources: source slots
     // first, then resonator slots. The level is summed over all voices (taken from
@@ -87,6 +98,16 @@ private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     fxme::PresetManager presetManager;   // must be declared after apvts
+
+    // Effect module presets: one library per effect type (aligned with
+    // EffectFactory::types()), shared by every slot, so a preset saved in one
+    // slot is listed in all of them at once; one target per effect per slot
+    // (every slot holds an instance of every effect). Made in the ctor body,
+    // once the APVTS exists; the targets are declared after the libraries
+    // (and both after the APVTS) so they go first.
+    std::vector<std::unique_ptr<fxme::ModulePresetLibrary>> effectPresetLibraries;
+    std::map<juce::String, std::unique_ptr<fxme::ModulePresetTarget>> effectPresetTargets;
+    void createEffectPresets();
 
     PolySynth synth;
 

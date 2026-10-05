@@ -22,10 +22,14 @@ namespace
     constexpr int kRowGap     = 3;
     constexpr int kSectionGap = 14;
     constexpr int kShowBtnW   = 26;
+    constexpr int kContPad    = 14;    // the panel container around the effect
+    constexpr int kPresetBarW = 300;
+    constexpr int kPresetBarH = 26;
+    constexpr int kPresetGap  = 8;     // between the preset bar and the container
 }
 
-EffectsTabComponent::EffectsTabComponent (juce::AudioProcessorValueTreeState& apvtsIn)
-    : apvts (apvtsIn)
+EffectsTabComponent::EffectsTabComponent (MechanOddAudioProcessor& p)
+    : processor (p), apvts (p.apvts)
 {
     auto styleLabel = [&] (juce::Label& l, const juce::String& text)
     {
@@ -85,6 +89,7 @@ void EffectsTabComponent::initSlot (int idx, const juce::String& chain, int pos)
     addAndMakeVisible (e->typeBox);
 
     const juce::String slotPfx = EffectChain::slotPrefix (chain, pos);
+    e->slotPrefix = slotPfx;
     e->typeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
         apvts, EffectSlot::typeParamId (slotPfx), e->typeBox);
 
@@ -136,6 +141,8 @@ void EffectsTabComponent::refreshRightPanel()
     if (activeSlot < 0)
     {
         placeholderLabel.setVisible (true);
+        if (presetBar != nullptr)
+            presetBar->setVisible (false);
         repaint();
         return;
     }
@@ -146,14 +153,39 @@ void EffectsTabComponent::refreshRightPanel()
     if (ti >= 0 && ti < (int) e.typeComponents.size())
     {
         placeholderLabel.setVisible (false);
+        const auto& info = EffectFactory::types()[(size_t) ti];
         auto* comp = e.typeComponents[(size_t) ti].get();
-        comp->setBounds (centredBounds (EffectFactory::types()[(size_t) ti]));
+        comp->setBounds (centredBounds (info));
         comp->setVisible (true);
+
+        // This effect's module presets, in this slot.
+        auto* bank = processor.getEffectPresets (EffectSlot::perTypePrefix (e.slotPrefix, info.name));
+        if (bank != presetBarBank)
+        {
+            presetBar.reset();
+            presetBarBank = bank;
+            if (bank != nullptr)
+            {
+                presetBar = std::make_unique<fxme::PresetBarComponent> (*bank);
+                presetBar->setAccentColour (activeSlot < kSlotsPerChain ? MechanOddTheme::busColour()
+                                                                        : MechanOddTheme::modulation);
+                presetBar->setBrowserButtonVisible (true);
+                presetBar->setBrowserSize (320, 380);
+                addChildComponent (*presetBar);
+            }
+        }
+        if (presetBar != nullptr)
+        {
+            presetBar->setBounds (presetBarBounds (info));
+            presetBar->setVisible (true);
+        }
     }
     else
     {
         // Slot is set to "Off" — show placeholder
         placeholderLabel.setVisible (true);
+        if (presetBar != nullptr)
+            presetBar->setVisible (false);
     }
 
     repaint();
@@ -163,7 +195,16 @@ void EffectsTabComponent::refreshRightPanel()
 
 juce::Rectangle<int> EffectsTabComponent::rightBounds() const
 {
-    return getLocalBounds().reduced (kPad).withTrimmedLeft (kLeftW);
+    // The top row is kept for the preset bar above the effect's container.
+    return getLocalBounds().reduced (kPad).withTrimmedLeft (kLeftW)
+                           .withTrimmedTop (kPresetBarH + kPresetGap + kContPad);
+}
+
+juce::Rectangle<int> EffectsTabComponent::presetBarBounds (const EffectTypeInfo& info) const
+{
+    const auto panel = centredBounds (info).expanded (kContPad);
+    const int w = juce::jmin (kPresetBarW, panel.getWidth());
+    return { panel.getCentreX() - w / 2, panel.getY() - kPresetGap - kPresetBarH, w, kPresetBarH };
 }
 
 juce::Rectangle<int> EffectsTabComponent::centredBounds (const EffectTypeInfo& info) const
@@ -197,10 +238,9 @@ void EffectsTabComponent::paint (juce::Graphics& g)
         const int ti = e.typeBox.getSelectedItemIndex() - 1;
         if (ti >= 0 && ti < (int) EffectFactory::types().size())
         {
-            constexpr float kContPad = 14.0f;
             constexpr float kRadius  =  8.0f;
             const auto inner = centredBounds (EffectFactory::types()[(size_t) ti]).toFloat();
-            const auto outer = inner.expanded (kContPad);
+            const auto outer = inner.expanded ((float) kContPad);
 
             // Soft drop shadow
             g.setColour (juce::Colours::black.withAlpha (0.45f));
@@ -261,7 +301,11 @@ void EffectsTabComponent::resized()
         auto& e  = *slots[(size_t) activeSlot];
         const int ti = e.typeBox.getSelectedItemIndex() - 1;
         if (ti >= 0 && ti < (int) e.typeComponents.size())
-            e.typeComponents[(size_t) ti]->setBounds (
-                centredBounds (EffectFactory::types()[(size_t) ti]));
+        {
+            const auto& info = EffectFactory::types()[(size_t) ti];
+            e.typeComponents[(size_t) ti]->setBounds (centredBounds (info));
+            if (presetBar != nullptr)
+                presetBar->setBounds (presetBarBounds (info));
+        }
     }
 }

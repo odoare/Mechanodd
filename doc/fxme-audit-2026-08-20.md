@@ -23,16 +23,18 @@ below, because a clean result is worth recording explicitly.
 
 Mechanical, low risk unless marked otherwise.
 
-- [ ] **R1. No `fxme::TextEntryFocusFixer` anywhere, and the editor declines
+- [x] **R1. No `fxme::TextEntryFocusFixer` anywhere, and the editor declines
       keyboard focus.** There are 15 `fxme::FxmeSlider` instances, and every one
       of them opens an inline `TextEditor` on right-click, so typing a value into
       a knob is likely dead in a hosted plugin window. Two things are needed and
       they go together. **safe to apply**
-  - [ ] Add `fxme::TextEntryFocusFixer textEntryFixer { *this };` to
+  - [x] Add `fxme::TextEntryFocusFixer textEntryFixer { *this };` to
         [../Source/PluginEditor.h](../Source/PluginEditor.h), declared after the
         child components.
-  - [ ] Change `EDITOR_WANTS_KEYBOARD_FOCUS` from `FALSE` to `TRUE` in
+  - [x] Change `EDITOR_WANTS_KEYBOARD_FOCUS` from `FALSE` to `TRUE` in
         [../CMakeLists.txt:45](../CMakeLists.txt#L45).
+  - Done 2026-10-05 with the top bar (the preset browsers' name fields need
+    it too). Not yet tried in a host.
 
 - [ ] **R2. `FxmeLookAndFeel::setAccentColour()` is never called.** Thirteen
       components own their own `fxme::FxmeLookAndFeel`, six of them carry combo
@@ -58,6 +60,9 @@ Mechanical, low risk unless marked otherwise.
       Adding the window makes tooltips start appearing across the whole editor,
       which is a product change rather than a cleanup, so it is yours to call.
       **decision**
+  - 2026-10-05: the bottom bar and its two tooltips are gone. The question
+    is now the shell's tooltip step (`Tooltips.h`, a toggleable
+    `TooltipWindow`, the "?" switch); see [todo.md](todo.md).
 
 - [ ] **R4. One deprecated `juce::Font` constructor.**
       [../Source/Effects/EffectsTabComponent.cpp:33](../Source/Effects/EffectsTabComponent.cpp#L33)

@@ -5,7 +5,9 @@
 
     Full-tab effects view: a left column with 8 type selectors (4 Send + 4
     Master) each with an exclusive "show" button, and a right panel that
-    displays the selected slot's effect controls at full size.
+    displays the selected slot's effect controls at full size, under a preset
+    bar for that effect in that slot (its module presets, shared with the
+    effect's own FxmeFX plugin; "..." opens the browser).
 
   ==============================================================================
 */
@@ -16,10 +18,12 @@
 #include "Effect.h"
 #include "EffectFactory.h"
 
+class MechanOddAudioProcessor;
+
 class EffectsTabComponent : public juce::Component
 {
 public:
-    EffectsTabComponent (juce::AudioProcessorValueTreeState& apvts);
+    explicit EffectsTabComponent (MechanOddAudioProcessor& processor);
     ~EffectsTabComponent() override;
 
     void paint  (juce::Graphics& g) override;
@@ -28,6 +32,7 @@ public:
 private:
     struct SlotEntry
     {
+        juce::String     slotPrefix;   // "bus_fx0"
         juce::ComboBox   typeBox;
         juce::TextButton showButton;
 
@@ -36,6 +41,7 @@ private:
         std::vector<std::unique_ptr<juce::Component>>   typeComponents;
     };
 
+    MechanOddAudioProcessor& processor;
     juce::AudioProcessorValueTreeState& apvts;
 
     static constexpr int kSlotsPerChain = 4;
@@ -51,6 +57,11 @@ private:
 
     std::unique_ptr<fxme::FxmeSlider> sendVolumeSlider;
 
+    // The shown effect's module presets. Remade when another slot or effect
+    // is shown (a bar is tied to one bank for its lifetime).
+    std::unique_ptr<fxme::PresetBarComponent> presetBar;
+    fxme::PresetBank* presetBarBank = nullptr;
+
     int  activeSlot = -1;
     fxme::FxmeLookAndFeel laf;
 
@@ -60,6 +71,7 @@ private:
 
     juce::Rectangle<int> rightBounds() const;
     juce::Rectangle<int> centredBounds (const EffectTypeInfo& info) const;
+    juce::Rectangle<int> presetBarBounds (const EffectTypeInfo& info) const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectsTabComponent)
 };
