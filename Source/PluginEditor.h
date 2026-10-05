@@ -74,8 +74,6 @@ private:
 
     std::unique_ptr<ModulationComponent> modulationComponent;
 
-    std::unique_ptr<fxme::PresetComponent> presetComponent;
-
     // Typing in the preset browsers' name fields (and in the knobs' value
     // entry) in a hosted window. Exactly one, declared after the children.
     fxme::TextEntryFocusFixer textEntryFixer { *this };

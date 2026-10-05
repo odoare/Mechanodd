@@ -57,7 +57,7 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
     // Factory (BinaryData) + user (XML files) preset banks; the editor's
-    // Presets tab and the host program list both drive this.
+    // top-bar preset bar (and its browser) and the host program list both drive this.
     fxme::PresetManager& getPresetManager() noexcept { return presetManager; }
 
     // The module presets of one effect in one slot (local presets, shared

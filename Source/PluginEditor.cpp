@@ -69,15 +69,11 @@ MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProc
     // The modulation page stays homogeneous; the matrix colours itself per row.
     MechanOddTheme::applyAccent (*modulationComponent, MechanOddTheme::modulation);
 
-    presetComponent = std::make_unique<fxme::PresetComponent> (audioProcessor.getPresetManager());
-    presetComponent->setAccentColour (MechanOddTheme::modulation);
-
     tabs.addTab ("Sources",    MechanOddTheme::tabButton, sourcesTab.get(),          false);
     tabs.addTab ("Resonators", MechanOddTheme::tabButton, resonatorsTab.get(),       false);
     tabs.addTab ("Matrix",     MechanOddTheme::tabButton, matrixComponent.get(),     false);
     tabs.addTab ("Effects",    MechanOddTheme::tabButton, effectsTabComponent.get(), false);
     tabs.addTab ("Modulation", MechanOddTheme::tabButton, modulationComponent.get(), false);
-    tabs.addTab ("Presets",    MechanOddTheme::tabButton, presetComponent.get(),     false);
     addAndMakeVisible (tabs);
 
     setResizable (true, true);

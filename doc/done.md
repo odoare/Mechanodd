@@ -14,8 +14,9 @@ to right: the output level as a horizontal `FxmeSlider` (dB), the stereo
 output meter (`OutputMeter.h`, the same two `HorizontalVuMeter`s as before,
 stacked), the global preset bar with its "..." browser
 (`setBrowserButtonVisible`), and a gear (`GlobalPanel.h`, after Dede's) that
-opens Voices and Portamento in a callout. The Presets tab is kept; the
-preset strip that sat on the tab row has moved to the top bar. The old L / S
+opens Voices and Portamento in a callout. The preset strip that sat on the
+tab row has moved to the top bar, and the Presets tab is gone (the browser
+replaces it). The old L / S
 buttons (raw XML through a file chooser) are gone: the browser covers loading
 and saving. The default window is 654 px high instead of 700, so the tabs
 keep their size.
