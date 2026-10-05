@@ -37,8 +37,6 @@ private:
         juce::TextButton showButton;
 
         std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeAtt;
-        std::vector<std::unique_ptr<Effect>>            guiEffects;
-        std::vector<std::unique_ptr<juce::Component>>   typeComponents;
     };
 
     MechanOddAudioProcessor& processor;
@@ -61,6 +59,17 @@ private:
     // is shown (a bar is tied to one bank for its lifetime).
     std::unique_ptr<fxme::PresetBarComponent> presetBar;
     fxme::PresetBank* presetBarBank = nullptr;
+
+    // The shown effect's panel, made when shown and dropped when another one
+    // is (rather than a panel for every effect in every slot up front: the
+    // Cab and Reverb instances behind them load an IR as soon as they
+    // exist). The GUI-side effect instance backs the panel; the audio one is
+    // in the processor. The panel is declared after its effect, so it goes
+    // first.
+    std::unique_ptr<Effect> shownEffect;
+    std::unique_ptr<juce::Component> shownPanel;
+    int shownSlot = -1, shownType = -1;
+    void showPanel (int slot, int type);
 
     int  activeSlot = -1;
     fxme::FxmeLookAndFeel laf;

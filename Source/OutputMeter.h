@@ -16,15 +16,21 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-class OutputMeter : public juce::Component
+class OutputMeter : public juce::Component,
+                    public juce::SettableTooltipClient
 {
 public:
     explicit OutputMeter (MechanOddAudioProcessor& processor)
         : left  (makeMeter (processor, 0)),
           right (makeMeter (processor, 1))
     {
-        addAndMakeVisible (*left);
-        addAndMakeVisible (*right);
+        // The bars let the mouse through, so the tooltip window finds this
+        // component (and its tip) under the pointer.
+        for (auto* m : { left.get(), right.get() })
+        {
+            m->setInterceptsMouseClicks (false, false);
+            addAndMakeVisible (*m);
+        }
     }
 
     void resized() override

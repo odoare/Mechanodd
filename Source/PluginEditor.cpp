@@ -10,7 +10,46 @@
 #include "PluginEditor.h"
 #include "ResonatorSlot.h"
 #include "Theme.h"
+#include "Tooltips.h"
 #include <BinaryData.h>
+
+namespace
+{
+    // The info button's text: what the plugin is and how to find one's way
+    // around it.
+    const char* const helpBody =
+        "MechanOdd is a modular physical-modelling synth: sources excite resonators "
+        "(strings, plates, membranes, bars), which can feed back into each other "
+        "through a matrix, then go through two effect chains.\n"
+        "\n"
+        "Sources: four slots of excitation (noise, wavetable, crackles, or the "
+        "plugin's audio input), each with its own envelope and low-pass filter.\n"
+        "\n"
+        "Resonators: four slots, each a physical model. A resonator follows the "
+        "notes (one per voice) or, with Global on, is one shared body at a fixed "
+        "pitch. Most settings come in On / Off pairs: while the note is held, and "
+        "after it is released.\n"
+        "\n"
+        "Matrix: each row feeds one resonator. Its knobs choose how much of each "
+        "source (S), of each resonator (R, one block later) and of the send "
+        "effects (Fx) go into it; centre is off, the sign flips the phase. Lvl, "
+        "Pan and Snd send the resonator to the mix and to the send effects. "
+        "Feedback loops can run away: raise them slowly, and keep a limiter last "
+        "in the master chain.\n"
+        "\n"
+        "Effects: a send chain and a master chain of four slots each. Choose an "
+        "effect in a slot, then its arrow to show it. Each effect has its own "
+        "presets (shared with the FxmeFX plugins).\n"
+        "\n"
+        "Modulation: twelve LFOs or envelopes, each on any parameter "
+        "(module, then parameter).\n"
+        "\n"
+        "Top bar: the output level and meter, the presets (\"...\" opens the "
+        "browser to save, rename and delete), and the gear for the voices, the "
+        "portamento and the \"?\" that turns these hover tips on and off.\n"
+        "\n"
+        "Right-click a knob to type a value.";
+}
 
 MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProcessor& p)
     : AudioProcessorEditor (&p),
@@ -34,8 +73,16 @@ MechanOddAudioProcessorEditor::MechanOddAudioProcessorEditor (MechanOddAudioProc
 
     globalButton.onClick = [this] { showGlobalPanel(); };
 
+    infoButton.setColours ({ MechanOddTheme::modulation, juce::Colour (0xffd8d8e0),
+                             juce::Colour (0xff20202c), juce::Colour (0xff3a3a4c) });
+    infoButton.setInfo (MechanOddTheme::displayName, helpBody);
+
+    outputSlider.setTooltip (mechanodd::tips::bar::output);
+    outputMeter.setTooltip (mechanodd::tips::bar::meter);
+    globalButton.setTooltip (mechanodd::tips::bar::global);
+
     topBar.setRightControls ({ { &outputSlider, 120 }, { &outputMeter, 130 },
-                               { &presetBar, 236 }, { &globalButton, 24 } });
+                               { &presetBar, 236 }, { &globalButton, 24 }, { &infoButton, 22 } });
 
     // ---- Tabs ---------------------------------------------------------------------
     sourcesTab = std::make_unique<juce::Component>();

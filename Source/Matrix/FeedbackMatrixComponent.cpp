@@ -8,6 +8,9 @@
 
 #include "FeedbackMatrixComponent.h"
 #include "../Theme.h"
+#include "../Tooltips.h"
+
+namespace tips = mechanodd::tips::matrix;
 
 FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeState& state)
     : apvts (state)
@@ -33,6 +36,15 @@ FeedbackMatrixComponent::FeedbackMatrixComponent (juce::AudioProcessorValueTreeS
         levelKnobs[(size_t) r] = makeKnob (FeedbackMatrix::levelId (r));
         panKnobs[(size_t) r]   = makeKnob (FeedbackMatrix::panId (r), true);
         sendKnobs[(size_t) r]  = makeKnob (FeedbackMatrix::sendId (r));
+
+        for (int c = 0; c < cols; ++c)
+            if (auto& k = gainKnobs[(size_t) r][(size_t) c])
+                k->setTooltip (c < FeedbackMatrix::numSources        ? tips::sourceCell
+                             : c == FeedbackMatrix::busFeedbackCol   ? tips::busCell
+                                                                     : tips::resonatorCell);
+        levelKnobs[(size_t) r]->setTooltip (tips::level);
+        panKnobs[(size_t) r]->setTooltip (tips::pan);
+        sendKnobs[(size_t) r]->setTooltip (tips::send);
 
         // Each row feeds resonator r, so tint the whole row in its colour.
         const auto rc = MechanOddTheme::resonatorColour (r);

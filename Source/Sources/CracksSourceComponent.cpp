@@ -8,6 +8,7 @@
 
 #include "CracksSourceComponent.h"
 #include "Source.h"
+#include "../Tooltips.h"
 
 CracksSourceComponent::CracksSourceComponent (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
     : common (apvts, prefix)
@@ -16,6 +17,7 @@ CracksSourceComponent::CracksSourceComponent (juce::AudioProcessorValueTreeState
     densitySlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     densitySlider->setShowLabel (true);     // name drawn below the knob by FxmeLookAndFeel
     densitySlider->setLookAndFeel (&fxmeLookAndFeel);
+    densitySlider->setTooltip (mechanodd::tips::source::density);
     addAndMakeVisible (*densitySlider);
 
     addAndMakeVisible (common);

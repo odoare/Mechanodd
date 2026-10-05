@@ -18,6 +18,7 @@
 #include "GlobalPanel.h"
 #include "OutputMeter.h"
 #include "Theme.h"
+#include "AppSettings.h"
 
 // TabbedComponent that paints the shared StrinGO gradient behind every tab
 // instead of the default per-tab background fill.
@@ -51,14 +52,15 @@ private:
     fxme::FxmeLookAndFeel laf;
 
     // The top bar: logo, name, then the output level (a fader and the
-    // stereo meter), the global presets ("..." opens the browser) and the
-    // gear for the global settings, then the version.
+    // stereo meter), the global presets ("..." opens the browser), the gear
+    // for the global settings and the help, then the version.
     fxme::TopBar topBar { MechanOddTheme::displayName, MechanOddTheme::tagline,
                           JucePlugin_VersionString, logoImage() };
     fxme::FxmeSlider outputSlider;
     OutputMeter outputMeter { audioProcessor };
     fxme::PresetBarComponent presetBar { audioProcessor.getPresetManager() };
     GearButton globalButton { MechanOddTheme::modulation };
+    fxme::InfoButton infoButton;
 
     GradientTabbedComponent tabs;
 
@@ -73,6 +75,21 @@ private:
     std::unique_ptr<EffectsTabComponent> effectsTabComponent;
 
     std::unique_ptr<ModulationComponent> modulationComponent;
+
+    // The hover help, with an off switch (the "?" in the gear's callout,
+    // saved machine-wide in AppSettings). Asking per tip rather than
+    // destroying the window: one object, and the switch covers every
+    // component under the editor, callouts included. Declared after the
+    // other children; it keeps itself on top anyway.
+    struct ToggleableTooltipWindow : public juce::TooltipWindow
+    {
+        using juce::TooltipWindow::TooltipWindow;
+        juce::String getTipFor (juce::Component& c) override
+        {
+            return mechanodd::getUiTooltips() ? juce::TooltipWindow::getTipFor (c) : juce::String();
+        }
+    };
+    ToggleableTooltipWindow tooltipWindow { this, 700 };
 
     // Typing in the preset browsers' name fields (and in the knobs' value
     // entry) in a hosted window. Exactly one, declared after the children.

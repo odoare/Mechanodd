@@ -10,6 +10,7 @@
 #include "SourceFactory.h"
 #include "SourceSlot.h"
 #include "WavetableOscSourceComponent.h"
+#include "../Tooltips.h"
 
 SourceSlotComponent::SourceSlotComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), slotPrefix (pfx)
@@ -20,6 +21,7 @@ SourceSlotComponent::SourceSlotComponent (juce::AudioProcessorValueTreeState& st
 
     typeBox.addItemList (SourceFactory::typeChoices(), 1);
     typeBox.setLookAndFeel (&fxmeLookAndFeel);
+    typeBox.setTooltip (mechanodd::tips::source::type);
     addAndMakeVisible (typeBox);
     typeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
         apvts, SourceSlot::typeParamId (slotPrefix), typeBox);

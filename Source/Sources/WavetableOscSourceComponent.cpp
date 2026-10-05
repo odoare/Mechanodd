@@ -10,6 +10,9 @@
 #include "Source.h"
 #include "WavetableLibrary.h"
 #include "SourceSlotComponent.h"
+#include "../Tooltips.h"
+
+namespace tips = mechanodd::tips::source;
 
 WavetableOscSourceComponent::WavetableOscSourceComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), prefix (pfx), common (state, pfx)
@@ -24,6 +27,7 @@ WavetableOscSourceComponent::WavetableOscSourceComponent (juce::AudioProcessorVa
     addAndMakeVisible (waveLabel);
     waveBox.addItemList (WavetableLibrary::names(), 1);
     waveBox.setLookAndFeel (&fxmeLookAndFeel);
+    waveBox.setTooltip (tips::wave);
     addAndMakeVisible (waveBox);
     waveAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (apvts, Source::makeId (prefix, "wave"), waveBox);
 
@@ -32,6 +36,7 @@ WavetableOscSourceComponent::WavetableOscSourceComponent (juce::AudioProcessorVa
     addAndMakeVisible (modeLabel);
     modeBox.addItemList (juce::StringArray { "One-shot", "Loop" }, 1);
     modeBox.setLookAndFeel (&fxmeLookAndFeel);
+    modeBox.setTooltip (tips::mode);
     addAndMakeVisible (modeBox);
     modeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (apvts, Source::makeId (prefix, "mode"), modeBox);
 
@@ -40,6 +45,7 @@ WavetableOscSourceComponent::WavetableOscSourceComponent (juce::AudioProcessorVa
     tuneSlider->setCentralValue (0.0);   // bipolar: 0 semitones at centre
     tuneSlider->setShowLabel (true);     // name drawn below the knob by FxmeLookAndFeel
     tuneSlider->setLookAndFeel (&fxmeLookAndFeel);
+    tuneSlider->setTooltip (tips::tune);
     addAndMakeVisible (*tuneSlider);
 
     addAndMakeVisible (common);

@@ -3,6 +3,58 @@
 Implemented items, newest first. Items that came from [todo.md](todo.md) keep
 their number there.
 
+## Faster loading: no throwaway effects, effect panels made on demand (2026-10-05)
+
+Load time was dominated by the convolution reverb: every instance decodes a
+5 s, 96 kHz stereo IR, builds a convolution engine and starts a polling
+thread as soon as it is created, and they were created far more often than
+used.
+
+- **No probe instances for the parameter layout.** `EffectSlot::addParameters`
+  made an instance of every effect in every slot just to ask for its
+  parameters (8 reverbs and 8 cabs, thrown away). `EffectTypeInfo` now has
+  a static `addParameters`; the Cab and ConvolReverb adapters keep their IR
+  tables as class members so they know the IR count without an instance.
+  `Effect::addParametersToLayout` is gone. The parameter layout is the
+  same as before (same IDs, same IR counts: 19 and 6).
+- **Effect panels made when shown.** The Effects tab made a GUI-side effect
+  and its panel for every effect in every slot (72, 8 of them reverbs) each
+  time the editor opened. Now only the shown one exists; it is made when
+  shown and dropped when another is. The reverb's external IR lives in the
+  plugin state (`EmbeddedAudio`), not in the instance, so nothing is lost
+  when a panel is remade.
+
+Left as is: the 8 processor-side reverbs, one per slot whether used or not
+(see todo 13 for the options).
+
+Checked: no build run yet.
+
+## 3, 4. Tooltips, "?" switch, info button (2026-10-05)
+
+- `Source/Tooltips.h`: every hover-help string, one sub-namespace per pane
+  (`mechanodd::tips::bar`, `global`, `source`, `resonator`, `matrix`,
+  `effects`, `modulation`). No `setTooltip ("...")` literal anywhere else.
+  Covered: the top bar (output, meter, gear), the gear's callout, every
+  source and resonator control, every matrix knob (by column kind: source,
+  resonator, Fx), the effects tab's selectors, show buttons, post master and
+  send level, and every modulation row control.
+- `Source/AppSettings.h`: `getUiTooltips` / `setUiTooltips`, saved in
+  `FX-Mechanics/MechanOdd.settings` (Linux: `~/.config/FX-Mechanics`, not
+  `~`).
+- The editor's `TooltipWindow` asks the setting before each tip, so the
+  switch covers the callouts too. The "?" (`fxme::AccentToggle`) is in the
+  gear's callout, now with a "Global" title row (150 px high instead of
+  120).
+- `fxme::InfoButton` at the right end of the top bar, with an overview of
+  the plugin (in `PluginEditor.cpp`).
+- `OutputMeter` is a tooltip client; its bars let the mouse through.
+- This settles the audit's R3: tips now appear everywhere, on by default.
+
+Not covered: the small meters in the resonator slots and the matrix (todo
+10), and the FxmeFX effect panels beyond their own tips (todo 11).
+
+Checked: no build run yet.
+
 ## FX-Mechanics shell: top bar, preset folders, effect module presets (2026-10-05)
 
 Brings the plugin to the FX-Mechanics shell (the FxMechanicsSuperSkill's

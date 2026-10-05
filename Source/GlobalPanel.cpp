@@ -8,6 +8,10 @@
 
 #include "GlobalPanel.h"
 #include "Theme.h"
+#include "Tooltips.h"
+#include "AppSettings.h"
+
+namespace tips = mechanodd::tips::global;
 
 GlobalPanel::GlobalPanel (MechanOddAudioProcessor& p)
     : voices     (p.apvts, MechanOddAudioProcessor::numVoicesId,  "Voices", MechanOddTheme::modulation),
@@ -23,6 +27,15 @@ GlobalPanel::GlobalPanel (MechanOddAudioProcessor& p)
         MechanOddTheme::accentSlider (*k, MechanOddTheme::modulation);
         addAndMakeVisible (*k);
     }
+    voices.setTooltip (tips::voices);
+    portamento.setTooltip (tips::portamento);
+
+    tooltipsButton.setButtonText ("?");
+    tooltipsButton.setAccent (MechanOddTheme::modulation);
+    tooltipsButton.setTooltip (tips::tooltips);
+    tooltipsButton.setToggleState (mechanodd::getUiTooltips(), juce::dontSendNotification);
+    tooltipsButton.onClick = [this] { mechanodd::setUiTooltips (tooltipsButton.getToggleState()); };
+    addAndMakeVisible (tooltipsButton);
 
     setSize (preferredWidth, preferredHeight);
 }
@@ -36,11 +49,19 @@ GlobalPanel::~GlobalPanel()
 void GlobalPanel::paint (juce::Graphics& g)
 {
     MechanOddTheme::paintBackground (g, getLocalBounds().toFloat());
+
+    g.setColour (juce::Colours::white.withAlpha (0.8f));
+    g.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)));
+    g.drawText ("Global", getLocalBounds().reduced (10, 0).removeFromTop (titleHeight + 4),
+                juce::Justification::centredLeft);
 }
 
 void GlobalPanel::resized()
 {
     auto area = getLocalBounds().reduced (8);
+    auto title = area.removeFromTop (titleHeight);
+    tooltipsButton.setBounds (title.removeFromRight (titleHeight).reduced (2));
+    area.removeFromTop (4);
     const int knobW = area.getWidth() / 2;
     voices.setBounds     (area.removeFromLeft (knobW).reduced (2));
     portamento.setBounds (area.reduced (2));

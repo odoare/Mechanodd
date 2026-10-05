@@ -24,7 +24,6 @@ public:
 
     virtual void prepare (double sampleRate, int numChannels, int blockSize) = 0;
     virtual void process (juce::AudioBuffer<float>& buffer) = 0;
-    virtual void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix) = 0;
     virtual void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) = 0;
     virtual void checkParameters() = 0;
 };
@@ -57,10 +56,6 @@ public:
 
     void process (juce::AudioBuffer<float>& buffer) override { impl.process (buffer); }
 
-    void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params, const juce::String& prefix) override
-    {
-        T::addParameters (params, prefix);
-    }
 
     void assignParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix) override { impl.assignParameters (apvts, prefix); }
     void checkParameters() override { impl.checkParameters(); }

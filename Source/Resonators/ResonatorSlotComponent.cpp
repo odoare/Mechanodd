@@ -9,6 +9,9 @@
 #include "ResonatorSlotComponent.h"
 #include "ResonatorFactory.h"
 #include "ResonatorSlot.h"
+#include "../Tooltips.h"
+
+namespace tips = mechanodd::tips::resonator;
 
 ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeState& state, const juce::String& pfx)
     : apvts (state), slotPrefix (pfx)
@@ -19,11 +22,13 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
 
     typeBox.addItemList (ResonatorFactory::typeChoices(), 1);
     typeBox.setLookAndFeel (&fxmeLookAndFeel);
+    typeBox.setTooltip (tips::type);
     addAndMakeVisible (typeBox);
     typeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
         apvts, ResonatorSlot::typeParamId (slotPrefix), typeBox);
 
     globalButton.setLookAndFeel (&fxmeLookAndFeel);
+    globalButton.setTooltip (tips::global);
     addAndMakeVisible (globalButton);
     globalAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
         apvts, ResonatorSlot::globalParamId (slotPrefix), globalButton);
@@ -36,6 +41,7 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
         apvts, ResonatorSlot::globalFreqParamId (slotPrefix), "Base Hz", juce::Colours::orange);
     freqSlider->setSliderStyle (juce::Slider::LinearHorizontal);
     freqSlider->setLookAndFeel (&fxmeLookAndFeel);
+    freqSlider->setTooltip (tips::baseHz);
     addAndMakeVisible (*freqSlider);
 
     levelSlider = std::make_unique<fxme::FxmeSlider> (
@@ -43,6 +49,7 @@ ResonatorSlotComponent::ResonatorSlotComponent (juce::AudioProcessorValueTreeSta
     levelSlider->setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
     levelSlider->setShowLabel (true);       // name drawn below the knob by FxmeLookAndFeel
     levelSlider->setLookAndFeel (&fxmeLookAndFeel);
+    levelSlider->setTooltip (tips::level);
     addAndMakeVisible (*levelSlider);
 
     levelMeter.setRange (ResonatorSlot::levelMinDb, ResonatorSlot::levelMaxDb);

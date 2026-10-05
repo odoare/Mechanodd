@@ -4,8 +4,9 @@
     GlobalPanel.h
 
     The global settings opened by the top bar's gear button, in a callout:
-    the voice count and the portamento time. (The output level and meter
-    are in the top bar itself.)
+    the voice count and the portamento time, and the "?" switch for the hover
+    help (machine-wide, see AppSettings.h). (The output level and meter are
+    in the top bar itself.)
 
   ==============================================================================
 */
@@ -25,12 +26,15 @@ public:
     void resized() override;
 
     static constexpr int preferredWidth  = 200;
-    static constexpr int preferredHeight = 120;
+    static constexpr int preferredHeight = 150;
 
 private:
+    static constexpr int titleHeight = 26;
+
     fxme::FxmeLookAndFeel laf;
 
     fxme::FxmeSlider voices, portamento;
+    fxme::AccentToggle tooltipsButton;   // "?": hover help on / off
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GlobalPanel)
 };

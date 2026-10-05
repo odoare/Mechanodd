@@ -39,6 +39,7 @@ namespace
             moduleName,
             paramTag,
             []                                       { return std::unique_ptr<Effect> (new EffectAdapter<FX>()); },
+            [] (EffectTypeInfo::ParameterList& params, const juce::String& prefix) { FX::addParameters (params, prefix); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
                 auto& impl = static_cast<EffectAdapter<FX>&> (e).get();
@@ -56,32 +57,38 @@ namespace
     class CabAdapter : public Effect
     {
     public:
+        // Map display names to the BinaryData symbol names generated from the
+        // IR filenames in lib/FxmeFX/Source/Cab/IR/.
+        static constexpr std::pair<const char*, const char*> kIRs[] = {
+            { "2off-pres5",                           "_2offpres5_wav"                      },
+            { "Allure 67 Brit Greenback",              "Allure_67_Brit_Greenback_wav"         },
+            { "Allure 90s Cali V30",                  "Allure_90s_Cali_V30_wav"              },
+            { "Annihilator Feast",                    "AnnihilatorFeast_wav"                 },
+            { "Brohymn Mesa 4x12 SM57 V30 1",         "Brohymn_Mesa_4x12_SM57_V30_1_wav"    },
+            { "Brohymn-Mesa-4x12-SM57-V30-5",         "BrohymnMesa4x12SM57V305_wav"          },
+            { "Cenzo Celestion V30 Mix",               "Cenzo_Celestion_V30_Mix_wav"          },
+            { "Excalibur 1 - Bright1, a",              "Excalibur_1__Bright1_a_wav"           },
+            { "Excalibur 2 - Dark3, b",                "Excalibur_2__Dark3_b_wav"             },
+            { "GuitarHack JJ CENTRE45 0",             "GuitarHack_JJ_CENTRE45_0_wav"         },
+            { "GuitarHack JJ FRED45 0",               "GuitarHack_JJ_FRED45_0_wav"           },
+            { "KornKorn",                             "KornKorn_wav"                         },
+            { "Marshall1960A-G12Ms-M160-CapEdge-3in", "Marshall1960AG12MsM160CapEdge3in_wav" },
+            { "Marshall1960A-G12Ms-SM57-Cap-0in",     "Marshall1960AG12MsSM57Cap0in_wav"     },
+            { "Neumann U87 0_dc",                     "NewmannU87_0_dc_wav"                  },
+            { "OH 412 MES-ST V60 421-04",             "OH_412_MESST_V60_42104_wav"           },
+            { "OH 412 MES-ST V60 57-00",              "OH_412_MESST_V60_5700_wav"            },
+            { "Shure SM57 0_dc",                      "ShureSM57_0_dc_wav"                   },
+            { "s-preshigh",                           "spreshigh_wav"                        },
+        };
+        static constexpr int numIRs = (int) std::size (kIRs);
+
+        static void addParameters (EffectTypeInfo::ParameterList& params, const juce::String& prefix)
+        {
+            Cab::addParameters (params, prefix, numIRs);
+        }
+
         CabAdapter()
         {
-            // Map display names to the BinaryData symbol names generated from the
-            // IR filenames in lib/FxmeFX/Source/Cab/IR/.
-            static const std::pair<const char*, const char*> kIRs[] = {
-                { "2off-pres5",                           "_2offpres5_wav"                      },
-                { "Allure 67 Brit Greenback",              "Allure_67_Brit_Greenback_wav"         },
-                { "Allure 90s Cali V30",                  "Allure_90s_Cali_V30_wav"              },
-                { "Annihilator Feast",                    "AnnihilatorFeast_wav"                 },
-                { "Brohymn Mesa 4x12 SM57 V30 1",         "Brohymn_Mesa_4x12_SM57_V30_1_wav"    },
-                { "Brohymn-Mesa-4x12-SM57-V30-5",         "BrohymnMesa4x12SM57V305_wav"          },
-                { "Cenzo Celestion V30 Mix",               "Cenzo_Celestion_V30_Mix_wav"          },
-                { "Excalibur 1 - Bright1, a",              "Excalibur_1__Bright1_a_wav"           },
-                { "Excalibur 2 - Dark3, b",                "Excalibur_2__Dark3_b_wav"             },
-                { "GuitarHack JJ CENTRE45 0",             "GuitarHack_JJ_CENTRE45_0_wav"         },
-                { "GuitarHack JJ FRED45 0",               "GuitarHack_JJ_FRED45_0_wav"           },
-                { "KornKorn",                             "KornKorn_wav"                         },
-                { "Marshall1960A-G12Ms-M160-CapEdge-3in", "Marshall1960AG12MsM160CapEdge3in_wav" },
-                { "Marshall1960A-G12Ms-SM57-Cap-0in",     "Marshall1960AG12MsSM57Cap0in_wav"     },
-                { "Neumann U87 0_dc",                     "NewmannU87_0_dc_wav"                  },
-                { "OH 412 MES-ST V60 421-04",             "OH_412_MESST_V60_42104_wav"           },
-                { "OH 412 MES-ST V60 57-00",              "OH_412_MESST_V60_5700_wav"            },
-                { "Shure SM57 0_dc",                      "ShureSM57_0_dc_wav"                   },
-                { "s-preshigh",                           "spreshigh_wav"                        },
-            };
-
             juce::StringArray names, resources;
             for (const auto& [name, resource] : kIRs)
             {
@@ -99,12 +106,6 @@ namespace
         }
 
         void process (juce::AudioBuffer<float>& buffer) override { impl.process (buffer); }
-
-        void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
-                                    const juce::String& prefix) override
-        {
-            Cab::addParameters (params, prefix, impl.getImpulseNames().size());
-        }
 
         void assignParameters (juce::AudioProcessorValueTreeState& apvts,
                                const juce::String& prefix) override
@@ -126,25 +127,31 @@ namespace
     class ConvolReverbAdapter : public Effect
     {
     public:
+        // Map display names to BinaryData symbols from
+        // lib/FxmeFX/Source/ConvolReverb/ir/. Same order as FxmeFX's own
+        // ConvolReverb plugin: the IR parameter is an index, and the
+        // effect's module presets (shared with that plugin) store it.
+        // The first three are recorded as mid / side and are decoded to
+        // left / right on load; played as left / right they come out loud
+        // and lopsided to the left.
+        struct IR { const char* name; const char* resource; bool midSide; };
+        static constexpr IR kIRs[] = {
+            { "Council Chamber",         "Council_Chamber_wav",         true  },
+            { "Forest short",            "Forest_short_wav",            true  },
+            { "Forest long",             "Forest_long_wav",             true  },
+            { "Rectangular room small",  "Rectangular_room_small_wav",  false },
+            { "Rectangular room medium", "Rectangular_room_medium_wav", false },
+            { "Rectangular room large",  "Rectangular_room_large_wav",  false },
+        };
+        static constexpr int numIRs = (int) std::size (kIRs);
+
+        static void addParameters (EffectTypeInfo::ParameterList& params, const juce::String& prefix)
+        {
+            ConvolReverb::addParameters (params, prefix, numIRs);
+        }
+
         ConvolReverbAdapter()
         {
-            // Map display names to BinaryData symbols from
-            // lib/FxmeFX/Source/ConvolReverb/ir/. Same order as FxmeFX's own
-            // ConvolReverb plugin: the IR parameter is an index, and the
-            // effect's module presets (shared with that plugin) store it.
-            // The first three are recorded as mid / side and are decoded to
-            // left / right on load; played as left / right they come out loud
-            // and lopsided to the left.
-            struct IR { const char* name; const char* resource; bool midSide; };
-            static const IR kIRs[] = {
-                { "Council Chamber",         "Council_Chamber_wav",         true  },
-                { "Forest short",            "Forest_short_wav",            true  },
-                { "Forest long",             "Forest_long_wav",             true  },
-                { "Rectangular room small",  "Rectangular_room_small_wav",  false },
-                { "Rectangular room medium", "Rectangular_room_medium_wav", false },
-                { "Rectangular room large",  "Rectangular_room_large_wav",  false },
-            };
-
             juce::StringArray names, resources, midSide;
             for (const auto& ir : kIRs)
             {
@@ -164,12 +171,6 @@ namespace
         }
 
         void process (juce::AudioBuffer<float>& buffer) override { impl.process (buffer); }
-
-        void addParametersToLayout (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
-                                    const juce::String& prefix) override
-        {
-            ConvolReverb::addParameters (params, prefix, impl.getImpulseNames().size());
-        }
 
         void assignParameters (juce::AudioProcessorValueTreeState& apvts,
                                const juce::String& prefix) override
@@ -196,6 +197,7 @@ namespace
             moduleName,
             paramTag,
             [] { return std::unique_ptr<Effect> (new Adapter()); },
+            [] (EffectTypeInfo::ParameterList& params, const juce::String& prefix) { Adapter::addParameters (params, prefix); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
                 auto& impl = static_cast<Adapter&> (e).get();

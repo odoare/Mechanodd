@@ -16,6 +16,8 @@
 
 struct EffectTypeInfo
 {
+    using ParameterList = std::vector<std::unique_ptr<juce::RangedAudioParameter>>;
+
     juce::String name;          // shown in the slot's type box, and part of the parameter IDs
 
     // The FxmeFX effect's module presets (FxmeFX Source/Common/EffectPresets.h):
@@ -26,6 +28,11 @@ struct EffectTypeInfo
     juce::String paramTag;
 
     std::function<std::unique_ptr<Effect>()> create;
+
+    // Adds the effect's parameters under `prefix`, without making an instance
+    // (Cab and ConvolReverb load an IR as soon as they exist).
+    std::function<void (ParameterList&, const juce::String&)> addParameters;
+
     std::function<std::unique_ptr<juce::Component> (Effect&, juce::AudioProcessorValueTreeState&, const juce::String&)> createComponent;
     int preferredWidth  = 600;
     int preferredHeight = 400;

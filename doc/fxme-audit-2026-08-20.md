@@ -53,7 +53,7 @@ Mechanical, low risk unless marked otherwise.
   - [ ] The remaining seven for consistency, since they own tooltipped or
         menu-bearing widgets too.
 
-- [ ] **R3. Two `setTooltip()` calls with no `TooltipWindow` in the project, so
+- [x] **R3. Two `setTooltip()` calls with no `TooltipWindow` in the project, so
       neither tooltip is ever visible.** They are on the preset load and save
       buttons in
       [../Source/BottomBarComponent.cpp:62-63](../Source/BottomBarComponent.cpp#L62).
@@ -63,6 +63,8 @@ Mechanical, low risk unless marked otherwise.
   - 2026-10-05: the bottom bar and its two tooltips are gone. The question
     is now the shell's tooltip step (`Tooltips.h`, a toggleable
     `TooltipWindow`, the "?" switch); see [todo.md](todo.md).
+  - 2026-10-05: done that way (tips on by default, "?" in the gear's
+    callout); see [done.md](done.md).
 
 - [ ] **R4. One deprecated `juce::Font` constructor.**
       [../Source/Effects/EffectsTabComponent.cpp:33](../Source/Effects/EffectsTabComponent.cpp#L33)

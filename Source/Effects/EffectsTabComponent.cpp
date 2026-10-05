@@ -12,6 +12,9 @@
 #include "EffectChain.h"
 #include "../PluginProcessor.h"
 #include "../Theme.h"
+#include "../Tooltips.h"
+
+namespace tips = mechanodd::tips::effects;
 
 namespace
 {
@@ -50,6 +53,7 @@ EffectsTabComponent::EffectsTabComponent (MechanOddAudioProcessor& p)
 
     prePostButton.setButtonText ("POST MASTER");
     prePostButton.setLookAndFeel (&laf);
+    prePostButton.setTooltip (tips::postMaster);
     prePostButton.setColour (juce::ToggleButton::tickColourId,
                              MechanOddTheme::busColour());
     addAndMakeVisible (prePostButton);
@@ -60,6 +64,7 @@ EffectsTabComponent::EffectsTabComponent (MechanOddAudioProcessor& p)
         apvts, MechanOddAudioProcessor::busOutVolId, "Send Level", juce::Colours::orange);
     sendVolumeSlider->setSliderStyle (juce::Slider::LinearHorizontal);
     sendVolumeSlider->setLookAndFeel (&laf);
+    sendVolumeSlider->setTooltip (tips::sendLevel);
     MechanOddTheme::accentSlider (*sendVolumeSlider, MechanOddTheme::busColour());
     addAndMakeVisible (*sendVolumeSlider);
 
@@ -86,6 +91,7 @@ void EffectsTabComponent::initSlot (int idx, const juce::String& chain, int pos)
     // Type selector
     e->typeBox.addItemList (EffectFactory::typeChoices(), 1);
     e->typeBox.setLookAndFeel (&laf);
+    e->typeBox.setTooltip (chain == "bus" ? tips::sendSlot : tips::masterSlot);
     addAndMakeVisible (e->typeBox);
 
     const juce::String slotPfx = EffectChain::slotPrefix (chain, pos);
@@ -96,21 +102,9 @@ void EffectsTabComponent::initSlot (int idx, const juce::String& chain, int pos)
     // Show button — exclusive radio-style activation
     e->showButton.setButtonText (juce::CharPointer_UTF8 ("\xe2\x96\xb6")); // ▶
     e->showButton.setClickingTogglesState (false);
+    e->showButton.setTooltip (tips::show);
     addAndMakeVisible (e->showButton);
     e->showButton.onClick = [this, idx] { activateSlot (idx); };
-
-    // GUI-side effect instances + their control panels
-    for (const auto& info : EffectFactory::types())
-    {
-        e->guiEffects.push_back (info.create());
-        const juce::String perTypePfx = EffectSlot::perTypePrefix (slotPfx, info.name);
-        // Assign parameters so the GUI-side instance can poll for IR changes.
-        e->guiEffects.back()->assignParameters (apvts, perTypePfx);
-        auto comp = info.createComponent (*e->guiEffects.back(), apvts, perTypePfx);
-        comp->setVisible (false);
-        addChildComponent (*comp);
-        e->typeComponents.push_back (std::move (comp));
-    }
 
     // When the type changes while this slot is shown, refresh the right panel
     e->typeBox.onChange = [this, idx] { if (activeSlot == idx) refreshRightPanel(); };
@@ -131,15 +125,33 @@ void EffectsTabComponent::activateSlot (int idx)
     refreshRightPanel();
 }
 
+void EffectsTabComponent::showPanel (int slot, int type)
+{
+    if (slot == shownSlot && type == shownType)
+        return;
+
+    shownPanel.reset();
+    shownEffect.reset();
+    shownSlot = slot;
+    shownType = type;
+
+    if (slot < 0 || type < 0)
+        return;
+
+    const auto& info = EffectFactory::types()[(size_t) type];
+    const auto perTypePfx = EffectSlot::perTypePrefix (slots[(size_t) slot]->slotPrefix, info.name);
+    shownEffect = info.create();
+    // Assign parameters so the GUI-side instance can poll for IR changes.
+    shownEffect->assignParameters (apvts, perTypePfx);
+    shownPanel = info.createComponent (*shownEffect, apvts, perTypePfx);
+    addChildComponent (*shownPanel);
+}
+
 void EffectsTabComponent::refreshRightPanel()
 {
-    // Hide every effect component
-    for (auto& s : slots)
-        for (auto& c : s->typeComponents)
-            c->setVisible (false);
-
     if (activeSlot < 0)
     {
+        showPanel (-1, -1);
         placeholderLabel.setVisible (true);
         if (presetBar != nullptr)
             presetBar->setVisible (false);
@@ -150,13 +162,13 @@ void EffectsTabComponent::refreshRightPanel()
     auto& e       = *slots[(size_t) activeSlot];
     const int ti  = e.typeBox.getSelectedItemIndex() - 1;   // -1 = Off
 
-    if (ti >= 0 && ti < (int) e.typeComponents.size())
+    if (ti >= 0 && ti < (int) EffectFactory::types().size())
     {
         placeholderLabel.setVisible (false);
         const auto& info = EffectFactory::types()[(size_t) ti];
-        auto* comp = e.typeComponents[(size_t) ti].get();
-        comp->setBounds (centredBounds (info));
-        comp->setVisible (true);
+        showPanel (activeSlot, ti);
+        shownPanel->setBounds (centredBounds (info));
+        shownPanel->setVisible (true);
 
         // This effect's module presets, in this slot.
         auto* bank = processor.getEffectPresets (EffectSlot::perTypePrefix (e.slotPrefix, info.name));
@@ -183,6 +195,7 @@ void EffectsTabComponent::refreshRightPanel()
     else
     {
         // Slot is set to "Off" — show placeholder
+        showPanel (-1, -1);
         placeholderLabel.setVisible (true);
         if (presetBar != nullptr)
             presetBar->setVisible (false);
@@ -300,10 +313,10 @@ void EffectsTabComponent::resized()
     {
         auto& e  = *slots[(size_t) activeSlot];
         const int ti = e.typeBox.getSelectedItemIndex() - 1;
-        if (ti >= 0 && ti < (int) e.typeComponents.size())
+        if (ti >= 0 && ti < (int) EffectFactory::types().size() && shownPanel != nullptr)
         {
             const auto& info = EffectFactory::types()[(size_t) ti];
-            e.typeComponents[(size_t) ti]->setBounds (centredBounds (info));
+            shownPanel->setBounds (centredBounds (info));
             if (presetBar != nullptr)
                 presetBar->setBounds (presetBarBounds (info));
         }

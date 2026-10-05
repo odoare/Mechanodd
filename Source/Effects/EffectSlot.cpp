@@ -52,8 +52,5 @@ void EffectSlot::addParameters (std::vector<std::unique_ptr<juce::RangedAudioPar
         typeParamId (slotPrefix), slotPrefix + " Type", EffectFactory::typeChoices(), 0));
 
     for (const auto& info : EffectFactory::types())
-    {
-        auto probe = info.create();
-        probe->addParametersToLayout (params, perTypePrefix (slotPrefix, info.name));
-    }
+        info.addParameters (params, perTypePrefix (slotPrefix, info.name));
 }

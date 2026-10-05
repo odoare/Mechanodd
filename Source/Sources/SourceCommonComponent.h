@@ -32,7 +32,7 @@ private:
         std::unique_ptr<fxme::FxmeSlider> slider;
     };
 
-    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text);
+    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text, const char* tooltip);
 
     juce::AudioProcessorValueTreeState& apvts;
 

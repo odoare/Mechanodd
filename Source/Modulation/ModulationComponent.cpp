@@ -8,6 +8,9 @@
 
 #include "ModulationComponent.h"
 #include "../Resonators/ResonatorFactory.h"
+#include "../Tooltips.h"
+
+namespace tips = mechanodd::tips::modulation;
 
 namespace
 {
@@ -131,6 +134,7 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
         // Type (LFO / ADSR).
         row.typeBox.addItemList (ModEngine::typeChoices(), 1);
         row.typeBox.setLookAndFeel (&fxmeLookAndFeel);
+        row.typeBox.setTooltip (tips::type);
         addAndMakeVisible (row.typeBox);
         row.typeAtt = std::make_unique<ComboAtt> (apvts, ModEngine::typeId (i), row.typeBox);
         row.typeBox.onChange = [this, &row] { updateRowTypeVisibility (row); };
@@ -140,9 +144,11 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
             row.moduleBox.addItem (targetGroups[g].label, (int) g + 1);
         row.moduleBox.setLookAndFeel (&fxmeLookAndFeel);
         addAndMakeVisible (row.moduleBox);
+        row.moduleBox.setTooltip (tips::module);
 
         row.paramBox.setLookAndFeel (&fxmeLookAndFeel);
         addAndMakeVisible (row.paramBox);
+        row.paramBox.setTooltip (tips::param);
 
         row.moduleBox.onChange = [this, &row]
         {
@@ -185,21 +191,25 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
         // LFO controls.
         row.shapeBox.addItemList (ModEngine::shapeChoices(), 1);
         row.shapeBox.setLookAndFeel (&fxmeLookAndFeel);
+        row.shapeBox.setTooltip (tips::shape);
         addAndMakeVisible (row.shapeBox);
         row.shapeAtt = std::make_unique<ComboAtt> (apvts, ModEngine::shapeId (i), row.shapeBox);
 
         row.rate = std::make_unique<fxme::FxmeSlider> (apvts, ModEngine::rateId (i), "Rate", juce::Colours::orange);
         row.rate->setSliderStyle (juce::Slider::LinearHorizontal);
         row.rate->setLookAndFeel (&fxmeLookAndFeel);
+        row.rate->setTooltip (tips::rate);
         addAndMakeVisible (*row.rate);
 
         row.syncButton.setButtonText ("Sync");
         row.syncButton.setLookAndFeel (&fxmeLookAndFeel);
+        row.syncButton.setTooltip (tips::sync);
         addAndMakeVisible (row.syncButton);
         row.syncAtt = std::make_unique<ButtonAtt> (apvts, ModEngine::syncId (i), row.syncButton);
 
         row.syncRateBox.addItemList (ModEngine::syncRateChoices(), 1);
         row.syncRateBox.setLookAndFeel (&fxmeLookAndFeel);
+        row.syncRateBox.setTooltip (tips::syncRate);
         addAndMakeVisible (row.syncRateBox);
         row.syncRateAtt = std::make_unique<ComboAtt> (apvts, ModEngine::syncRateId (i), row.syncRateBox);
 
@@ -208,24 +218,28 @@ ModulationComponent::ModulationComponent (juce::AudioProcessorValueTreeState& st
         // Bipolar control (centre = 0 = no modulation): fill the bar from the centre.
         row.depth->getProperties().set ("drawFromCentre", true);
         row.depth->setLookAndFeel (&fxmeLookAndFeel);
+        row.depth->setTooltip (tips::depth);
         addAndMakeVisible (*row.depth);
 
         // ADSR controls.
-        auto makeAdsrSlider = [&] (std::unique_ptr<fxme::FxmeSlider>& s, const juce::String& id, const juce::String& name)
+        auto makeAdsrSlider = [&] (std::unique_ptr<fxme::FxmeSlider>& s, const juce::String& id, const juce::String& name,
+                                   const char* tooltip)
         {
             s = std::make_unique<fxme::FxmeSlider> (apvts, id, name, juce::Colours::orange);
             s->setSliderStyle (juce::Slider::LinearHorizontal);
             s->setLookAndFeel (&fxmeLookAndFeel);
+            s->setTooltip (tooltip);
             addAndMakeVisible (*s);
         };
-        makeAdsrSlider (row.attack,  ModEngine::attackId (i),  "A");
-        makeAdsrSlider (row.decay,   ModEngine::decayId (i),   "D");
-        makeAdsrSlider (row.sustain, ModEngine::sustainId (i), "S");
-        makeAdsrSlider (row.release, ModEngine::releaseId (i), "R");
-        makeAdsrSlider (row.amount,  ModEngine::amountId (i),  "Amt");
+        makeAdsrSlider (row.attack,  ModEngine::attackId (i),  "A", tips::attack);
+        makeAdsrSlider (row.decay,   ModEngine::decayId (i),   "D", tips::decay);
+        makeAdsrSlider (row.sustain, ModEngine::sustainId (i), "S", tips::sustain);
+        makeAdsrSlider (row.release, ModEngine::releaseId (i), "R", tips::release);
+        makeAdsrSlider (row.amount,  ModEngine::amountId (i),  "Amt", tips::amount);
 
         row.polarityBox.addItemList (ModEngine::polarityChoices(), 1);
         row.polarityBox.setLookAndFeel (&fxmeLookAndFeel);
+        row.polarityBox.setTooltip (tips::polarity);
         addAndMakeVisible (row.polarityBox);
         row.polarityAtt = std::make_unique<ComboAtt> (apvts, ModEngine::polarityId (i), row.polarityBox);
 

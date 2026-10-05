@@ -28,7 +28,7 @@ private:
         std::unique_ptr<fxme::FxmeSlider> slider;
     };
 
-    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text, bool bipolar = false);
+    void addKnob (Knob& k, const juce::String& paramId, const juce::String& text, const char* tooltip, bool bipolar = false);
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String prefix;
